@@ -6,6 +6,7 @@ import GetToKnowMe from "@/components/profile/GetToKnowMe";
 import RecordShelf from "@/components/profile/RecordShelf";
 import ShelfCard from "@/components/profile/ShelfCard";
 import FollowButton from "@/components/ui/FollowButton";
+import QuickSearch from "@/components/profile/QuickSearch";
 import Stars from "@/components/ui/Stars";
 
 function artwork(url: string | null, size = 500): string | null {
@@ -182,6 +183,9 @@ export default async function ProfilePage({ params }: Props) {
             </a>
           </div>
         </div>
+
+        {/* ====== Search + Rate (inline) ====== */}
+        <QuickSearch userId={profile.id} onDone={() => {}} />
 
         {/* ====== GET TO KNOW ME — Hero Carousel ====== */}
         <GetToKnowMe items={getToKnowMe} username={profile.username} />
