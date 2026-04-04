@@ -172,6 +172,14 @@ export default async function ProfilePage({ params }: Props) {
                 following
               </span>
             </div>
+
+            {/* Stats link */}
+            <a
+              href={`/${profile.username}/stats`}
+              className="inline-flex items-center gap-1.5 mt-4 px-4 py-1.5 bg-card border border-border rounded-full text-xs text-muted hover:text-accent hover:border-accent transition-colors"
+            >
+              <span>📊</span> View Stats
+            </a>
           </div>
         </div>
 
