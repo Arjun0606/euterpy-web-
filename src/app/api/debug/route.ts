@@ -29,16 +29,20 @@ export async function GET() {
 
     const body = await res.text();
 
+    // Decode token to see claims
+    const parts = token.split(".");
+    const header = JSON.parse(Buffer.from(parts[0], "base64url").toString());
+    const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString());
+
     return NextResponse.json({
       tokenGenerated: true,
       tokenLength: token.length,
       appleStatus: res.status,
-      appleResponse: body.substring(0, 200),
+      appleResponse: body.substring(0, 300),
+      jwtHeader: header,
+      jwtPayload: payload,
       keyLength: rawKey.length,
-      keyAfterReplace: keyWithReplace.length,
       keyLinesRaw: rawKey.split("\n").length,
-      keyLinesAfter: keyWithReplace.split("\n").length,
-      keyLines: rawKey.split("\n").map((l: string) => `${l.length}:${l.substring(0, 10)}...`),
     });
   } catch (e: any) {
     return NextResponse.json({
