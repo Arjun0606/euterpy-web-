@@ -15,19 +15,13 @@ interface Props {
   viewMode: "album" | "song";
 }
 
-const DECADE_ORDER = [
-  "1950s", "1960s", "1970s", "1980s", "1990s", "2000s", "2010s", "2020s",
-];
-
 export default function DecadeChart({ albumData, viewMode }: Props) {
-  const data = DECADE_ORDER.map((decade) => ({
-    decade,
-    count: albumData[decade] || 0,
-  })).filter((d) => d.count > 0);
+  // Build from actual data — no hardcoded range
+  const data = Object.entries(albumData)
+    .map(([decade, count]) => ({ decade, count }))
+    .sort((a, b) => a.decade.localeCompare(b.decade));
 
   if (data.length === 0) return null;
-
-  const maxCount = Math.max(...data.map((d) => d.count), 1);
 
   // Find the dominant decade
   const topDecade = data.reduce((a, b) => (a.count > b.count ? a : b));
