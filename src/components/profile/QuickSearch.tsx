@@ -17,7 +17,6 @@ type Tab = "albums" | "songs";
 
 interface Props {
   userId: string;
-  onDone: () => void;
 }
 
 const SUPABASE_URL = "https://xnnfbhjxcrlryjrmgtcv.supabase.co";
@@ -29,7 +28,7 @@ function artwork(url: string | null, size = 100): string | null {
   return getArtworkUrl(url, size, size);
 }
 
-export default function QuickSearch({ userId, onDone }: Props) {
+export default function QuickSearch({ userId }: Props) {
   const [tab, setTab] = useState<Tab>("albums");
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);

@@ -185,7 +185,7 @@ export default async function ProfilePage({ params }: Props) {
         </div>
 
         {/* ====== Search + Rate (inline) ====== */}
-        <QuickSearch userId={profile.id} onDone={() => {}} />
+        <QuickSearch userId={profile.id} />
 
         {/* ====== GET TO KNOW ME — Hero Carousel ====== */}
         <GetToKnowMe items={getToKnowMe} username={profile.username} />
