@@ -30,15 +30,21 @@ function getDeveloperToken(): string {
     );
   }
 
-  const token = jwt.sign({}, privateKey, {
-    algorithm: "ES256",
-    expiresIn: "30d",
-    issuer: teamId,
-    header: {
-      alg: "ES256",
-      kid: keyId,
+  const token = jwt.sign(
+    {
+      iss: teamId,
+      iat: now,
+      exp: now + 30 * 24 * 60 * 60,
     },
-  });
+    privateKey,
+    {
+      algorithm: "ES256",
+      header: {
+        alg: "ES256",
+        kid: keyId,
+      },
+    }
+  );
 
   cachedToken = token;
   tokenExpiry = now + 30 * 24 * 60 * 60; // 30 days
