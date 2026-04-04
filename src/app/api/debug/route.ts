@@ -38,6 +38,7 @@ export async function GET() {
       keyAfterReplace: keyWithReplace.length,
       keyLinesRaw: rawKey.split("\n").length,
       keyLinesAfter: keyWithReplace.split("\n").length,
+      keyLines: rawKey.split("\n").map((l: string) => `${l.length}:${l.substring(0, 10)}...`),
     });
   } catch (e: any) {
     return NextResponse.json({
