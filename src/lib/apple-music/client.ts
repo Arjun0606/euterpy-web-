@@ -17,8 +17,8 @@ function getDeveloperToken(): string {
     return cachedToken;
   }
 
-  const teamId = process.env.APPLE_MUSIC_TEAM_ID;
-  const keyId = process.env.APPLE_MUSIC_KEY_ID;
+  const teamId = process.env.APPLE_MUSIC_TEAM_ID?.trim();
+  const keyId = process.env.APPLE_MUSIC_KEY_ID?.trim();
   const privateKey = process.env.APPLE_MUSIC_PRIVATE_KEY?.replace(
     /\\n/g,
     "\n"
