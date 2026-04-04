@@ -35,8 +35,6 @@ export default function RatingModal({
   const [score, setScore] = useState(existingRating?.score || 0);
   const [reaction, setReaction] = useState(existingRating?.reaction || "");
   const [saving, setSaving] = useState(false);
-  const [hoveredStar, setHoveredStar] = useState(0);
-
   const coverUrl = artwork(artworkUrl, 600);
 
   async function handleSave() {
@@ -80,42 +78,17 @@ export default function RatingModal({
     }
   }
 
-  // Render half-star rating picker
   function renderStars() {
-    const stars = [];
-    for (let i = 1; i <= 10; i++) {
-      const value = i / 2; // 0.5, 1.0, 1.5, ..., 5.0
-      const isHalf = i % 2 !== 0;
-      const isFilled = hoveredStar > 0 ? value <= hoveredStar : value <= score;
-
-      stars.push(
-        <button
-          key={i}
-          type="button"
-          className={`relative transition-all duration-100 ${
-            isHalf ? "w-4" : "w-4"
-          } h-10 flex items-center`}
-          onMouseEnter={() => setHoveredStar(value)}
-          onMouseLeave={() => setHoveredStar(0)}
-          onClick={() => setScore(value === score ? 0 : value)}
-        >
-          <span
-            className={`text-2xl transition-colors ${
-              isFilled ? "text-accent" : "text-border"
-            }`}
-            style={{
-              // For half stars, we clip the star character
-              display: "inline-block",
-              overflow: "hidden",
-              width: isHalf ? "0.55em" : "auto",
-            }}
-          >
-            ★
-          </span>
-        </button>
-      );
-    }
-    return stars;
+    return [1, 2, 3, 4, 5].map((v) => (
+      <button
+        key={v}
+        type="button"
+        className={`text-3xl transition-colors ${v <= score ? "text-accent" : "text-border hover:text-accent/50"}`}
+        onClick={() => setScore(v === score ? 0 : v)}
+      >
+        ★
+      </button>
+    ));
   }
 
   return (

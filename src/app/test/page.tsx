@@ -354,25 +354,20 @@ export default function TestPage() {
 
             {action === "rate" && (
               <div className="space-y-4">
-                {/* Stars */}
+                {/* Stars — 1 to 5 */}
                 <div>
                   <p className="text-xs text-muted mb-2">Rating</p>
                   <div className="flex gap-1">
-                    {[0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5].map((v) => (
+                    {[1, 2, 3, 4, 5].map((v) => (
                       <button
                         key={v}
                         onClick={() => setScore(v === score ? 0 : v)}
-                        className={`text-xl ${v <= score ? "text-accent" : "text-border"}`}
-                        style={{
-                          display: "inline-block",
-                          overflow: "hidden",
-                          width: v % 1 !== 0 ? "0.55em" : "auto",
-                        }}
+                        className={`text-2xl transition-colors ${v <= score ? "text-accent" : "text-border hover:text-accent/50"}`}
                       >
                         ★
                       </button>
                     ))}
-                    <span className="text-xs text-muted ml-2 self-center">{score > 0 ? `${score}/5` : ""}</span>
+                    <span className="text-xs text-muted ml-2 self-center">{score > 0 ? `${score}/5` : "Tap to rate"}</span>
                   </div>
                 </div>
 

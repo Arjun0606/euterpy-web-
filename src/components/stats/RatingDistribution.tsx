@@ -16,10 +16,7 @@ interface Props {
   viewMode: "album" | "song";
 }
 
-// All possible half-star ratings
-const ALL_RATINGS = [
-  "0.5", "1", "1.5", "2", "2.5", "3", "3.5", "4", "4.5", "5",
-];
+const ALL_RATINGS = ["1", "2", "3", "4", "5"];
 
 export default function RatingDistribution({
   albumData,

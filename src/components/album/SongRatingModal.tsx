@@ -30,7 +30,6 @@ export default function SongRatingModal({
   const [score, setScore] = useState(existingRating?.score || 0);
   const [reaction, setReaction] = useState(existingRating?.reaction || "");
   const [saving, setSaving] = useState(false);
-  const [hoveredStar, setHoveredStar] = useState(0);
 
   async function handleSave() {
     if (score === 0) return;
@@ -93,35 +92,19 @@ export default function SongRatingModal({
           </p>
         </div>
 
-        {/* Stars */}
+        {/* Stars — 1 to 5 */}
         <div className="mb-6">
-          <div className="flex items-center justify-center gap-1">
-            {[0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5].map((value) => {
-              const isHalf = value % 1 !== 0;
-              const isFilled =
-                hoveredStar > 0 ? value <= hoveredStar : value <= score;
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  className="h-10 flex items-center"
-                  onMouseEnter={() => setHoveredStar(value)}
-                  onMouseLeave={() => setHoveredStar(0)}
-                  onClick={() => setScore(value === score ? 0 : value)}
-                >
-                  <span
-                    className={`text-2xl transition-colors ${isFilled ? "text-accent" : "text-border"}`}
-                    style={{
-                      display: "inline-block",
-                      overflow: "hidden",
-                      width: isHalf ? "0.55em" : "auto",
-                    }}
-                  >
-                    ★
-                  </span>
-                </button>
-              );
-            })}
+          <div className="flex items-center justify-center gap-2">
+            {[1, 2, 3, 4, 5].map((v) => (
+              <button
+                key={v}
+                type="button"
+                className={`text-3xl transition-colors ${v <= score ? "text-accent" : "text-border hover:text-accent/50"}`}
+                onClick={() => setScore(v === score ? 0 : v)}
+              >
+                ★
+              </button>
+            ))}
           </div>
           <p className="text-center text-sm text-muted mt-2">
             {score > 0 ? `${score} / 5` : "Tap to rate"}

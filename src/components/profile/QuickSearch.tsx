@@ -156,14 +156,13 @@ export default function QuickSearch({ userId }: Props) {
             </div>
           </div>
 
-          {/* Stars */}
-          <div className="flex items-center gap-0.5">
-            {[0.5,1,1.5,2,2.5,3,3.5,4,4.5,5].map((v) => (
+          {/* Stars — simple 1 to 5 */}
+          <div className="flex items-center gap-1">
+            {[1, 2, 3, 4, 5].map((v) => (
               <button key={v} onClick={() => setScore(v === score ? 0 : v)}
-                className={`text-xl ${v <= score ? "text-accent" : "text-border"}`}
-                style={{ display: "inline-block", overflow: "hidden", width: v % 1 !== 0 ? "0.55em" : "auto" }}>★</button>
+                className={`text-2xl transition-colors ${v <= score ? "text-accent" : "text-border hover:text-accent/50"}`}>★</button>
             ))}
-            <span className="text-xs text-muted ml-2">{score > 0 ? `${score}/5` : ""}</span>
+            <span className="text-xs text-muted ml-3">{score > 0 ? `${score}/5` : "Tap to rate"}</span>
           </div>
 
           {/* Reaction */}

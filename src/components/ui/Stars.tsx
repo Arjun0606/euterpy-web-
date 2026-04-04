@@ -4,9 +4,6 @@ interface Props {
 }
 
 export default function Stars({ score, size = "sm" }: Props) {
-  const fullStars = Math.floor(score);
-  const hasHalf = score % 1 !== 0;
-
   const sizeClasses = {
     sm: "text-sm",
     md: "text-base",
@@ -15,8 +12,8 @@ export default function Stars({ score, size = "sm" }: Props) {
 
   return (
     <span className={`text-accent ${sizeClasses[size]}`}>
-      {"★".repeat(fullStars)}
-      {hasHalf && "½"}
+      {"★".repeat(Math.round(score))}
+      {"☆".repeat(5 - Math.round(score))}
     </span>
   );
 }
