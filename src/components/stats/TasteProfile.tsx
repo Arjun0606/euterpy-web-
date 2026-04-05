@@ -41,12 +41,12 @@ export default function TasteProfile({
   return (
     <div className="mb-10">
       {/* Taste identity headline */}
-      <div className="bg-gradient-to-br from-accent/10 via-card to-card border border-accent/10 rounded-2xl p-6 sm:p-8 mb-6">
-        <p className="text-xs uppercase tracking-widest text-accent/60 mb-3">Your Taste Profile</p>
-        <h2 className="font-display text-2xl sm:text-3xl mb-2">
+      <div className="bg-gradient-to-br from-accent/5 via-card to-card border border-border rounded-2xl p-5 sm:p-8 mb-6">
+        <p className="text-[10px] uppercase tracking-widest text-muted/40 mb-3">Taste Profile</p>
+        <h2 className="font-display text-xl sm:text-2xl mb-2 leading-snug">
           A <span className="text-accent">{harshness}</span> curator of {descriptor}
         </h2>
-        <p className="text-sm text-muted">
+        <p className="text-xs sm:text-sm text-muted/60">
           {albumCount} albums · {songCount} songs · avg {avgRating.toFixed(1)}★
         </p>
       </div>

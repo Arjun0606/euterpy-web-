@@ -50,8 +50,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({ results: merged.slice(0, 20) });
-  } catch (error) {
-    console.error("Apple Music song search error:", error);
+  } catch {
     return NextResponse.json({ results: localResults });
   }
 }

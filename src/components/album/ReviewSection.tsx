@@ -108,7 +108,7 @@ export default function ReviewSection({ reviews, albumId, songId, userId }: Prop
       setBody("");
       setScore(0);
     } catch (e) {
-      console.error("Review error:", e);
+      // silent fail
     }
     setSaving(false);
   }
@@ -164,7 +164,7 @@ export default function ReviewSection({ reviews, albumId, songId, userId }: Prop
         );
       }
     } catch (e) {
-      console.error("Vote error:", e);
+      // silent fail
     }
   }
 

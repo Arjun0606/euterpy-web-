@@ -103,8 +103,7 @@ export default function RatingModal({
       onSaved();
       onClose();
     } catch (error) {
-      console.error("Failed to save rating:", error);
-      toast.error("Failed to save rating");
+      toast.error("Something went wrong. Try again.");
     } finally {
       setSaving(false);
     }

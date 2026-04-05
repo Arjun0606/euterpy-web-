@@ -49,12 +49,8 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({ results: merged.slice(0, 20) });
-  } catch (error: any) {
-    console.error("Apple Music search error:", error?.message || error);
-    // Return error details in dev for debugging
-    return NextResponse.json({
-      results: localResults,
-      error: error?.message || "Apple Music search failed",
-    });
+  } catch {
+    // Apple Music unavailable — return local results only
+    return NextResponse.json({ results: localResults });
   }
 }

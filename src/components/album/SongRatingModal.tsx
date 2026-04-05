@@ -64,7 +64,7 @@ export default function SongRatingModal({
       onSaved();
       onClose();
     } catch (error) {
-      console.error("Failed to save song rating:", error);
+      // silent fail — toast handled by parent
     } finally {
       setSaving(false);
     }
