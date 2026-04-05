@@ -20,12 +20,49 @@ interface RatingItem {
 }
 
 type SortBy = "recent" | "rating" | "artist";
+type ShelfStyle = "minimal" | "wood" | "ornate" | "glass";
 
 interface Props {
   items: RatingItem[];
   title?: string;
   showSort?: boolean;
+  shelfStyle?: ShelfStyle;
 }
+
+const SHELF_STYLES: Record<ShelfStyle, { ledge: React.CSSProperties; shadow: React.CSSProperties }> = {
+  minimal: {
+    ledge: {
+      background: "linear-gradient(to bottom, #2a2a2a 0%, #1a1a1a 50%, #111 100%)",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.4), 0 1px 2px rgba(255,255,255,0.03) inset",
+    },
+    shadow: { background: "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 100%)" },
+  },
+  wood: {
+    ledge: {
+      background: "linear-gradient(to bottom, #5c3d2e 0%, #3e2723 40%, #2c1a12 100%)",
+      boxShadow: "0 2px 10px rgba(0,0,0,0.5), 0 1px 2px rgba(255,200,150,0.08) inset",
+      height: "5px",
+    },
+    shadow: { background: "linear-gradient(to bottom, rgba(30,15,5,0.5) 0%, transparent 100%)" },
+  },
+  ornate: {
+    ledge: {
+      background: "linear-gradient(to bottom, #6d4c41 0%, #4e342e 30%, #3e2723 100%)",
+      boxShadow: "0 3px 12px rgba(0,0,0,0.6), 0 1px 3px rgba(255,215,0,0.1) inset, 0 -1px 0 rgba(255,215,0,0.05)",
+      height: "6px",
+      borderRadius: "2px",
+    },
+    shadow: { background: "linear-gradient(to bottom, rgba(20,10,0,0.5) 0%, transparent 100%)" },
+  },
+  glass: {
+    ledge: {
+      background: "linear-gradient(to bottom, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.06) inset",
+      backdropFilter: "blur(8px)",
+    },
+    shadow: { background: "linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, transparent 100%)" },
+  },
+};
 
 function artwork(url: string | null, size = 300): string | null {
   if (!url) return null;
@@ -46,7 +83,8 @@ function sortItems(items: RatingItem[], by: SortBy): RatingItem[] {
   }
 }
 
-export default function RecordShelf({ items, title = "The Shelf", showSort = true }: Props) {
+export default function RecordShelf({ items, title = "The Shelf", showSort = true, shelfStyle = "minimal" }: Props) {
+  const style = SHELF_STYLES[shelfStyle] || SHELF_STYLES.minimal;
   const [sortBy, setSortBy] = useState<SortBy>("recent");
   const [filter, setFilter] = useState<"all" | "album" | "song">("all");
 
@@ -165,17 +203,8 @@ export default function RecordShelf({ items, title = "The Shelf", showSort = tru
             </div>
 
             {/* Shelf ledge */}
-            <div
-              className="h-[3px] rounded-full relative z-0"
-              style={{
-                background: "linear-gradient(to bottom, #2a2a2a 0%, #1a1a1a 50%, #111 100%)",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.4), 0 1px 2px rgba(255,255,255,0.03) inset",
-              }}
-            />
-            <div
-              className="h-4 -mt-1"
-              style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 100%)" }}
-            />
+            <div className="h-[3px] rounded-full relative z-0" style={style.ledge} />
+            <div className="h-4 -mt-1" style={style.shadow} />
           </div>
         ))}
       </div>

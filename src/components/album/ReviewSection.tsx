@@ -7,6 +7,7 @@ import Stars from "@/components/ui/Stars";
 
 interface Review {
   id: string;
+  user_id?: string;
   title: string | null;
   body: string;
   score: number;
@@ -262,26 +263,27 @@ export default function ReviewSection({ reviews, albumId, songId, userId }: Prop
                   <span className="text-xs text-accent font-medium">❤️ Users love this</span>
                 )}
                 <div className="flex-1" />
+                {/* Vote buttons — anyone logged in can vote, but counts only visible to author */}
                 {userId && (
                   <>
                     <button
                       onClick={() => vote(review.id, "up")}
                       className={`text-xs transition-colors ${myVotes[review.id] === "up" ? "text-accent font-medium" : "text-muted hover:text-accent"}`}
                     >
-                      ▲ {review.upvotes}
+                      ▲{userId === (review as any).user_id ? ` ${review.upvotes}` : ""}
                     </button>
                     <button
                       onClick={() => vote(review.id, "down")}
                       className={`text-xs transition-colors ${myVotes[review.id] === "down" ? "text-red-400 font-medium" : "text-muted hover:text-red-400"}`}
                     >
-                      ▼ {review.downvotes}
+                      ▼{userId === (review as any).user_id ? ` ${review.downvotes}` : ""}
                     </button>
                   </>
                 )}
                 {!userId && (
                   <>
-                    <span className="text-xs text-muted">▲ {review.upvotes}</span>
-                    <span className="text-xs text-muted">▼ {review.downvotes}</span>
+                    <span className="text-xs text-muted">▲</span>
+                    <span className="text-xs text-muted">▼</span>
                   </>
                 )}
               </div>
