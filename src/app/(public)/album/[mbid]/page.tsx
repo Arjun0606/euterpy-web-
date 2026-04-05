@@ -6,6 +6,7 @@ import VinylCover from "@/components/ui/VinylCover";
 import AlbumActions from "@/components/album/AlbumActions";
 import TrackList from "@/components/album/TrackList";
 import ReviewSection from "@/components/album/ReviewSection";
+import RatingDistributionBar from "@/components/album/RatingDistributionBar";
 import Stars from "@/components/ui/Stars";
 
 interface Props {
@@ -154,6 +155,16 @@ export default async function AlbumPage({ params }: Props) {
               <p className="text-sm text-muted/40">Not yet rated</p>
             )}
 
+            {/* Listen on Apple Music */}
+            <a
+              href={`https://music.apple.com/album/${appleId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 mt-4 px-4 py-1.5 bg-card border border-border rounded-full text-xs text-muted hover:text-foreground hover:border-foreground/20 transition-colors"
+            >
+              <span>🎵</span> Listen on Apple Music
+            </a>
+
             {/* Rate / Edit button */}
             <AlbumActions
               albumAppleId={appleId}
@@ -164,6 +175,9 @@ export default async function AlbumPage({ params }: Props) {
             />
           </div>
         </div>
+
+        {/* Rating Distribution */}
+        <RatingDistributionBar ratings={ratings.map((r: any) => ({ score: r.score }))} />
 
         {/* Track Listing */}
         <TrackList albumAppleId={appleId} songRatings={songRatings} />

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { getArtworkUrl } from "@/lib/apple-music/client";
 import Stars from "@/components/ui/Stars";
 import Link from "next/link";
@@ -8,17 +9,22 @@ interface RatingItem {
   id: string;
   score: number;
   reaction: string | null;
-  albums: {
-    apple_id: string;
-    title: string;
-    artist_name: string;
-    artwork_url: string | null;
-  };
+  created_at: string;
+  type: "album" | "song";
+  ownership?: string | null;
+  apple_id: string;
+  title: string;
+  artist_name: string;
+  artwork_url: string | null;
+  album_name?: string | null;
 }
 
+type SortBy = "recent" | "rating" | "artist";
+
 interface Props {
-  ratings: RatingItem[];
+  items: RatingItem[];
   title?: string;
+  showSort?: boolean;
 }
 
 function artwork(url: string | null, size = 300): string | null {
@@ -26,97 +32,149 @@ function artwork(url: string | null, size = 300): string | null {
   return getArtworkUrl(url, size, size);
 }
 
-export default function RecordShelf({ ratings, title = "Collection" }: Props) {
-  if (ratings.length === 0) {
+function sortItems(items: RatingItem[], by: SortBy): RatingItem[] {
+  const sorted = [...items];
+  switch (by) {
+    case "recent":
+      return sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    case "rating":
+      return sorted.sort((a, b) => b.score - a.score || new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    case "artist":
+      return sorted.sort((a, b) => a.artist_name.localeCompare(b.artist_name));
+    default:
+      return sorted;
+  }
+}
+
+export default function RecordShelf({ items, title = "The Shelf", showSort = true }: Props) {
+  const [sortBy, setSortBy] = useState<SortBy>("recent");
+  const [filter, setFilter] = useState<"all" | "album" | "song">("all");
+
+  if (items.length === 0) {
     return (
       <div className="mb-10">
-        <h2 className="text-xs uppercase tracking-widest text-muted mb-4">
-          {title}
-        </h2>
-        <p className="text-muted/60 text-sm">No albums rated yet.</p>
+        <h2 className="text-xs uppercase tracking-widest text-muted mb-4">{title}</h2>
+        <p className="text-muted/60 text-sm">Nothing logged yet. Start rating to build your shelf.</p>
       </div>
     );
   }
 
-  // Group into rows of 5 (each row is a "shelf")
+  const filtered = filter === "all" ? items : items.filter((i) => i.type === filter);
+  const sorted = sortItems(filtered, sortBy);
+  const albumCount = items.filter((i) => i.type === "album").length;
+  const songCount = items.filter((i) => i.type === "song").length;
+
+  // Group into rows of 5
   const shelves: RatingItem[][] = [];
-  for (let i = 0; i < ratings.length; i += 5) {
-    shelves.push(ratings.slice(i, i + 5));
+  for (let i = 0; i < sorted.length; i += 5) {
+    shelves.push(sorted.slice(i, i + 5));
   }
 
   return (
     <div className="mb-10">
-      <h2 className="text-xs uppercase tracking-widest text-muted mb-6">
-        {title}
-      </h2>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="text-xs uppercase tracking-widest text-muted">{title}</h2>
+        <span className="text-xs text-muted/40">
+          {albumCount} {albumCount === 1 ? "album" : "albums"}
+          {songCount > 0 && ` · ${songCount} ${songCount === 1 ? "song" : "songs"}`}
+        </span>
+      </div>
 
+      {/* Filter + Sort */}
+      {showSort && (
+        <div className="flex items-center gap-2 mb-5">
+          <div className="flex gap-1 bg-card rounded-lg p-0.5 border border-border">
+            {([["all", "All"], ["album", "Albums"], ["song", "Songs"]] as [typeof filter, string][]).map(([f, label]) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`px-3 py-1 text-[11px] rounded-md transition-colors ${
+                  filter === f ? "bg-accent text-white" : "text-muted hover:text-foreground"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-1 ml-auto">
+            {([["recent", "Recent"], ["rating", "Top Rated"], ["artist", "Artist"]] as [SortBy, string][]).map(([s, label]) => (
+              <button
+                key={s}
+                onClick={() => setSortBy(s)}
+                className={`px-2 py-1 text-[11px] rounded transition-colors ${
+                  sortBy === s ? "text-accent" : "text-muted/40 hover:text-muted"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Shelf rows */}
       <div className="space-y-2">
         {shelves.map((row, rowIndex) => (
           <div key={rowIndex} className="relative">
-            {/* Albums on the shelf */}
+            {/* Items on the shelf */}
             <div className="flex gap-2 sm:gap-3 pb-2 relative z-10">
-              {row.map((rating) => {
-                const album = rating.albums;
-                const coverUrl = artwork(album.artwork_url, 300);
+              {row.map((item) => {
+                const coverUrl = artwork(item.artwork_url, 300);
+                const href = item.type === "album" ? `/album/${item.apple_id}` : `/song/${item.apple_id}`;
 
                 return (
                   <Link
-                    key={rating.id}
-                    href={`/album/${album.apple_id}`}
+                    key={item.id}
+                    href={href}
                     className="group flex-1 min-w-0 max-w-[20%]"
                   >
-                    {/* Album cover — slight tilt for realism */}
                     <div
-                      className="aspect-square rounded-sm overflow-hidden shadow-lg border border-white/5 transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-2xl group-hover:shadow-accent/10"
-                      style={{
-                        transformOrigin: "bottom center",
-                      }}
+                      className="aspect-square rounded-sm overflow-hidden shadow-lg border border-white/5 transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-2xl group-hover:shadow-accent/10 relative"
+                      style={{ transformOrigin: "bottom center" }}
                     >
                       {coverUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={coverUrl}
-                          alt={album.title}
-                          className="w-full h-full object-cover"
-                        />
+                        <img src={coverUrl} alt={item.title} className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full bg-card flex items-center justify-center text-border">
-                          ♪
+                        <div className="w-full h-full bg-card flex items-center justify-center text-border">♪</div>
+                      )}
+                      {/* Song badge */}
+                      {item.type === "song" && (
+                        <div className="absolute top-1 left-1 w-4 h-4 bg-black/60 rounded-full flex items-center justify-center">
+                          <span className="text-[8px] text-white">♪</span>
+                        </div>
+                      )}
+                      {/* Ownership badge */}
+                      {item.ownership && item.ownership !== "digital" && (
+                        <div className="absolute bottom-1 right-1 text-[10px]">
+                          {item.ownership === "vinyl" ? "🎵" : item.ownership === "cd" ? "💿" : "📼"}
                         </div>
                       )}
                     </div>
 
-                    {/* Info below — visible on hover */}
+                    {/* Hover info */}
                     <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      <p className="text-xs font-medium truncate">
-                        {album.title}
-                      </p>
-                      <p className="text-xs text-muted truncate">
-                        {album.artist_name}
-                      </p>
-                      <Stars score={rating.score} size="sm" />
+                      <p className="text-xs font-medium truncate">{item.title}</p>
+                      <p className="text-xs text-muted truncate">{item.artist_name}</p>
+                      <Stars score={item.score} size="sm" />
                     </div>
                   </Link>
                 );
               })}
             </div>
 
-            {/* The shelf — a subtle wooden ledge */}
+            {/* Shelf ledge */}
             <div
               className="h-[3px] rounded-full relative z-0"
               style={{
-                background:
-                  "linear-gradient(to bottom, #2a2a2a 0%, #1a1a1a 50%, #111 100%)",
+                background: "linear-gradient(to bottom, #2a2a2a 0%, #1a1a1a 50%, #111 100%)",
                 boxShadow: "0 2px 8px rgba(0,0,0,0.4), 0 1px 2px rgba(255,255,255,0.03) inset",
               }}
             />
-            {/* Shelf shadow */}
             <div
               className="h-4 -mt-1"
-              style={{
-                background:
-                  "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 100%)",
-              }}
+              style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 100%)" }}
             />
           </div>
         ))}

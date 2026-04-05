@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
 interface Props {
   targetUserId: string;
@@ -64,6 +65,7 @@ export default function FollowButton({ targetUserId, initialFollowing = false, i
         .eq("follower_id", currentUserId)
         .eq("following_id", targetUserId);
       setStatus("none");
+      toast("Unfollowed");
     } else if (status === "requested") {
       await supabase
         .from("follow_requests")
@@ -71,20 +73,22 @@ export default function FollowButton({ targetUserId, initialFollowing = false, i
         .eq("requester_id", currentUserId)
         .eq("target_id", targetUserId);
       setStatus("none");
+      toast("Request cancelled");
     } else {
-      // New follow
       if (isPrivate) {
         await supabase.from("follow_requests").insert({
           requester_id: currentUserId,
           target_id: targetUserId,
         });
         setStatus("requested");
+        toast("Follow request sent");
       } else {
         await supabase.from("follows").insert({
           follower_id: currentUserId,
           following_id: targetUserId,
         });
         setStatus("following");
+        toast("Following");
       }
     }
 

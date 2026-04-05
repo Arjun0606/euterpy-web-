@@ -42,6 +42,35 @@ export default function ProfilePage({ data }: Props) {
   const displayedBadges = badges.filter((b: any) => b.is_displayed).slice(0, 5);
   const isOwnProfile = currentUserId === profile.id;
 
+  // Unify albums + songs into one shelf
+  const shelfItems = [
+    ...ratings.map((r: any) => ({
+      id: r.id,
+      score: r.score,
+      reaction: r.reaction,
+      created_at: r.created_at,
+      type: "album" as const,
+      ownership: r.ownership,
+      apple_id: r.albums?.apple_id,
+      title: r.albums?.title,
+      artist_name: r.albums?.artist_name,
+      artwork_url: r.albums?.artwork_url,
+    })),
+    ...songRatings.map((r: any) => ({
+      id: r.id,
+      score: r.score,
+      reaction: r.reaction,
+      created_at: r.created_at,
+      type: "song" as const,
+      ownership: null,
+      apple_id: r.songs?.apple_id,
+      title: r.songs?.title,
+      artist_name: r.songs?.artist_name,
+      artwork_url: r.songs?.artwork_url,
+      album_name: r.songs?.album_name,
+    })),
+  ].filter((item) => item.apple_id);
+
   async function handleShare() {
     const url = `${window.location.origin}/${profile.username}`;
     const shareData = {
@@ -92,13 +121,26 @@ export default function ProfilePage({ data }: Props) {
             {/* Social links */}
             {profile.social_links && Object.keys(profile.social_links).length > 0 && (
               <div className="flex gap-3 mt-2">
-                {Object.entries(profile.social_links).map(([platform, handle]: [string, any]) => (
-                  handle && (
-                    <span key={platform} className="text-xs text-muted/60">
-                      {platform === "instagram" ? "📸" : platform === "twitter" ? "𝕏" : platform === "spotify" ? "🎧" : "🔗"} {handle}
-                    </span>
-                  )
-                ))}
+                {Object.entries(profile.social_links).map(([platform, handle]: [string, any]) => {
+                  if (!handle) return null;
+                  const urls: Record<string, string> = {
+                    instagram: `https://instagram.com/${handle}`,
+                    twitter: `https://x.com/${handle}`,
+                    spotify: `https://open.spotify.com/user/${handle}`,
+                  };
+                  const icons: Record<string, string> = { instagram: "📸", twitter: "𝕏", spotify: "🎧" };
+                  return (
+                    <a
+                      key={platform}
+                      href={urls[platform] || "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-muted/60 hover:text-accent transition-colors"
+                    >
+                      {icons[platform] || "🔗"} {handle}
+                    </a>
+                  );
+                })}
               </div>
             )}
 
@@ -183,13 +225,16 @@ export default function ProfilePage({ data }: Props) {
             {/* Quick Search + Rate (only on own profile) */}
             {isOwnProfile && <QuickSearch />}
 
-            {/* Get to Know Me */}
+            {/* Get to Know Me — the hero carousel */}
             <GetToKnowMe items={getToKnowMe} username={profile.username} />
 
-            {/* Shelves */}
+            {/* The Shelf — ALL rated albums + songs, unified */}
+            <RecordShelf items={shelfItems} title="The Shelf" />
+
+            {/* Custom Shelves */}
             <div className="mb-10">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xs uppercase tracking-widest text-muted">Shelves</h2>
+                <h2 className="text-xs uppercase tracking-widest text-muted">Curated Shelves</h2>
                 {isOwnProfile && (
                   <button
                     onClick={() => setShowNewShelf(true)}
@@ -207,8 +252,8 @@ export default function ProfilePage({ data }: Props) {
                 </div>
               ) : (
                 <div className="text-center py-8 border border-dashed border-border rounded-xl">
-                  <p className="text-muted text-sm">No shelves yet.</p>
-                  {isOwnProfile && <p className="text-xs text-muted/60 mt-1">Create shelves to curate your collection.</p>}
+                  <p className="text-muted text-sm">No curated shelves yet.</p>
+                  {isOwnProfile && <p className="text-xs text-muted/60 mt-1">Create themed shelves to organize your collection.</p>}
                 </div>
               )}
             </div>
@@ -218,41 +263,6 @@ export default function ProfilePage({ data }: Props) {
                 onClose={() => setShowNewShelf(false)}
                 onSaved={() => window.location.reload()}
               />
-            )}
-
-            {/* Record Shelf Collection */}
-            <RecordShelf ratings={ratings} title="Collection" />
-
-            {/* Song Ratings */}
-            {songRatings.length > 0 && (
-              <div className="mb-10">
-                <h2 className="text-xs uppercase tracking-widest text-muted mb-4">Songs</h2>
-                <div className="space-y-1">
-                  {songRatings.map((rating: any) => {
-                    const song = rating.songs;
-                    return (
-                      <div key={rating.id} className="flex items-center gap-4 p-3 -mx-3 rounded-lg hover:bg-card-hover transition-colors">
-                        <div className="w-10 h-10 rounded bg-card border border-border overflow-hidden shrink-0">
-                          {song?.artwork_url ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={artwork(song.artwork_url, 80)!} alt={song.title} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-xs text-border">♪</div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">{song?.title}</p>
-                          <p className="text-xs text-muted truncate">
-                            {song?.artist_name}
-                            {song?.album_name && <span className="text-muted/40"> · {song.album_name}</span>}
-                          </p>
-                        </div>
-                        <Stars score={rating.score} />
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
             )}
           </div>
         )}

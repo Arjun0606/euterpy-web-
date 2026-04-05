@@ -51,7 +51,7 @@ export default function SignUpPage() {
       return;
     }
 
-    router.push("/feed");
+    router.push("/welcome");
   }
 
   return (

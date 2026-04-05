@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getArtworkUrl } from "@/lib/apple-music/client";
 import Link from "next/link";
 import Stars from "@/components/ui/Stars";
+import LikeButton from "@/components/ui/LikeButton";
 
 export const metadata = { title: "Home" };
 
@@ -23,7 +24,7 @@ export default async function HomePage() {
       id, created_at,
       actor:profiles!feed_items_actor_id_fkey(username, display_name, avatar_url),
       rating:ratings!feed_items_rating_id_fkey(
-        id, score, reaction, created_at, ownership,
+        id, score, reaction, created_at, ownership, like_count,
         album:albums(id, apple_id, title, artist_name, artwork_url)
       )
     `)
@@ -130,6 +131,9 @@ export default async function HomePage() {
                     {rating.reaction && (
                       <p className="text-sm text-muted/80 mt-2 italic">&ldquo;{rating.reaction}&rdquo;</p>
                     )}
+                    <div className="mt-2">
+                      <LikeButton ratingId={rating.id} initialCount={rating.like_count || 0} />
+                    </div>
                   </div>
 
                   <Link href={`/album/${album.apple_id}`} className="w-14 h-14 rounded-lg bg-card border border-border overflow-hidden shrink-0">
