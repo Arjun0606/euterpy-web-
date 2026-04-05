@@ -16,12 +16,6 @@ export default async function HomePage() {
 
   if (!user) return null;
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("username, display_name, avatar_url")
-    .eq("id", user.id)
-    .single();
-
   // Get feed: reviews + ratings from followed users
   const { data: feedItems } = await supabase
     .from("feed_items")
@@ -45,36 +39,7 @@ export default async function HomePage() {
     .limit(5);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Top Bar */}
-      <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-4">
-          <Link href="/feed" className="font-display text-2xl shrink-0">Euterpy</Link>
-
-          {/* Search bar */}
-          <Link
-            href="/search"
-            className="flex-1 flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-full text-sm text-muted/40 hover:border-accent/30 transition-colors"
-          >
-            <span>🔍</span> Search albums, songs, people...
-          </Link>
-
-          {/* Profile circle */}
-          <Link
-            href={`/${profile?.username || ""}`}
-            className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center text-sm text-muted shrink-0 hover:border-accent transition-colors"
-          >
-            {profile?.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
-            ) : (
-              <span className="font-medium">{profile?.username?.[0]?.toUpperCase() || "?"}</span>
-            )}
-          </Link>
-        </div>
-      </header>
-
-      <main className="max-w-2xl mx-auto px-4 py-6">
+    <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
         {/* Latest Reviews (if any) */}
         {latestReviews && latestReviews.length > 0 && (
           <div className="mb-8">
@@ -180,7 +145,6 @@ export default async function HomePage() {
             })}
           </div>
         )}
-      </main>
-    </div>
+    </main>
   );
 }
