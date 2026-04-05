@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getArtworkUrl } from "@/lib/apple-music/client";
+import { createClient } from "@/lib/supabase/client";
 import Stars from "@/components/ui/Stars";
 
 interface Review {
@@ -24,11 +25,8 @@ interface Props {
   reviews: Review[];
   albumId?: string;
   songId?: string;
-  userId: string;
+  userId: string | null;
 }
-
-const SUPABASE_URL = "https://xnnfbhjxcrlryjrmgtcv.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhubmZiaGp4Y3Jscnlqcm1ndGN2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTMwMDgwNCwiZXhwIjoyMDkwODc2ODA0fQ.qaDfTjtjjC9io_AsZH84HG4d4MiujidI0omFhdNrYU4";
 
 export default function ReviewSection({ reviews, albumId, songId, userId }: Props) {
   const [showWrite, setShowWrite] = useState(false);
@@ -37,9 +35,43 @@ export default function ReviewSection({ reviews, albumId, songId, userId }: Prop
   const [score, setScore] = useState(0);
   const [saving, setSaving] = useState(false);
   const [localReviews, setLocalReviews] = useState(reviews);
+  const [myVotes, setMyVotes] = useState<Record<string, "up" | "down">>({});
+  const [myProfile, setMyProfile] = useState<{ username: string; display_name: string | null; avatar_url: string | null } | null>(null);
+
+  const supabase = createClient();
+
+  // Fetch current user's profile and existing votes
+  useEffect(() => {
+    if (!userId) return;
+
+    supabase
+      .from("profiles")
+      .select("username, display_name, avatar_url")
+      .eq("id", userId)
+      .single()
+      .then(({ data }) => {
+        if (data) setMyProfile(data);
+      });
+
+    const reviewIds = reviews.map((r) => r.id);
+    if (reviewIds.length > 0) {
+      supabase
+        .from("review_votes")
+        .select("review_id, vote_type")
+        .eq("user_id", userId)
+        .in("review_id", reviewIds)
+        .then(({ data }) => {
+          if (data) {
+            const votes: Record<string, "up" | "down"> = {};
+            data.forEach((v: any) => { votes[v.review_id] = v.vote_type; });
+            setMyVotes(votes);
+          }
+        });
+    }
+  }, [userId, reviews]);
 
   async function submitReview() {
-    if (!body.trim() || score === 0) return;
+    if (!body.trim() || score === 0 || !userId) return;
     setSaving(true);
 
     try {
@@ -52,20 +84,22 @@ export default function ReviewSection({ reviews, albumId, songId, userId }: Prop
       if (albumId) payload.album_id = albumId;
       if (songId) payload.song_id = songId;
 
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/reviews`, {
-        method: "POST",
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-          "Content-Type": "application/json",
-          Prefer: "return=representation",
-        },
-        body: JSON.stringify(payload),
-      });
-      const created = await res.json();
+      const { data: created, error } = await supabase
+        .from("reviews")
+        .insert(payload)
+        .select()
+        .single();
 
-      if (Array.isArray(created) && created[0]) {
-        setLocalReviews([{ ...created[0], profiles: { username: "you", display_name: "You", avatar_url: null } }, ...localReviews]);
+      if (error) throw error;
+
+      if (created) {
+        setLocalReviews([
+          {
+            ...created,
+            profiles: myProfile || { username: "you", display_name: "You", avatar_url: null },
+          },
+          ...localReviews,
+        ]);
       }
 
       setShowWrite(false);
@@ -79,22 +113,55 @@ export default function ReviewSection({ reviews, albumId, songId, userId }: Prop
   }
 
   async function vote(reviewId: string, voteType: "up" | "down") {
-    try {
-      await fetch(`${SUPABASE_URL}/rest/v1/review_votes`, {
-        method: "POST",
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ review_id: reviewId, user_id: userId, vote_type: voteType }),
-      });
+    if (!userId) return;
 
-      setLocalReviews(prev => prev.map(r =>
-        r.id === reviewId
-          ? { ...r, upvotes: r.upvotes + (voteType === "up" ? 1 : 0), downvotes: r.downvotes + (voteType === "down" ? 1 : 0) }
-          : r
-      ));
+    const existing = myVotes[reviewId];
+
+    try {
+      if (existing === voteType) {
+        // Remove vote
+        await supabase
+          .from("review_votes")
+          .delete()
+          .eq("review_id", reviewId)
+          .eq("user_id", userId);
+
+        setMyVotes((prev) => {
+          const next = { ...prev };
+          delete next[reviewId];
+          return next;
+        });
+        setLocalReviews((prev) =>
+          prev.map((r) =>
+            r.id === reviewId
+              ? { ...r, upvotes: r.upvotes - (voteType === "up" ? 1 : 0), downvotes: r.downvotes - (voteType === "down" ? 1 : 0) }
+              : r
+          )
+        );
+      } else {
+        // Upsert vote
+        await supabase
+          .from("review_votes")
+          .upsert(
+            { review_id: reviewId, user_id: userId, vote_type: voteType },
+            { onConflict: "review_id,user_id" }
+          );
+
+        setMyVotes((prev) => ({ ...prev, [reviewId]: voteType }));
+        setLocalReviews((prev) =>
+          prev.map((r) => {
+            if (r.id !== reviewId) return r;
+            let { upvotes, downvotes } = r;
+            // Remove old vote count
+            if (existing === "up") upvotes--;
+            if (existing === "down") downvotes--;
+            // Add new vote count
+            if (voteType === "up") upvotes++;
+            if (voteType === "down") downvotes++;
+            return { ...r, upvotes, downvotes };
+          })
+        );
+      }
     } catch (e) {
       console.error("Vote error:", e);
     }
@@ -104,16 +171,18 @@ export default function ReviewSection({ reviews, albumId, songId, userId }: Prop
     <div className="mb-10">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xs uppercase tracking-widest text-muted">Reviews</h2>
-        <button
-          onClick={() => setShowWrite(!showWrite)}
-          className="text-xs text-accent hover:underline"
-        >
-          {showWrite ? "Cancel" : "Write a Review"}
-        </button>
+        {userId && (
+          <button
+            onClick={() => setShowWrite(!showWrite)}
+            className="text-xs text-accent hover:underline"
+          >
+            {showWrite ? "Cancel" : "Write a Review"}
+          </button>
+        )}
       </div>
 
       {/* Write review form */}
-      {showWrite && (
+      {showWrite && userId && (
         <div className="bg-card border border-border rounded-xl p-5 mb-6">
           {/* Stars */}
           <div className="flex items-center gap-2 mb-4">
@@ -193,18 +262,28 @@ export default function ReviewSection({ reviews, albumId, songId, userId }: Prop
                   <span className="text-xs text-accent font-medium">❤️ Users love this</span>
                 )}
                 <div className="flex-1" />
-                <button
-                  onClick={() => vote(review.id, "up")}
-                  className="text-xs text-muted hover:text-accent transition-colors"
-                >
-                  ▲ {review.upvotes}
-                </button>
-                <button
-                  onClick={() => vote(review.id, "down")}
-                  className="text-xs text-muted hover:text-red-400 transition-colors"
-                >
-                  ▼ {review.downvotes}
-                </button>
+                {userId && (
+                  <>
+                    <button
+                      onClick={() => vote(review.id, "up")}
+                      className={`text-xs transition-colors ${myVotes[review.id] === "up" ? "text-accent font-medium" : "text-muted hover:text-accent"}`}
+                    >
+                      ▲ {review.upvotes}
+                    </button>
+                    <button
+                      onClick={() => vote(review.id, "down")}
+                      className={`text-xs transition-colors ${myVotes[review.id] === "down" ? "text-red-400 font-medium" : "text-muted hover:text-red-400"}`}
+                    >
+                      ▼ {review.downvotes}
+                    </button>
+                  </>
+                )}
+                {!userId && (
+                  <>
+                    <span className="text-xs text-muted">▲ {review.upvotes}</span>
+                    <span className="text-xs text-muted">▼ {review.downvotes}</span>
+                  </>
+                )}
               </div>
             </div>
           ))}

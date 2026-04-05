@@ -7,6 +7,11 @@ import RecordShelf from "./RecordShelf";
 import ShelfCard from "./ShelfCard";
 import QuickSearch from "./QuickSearch";
 import Stars from "@/components/ui/Stars";
+import FollowButton from "@/components/ui/FollowButton";
+import TasteMatch from "./TasteMatch";
+import ShelfEditor from "./ShelfEditor";
+import BlockButton from "./BlockButton";
+import StatsView from "@/components/stats/StatsView";
 
 type Tab = "collection" | "stats" | "reviews";
 
@@ -18,6 +23,7 @@ function artwork(url: string | null, size = 500): string | null {
 interface Props {
   data: {
     profile: any;
+    currentUserId: string | null;
     getToKnowMe: any[];
     ratings: any[];
     songRatings: any[];
@@ -28,10 +34,34 @@ interface Props {
 }
 
 export default function ProfilePage({ data }: Props) {
-  const { profile, getToKnowMe, ratings, songRatings, shelves, reviews, badges } = data;
+  const { profile, currentUserId, getToKnowMe, ratings, songRatings, shelves, reviews, badges } = data;
   const [activeTab, setActiveTab] = useState<Tab>("collection");
+  const [copied, setCopied] = useState(false);
+  const [showNewShelf, setShowNewShelf] = useState(false);
 
   const displayedBadges = badges.filter((b: any) => b.is_displayed).slice(0, 5);
+  const isOwnProfile = currentUserId === profile.id;
+
+  async function handleShare() {
+    const url = `${window.location.origin}/${profile.username}`;
+    const shareData = {
+      title: `${profile.display_name || profile.username} on Euterpy`,
+      url,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch {
+        // User cancelled or share failed, fall through to clipboard
+      }
+      return;
+    }
+
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -92,12 +122,31 @@ export default function ProfilePage({ data }: Props) {
 
             {/* Action buttons */}
             <div className="flex gap-2 mt-4">
-              <button className="px-4 py-1.5 bg-accent text-white text-xs font-medium rounded-full hover:bg-accent-hover transition-colors">
-                Share Profile
-              </button>
-              <a href="/settings" className="px-4 py-1.5 border border-border text-xs text-muted rounded-full hover:text-foreground hover:border-foreground/20 transition-colors">
-                Edit Profile
-              </a>
+              {isOwnProfile ? (
+                <>
+                  <button
+                    onClick={handleShare}
+                    className="px-4 py-1.5 bg-accent text-white text-xs font-medium rounded-full hover:bg-accent-hover transition-colors"
+                  >
+                    {copied ? "Link Copied!" : "Share Profile"}
+                  </button>
+                  <a href="/settings" className="px-4 py-1.5 border border-border text-xs text-muted rounded-full hover:text-foreground hover:border-foreground/20 transition-colors">
+                    Edit Profile
+                  </a>
+                </>
+              ) : (
+                <>
+                  <FollowButton targetUserId={profile.id} />
+                  <button
+                    onClick={handleShare}
+                    className="px-4 py-1.5 border border-border text-xs text-muted rounded-full hover:text-foreground hover:border-foreground/20 transition-colors"
+                  >
+                    {copied ? "Copied!" : "Share"}
+                  </button>
+                  <TasteMatch targetUserId={profile.id} />
+                  <BlockButton targetUserId={profile.id} />
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -105,9 +154,9 @@ export default function ProfilePage({ data }: Props) {
         {/* ====== Sub-menu Tabs ====== */}
         <div className="flex border-b border-border mb-6">
           {([
-            ["collection", "My Collection"],
+            ["collection", isOwnProfile ? "My Collection" : "Collection"],
             ["stats", "Stats"],
-            ["reviews", "My Reviews"],
+            ["reviews", isOwnProfile ? "My Reviews" : "Reviews"],
           ] as [Tab, string][]).map(([tab, label]) => (
             <button
               key={tab}
@@ -131,22 +180,44 @@ export default function ProfilePage({ data }: Props) {
         {/* COLLECTION TAB */}
         {activeTab === "collection" && (
           <div>
-            {/* Quick Search + Rate */}
-            <QuickSearch userId={profile.id} />
+            {/* Quick Search + Rate (only on own profile) */}
+            {isOwnProfile && <QuickSearch />}
 
             {/* Get to Know Me */}
             <GetToKnowMe items={getToKnowMe} username={profile.username} />
 
             {/* Shelves */}
-            {shelves.length > 0 && (
-              <div className="mb-10">
-                <h2 className="text-xs uppercase tracking-widest text-muted mb-4">Shelves</h2>
+            <div className="mb-10">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xs uppercase tracking-widest text-muted">Shelves</h2>
+                {isOwnProfile && (
+                  <button
+                    onClick={() => setShowNewShelf(true)}
+                    className="text-xs text-accent hover:underline"
+                  >
+                    + New Shelf
+                  </button>
+                )}
+              </div>
+              {shelves.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {shelves.map((shelf: any) => (
                     <ShelfCard key={shelf.id} shelf={shelf} />
                   ))}
                 </div>
-              </div>
+              ) : (
+                <div className="text-center py-8 border border-dashed border-border rounded-xl">
+                  <p className="text-muted text-sm">No shelves yet.</p>
+                  {isOwnProfile && <p className="text-xs text-muted/60 mt-1">Create shelves to curate your collection.</p>}
+                </div>
+              )}
+            </div>
+
+            {showNewShelf && (
+              <ShelfEditor
+                onClose={() => setShowNewShelf(false)}
+                onSaved={() => window.location.reload()}
+              />
             )}
 
             {/* Record Shelf Collection */}
@@ -195,12 +266,7 @@ export default function ProfilePage({ data }: Props) {
                 <p className="text-sm text-muted/60 mt-2">Rate some albums to see your taste breakdown.</p>
               </div>
             ) : (
-              <iframe
-                src={`/${profile.username}/stats`}
-                className="w-full border-0"
-                style={{ height: "2000px" }}
-                title="Stats"
-              />
+              <StatsView ratings={ratings} songRatings={songRatings} />
             )}
           </div>
         )}

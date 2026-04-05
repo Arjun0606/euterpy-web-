@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { getArtworkUrl } from "@/lib/apple-music/client";
+import { createClient } from "@/lib/supabase/client";
 
 interface SearchResult {
   appleId: string;
@@ -15,20 +16,12 @@ interface SearchResult {
 
 type Tab = "albums" | "songs";
 
-interface Props {
-  userId: string;
-}
-
-const SUPABASE_URL = "https://xnnfbhjxcrlryjrmgtcv.supabase.co";
-const SUPABASE_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhubmZiaGp4Y3Jscnlqcm1ndGN2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTMwMDgwNCwiZXhwIjoyMDkwODc2ODA0fQ.qaDfTjtjjC9io_AsZH84HG4d4MiujidI0omFhdNrYU4";
-
 function artwork(url: string | null, size = 100): string | null {
   if (!url) return null;
   return getArtworkUrl(url, size, size);
 }
 
-export default function QuickSearch({ userId }: Props) {
+export default function QuickSearch() {
   const [tab, setTab] = useState<Tab>("albums");
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -39,7 +32,16 @@ export default function QuickSearch({ userId }: Props) {
   const [ownership, setOwnership] = useState("digital");
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  const supabase = createClient();
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setUserId(user.id);
+    });
+  }, []);
 
   const search = useCallback(async (q: string, t: Tab) => {
     if (q.trim().length < 2) { setResults([]); return; }
@@ -60,25 +62,30 @@ export default function QuickSearch({ userId }: Props) {
   }
 
   async function handleRate() {
-    if (!selected || score === 0) return;
+    if (!selected || score === 0 || !userId) return;
     setSaving(true);
     try {
       if (tab === "albums") {
         const albumRes = await fetch(`/api/albums/${selected.appleId}`);
         const { album } = await albumRes.json();
-        await fetch(`${SUPABASE_URL}/rest/v1/ratings`, {
-          method: "POST",
-          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ user_id: userId, album_id: album.id, score, reaction: reaction.trim() || null, ownership }),
+        const { error } = await supabase.from("ratings").insert({
+          user_id: userId,
+          album_id: album.id,
+          score,
+          reaction: reaction.trim() || null,
+          ownership,
         });
+        if (error) throw error;
       } else {
         const songRes = await fetch(`/api/songs/${selected.appleId}`);
         const { song } = await songRes.json();
-        await fetch(`${SUPABASE_URL}/rest/v1/song_ratings`, {
-          method: "POST",
-          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ user_id: userId, song_id: song.id, score, reaction: reaction.trim() || null }),
+        const { error } = await supabase.from("song_ratings").insert({
+          user_id: userId,
+          song_id: song.id,
+          score,
+          reaction: reaction.trim() || null,
         });
+        if (error) throw error;
       }
       setSuccess(`★ ${score} — ${selected.title}`);
       setSelected(null);

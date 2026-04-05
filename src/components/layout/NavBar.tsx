@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import NotificationBell from "./NotificationBell";
 
 interface Props {
   username?: string;
@@ -44,8 +45,9 @@ export default function NavBar({ username, avatarUrl }: Props) {
             ))}
           </nav>
 
-          {/* Profile + Settings */}
+          {/* Notifications + Settings + Profile */}
           <div className="flex items-center gap-3">
+            <NotificationBell />
             <Link
               href="/settings"
               className={`text-sm transition-colors ${pathname === "/settings" ? "text-accent" : "text-muted hover:text-foreground"}`}
@@ -70,7 +72,7 @@ export default function NavBar({ username, avatarUrl }: Props) {
       {/* Mobile: bottom tab bar */}
       <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-20 bg-background/90 backdrop-blur-xl border-t border-border safe-area-bottom">
         <div className="flex items-center justify-around py-2 px-4">
-          {links.map((link) => {
+          {links.slice(0, 3).map((link) => {
             const isActive = pathname === link.href || (link.href !== "/feed" && link.href.length > 1 && pathname.startsWith(link.href));
             return (
               <Link
@@ -85,6 +87,24 @@ export default function NavBar({ username, avatarUrl }: Props) {
               </Link>
             );
           })}
+          <Link
+            href="/notifications"
+            className={`flex flex-col items-center gap-0.5 px-3 py-1 ${
+              pathname === "/notifications" ? "text-accent" : "text-muted"
+            }`}
+          >
+            <span className="text-lg">🔔</span>
+            <span className="text-[10px]">Alerts</span>
+          </Link>
+          <Link
+            href={`/${username}`}
+            className={`flex flex-col items-center gap-0.5 px-3 py-1 ${
+              pathname === `/${username}` ? "text-accent" : "text-muted"
+            }`}
+          >
+            <span className="text-lg">👤</span>
+            <span className="text-[10px]">Profile</span>
+          </Link>
         </div>
       </nav>
     </>

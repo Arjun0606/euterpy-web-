@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getArtworkUrl } from "@/lib/apple-music/client";
 
 interface ShelfItem {
@@ -41,7 +42,7 @@ export default function ShelfCard({ shelf }: Props) {
   const previewItems = shelf.items.slice(0, 4);
 
   return (
-    <div className="rounded-xl bg-card border border-border overflow-hidden hover:border-border/80 transition-colors">
+    <Link href={`/shelf/${shelf.id}`} className="block rounded-xl bg-card border border-border overflow-hidden hover:border-accent/30 transition-colors">
       {/* Cover art grid preview */}
       <div className="grid grid-cols-2 aspect-square">
         {[0, 1, 2, 3].map((i) => {
@@ -80,6 +81,6 @@ export default function ShelfCard({ shelf }: Props) {
           {shelf.item_count} {shelf.item_count === 1 ? "item" : "items"}
         </p>
       </div>
-    </div>
+    </Link>
   );
 }

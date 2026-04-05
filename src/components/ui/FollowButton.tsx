@@ -6,28 +6,44 @@ import { createClient } from "@/lib/supabase/client";
 interface Props {
   targetUserId: string;
   initialFollowing?: boolean;
+  isPrivate?: boolean;
 }
 
-export default function FollowButton({ targetUserId, initialFollowing = false }: Props) {
-  const [following, setFollowing] = useState(initialFollowing);
+export default function FollowButton({ targetUserId, initialFollowing = false, isPrivate = false }: Props) {
+  const [status, setStatus] = useState<"none" | "following" | "requested">("none");
   const [loading, setLoading] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        setCurrentUserId(user.id);
-        // Check if already following
-        supabase
-          .from("follows")
-          .select("id")
-          .eq("follower_id", user.id)
-          .eq("following_id", targetUserId)
-          .single()
-          .then(({ data }) => {
-            setFollowing(!!data);
-          });
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return;
+      setCurrentUserId(user.id);
+
+      // Check if already following
+      const { data: follow } = await supabase
+        .from("follows")
+        .select("id")
+        .eq("follower_id", user.id)
+        .eq("following_id", targetUserId)
+        .single();
+
+      if (follow) {
+        setStatus("following");
+        return;
+      }
+
+      // Check if there's a pending follow request
+      const { data: request } = await supabase
+        .from("follow_requests")
+        .select("id, status")
+        .eq("requester_id", user.id)
+        .eq("target_id", targetUserId)
+        .eq("status", "pending")
+        .single();
+
+      if (request) {
+        setStatus("requested");
       }
     });
   }, [targetUserId]);
@@ -41,19 +57,35 @@ export default function FollowButton({ targetUserId, initialFollowing = false }:
 
     const supabase = createClient();
 
-    if (following) {
+    if (status === "following") {
       await supabase
         .from("follows")
         .delete()
         .eq("follower_id", currentUserId)
         .eq("following_id", targetUserId);
-      setFollowing(false);
+      setStatus("none");
+    } else if (status === "requested") {
+      await supabase
+        .from("follow_requests")
+        .delete()
+        .eq("requester_id", currentUserId)
+        .eq("target_id", targetUserId);
+      setStatus("none");
     } else {
-      await supabase.from("follows").insert({
-        follower_id: currentUserId,
-        following_id: targetUserId,
-      });
-      setFollowing(true);
+      // New follow
+      if (isPrivate) {
+        await supabase.from("follow_requests").insert({
+          requester_id: currentUserId,
+          target_id: targetUserId,
+        });
+        setStatus("requested");
+      } else {
+        await supabase.from("follows").insert({
+          follower_id: currentUserId,
+          following_id: targetUserId,
+        });
+        setStatus("following");
+      }
     }
 
     setLoading(false);
@@ -64,12 +96,14 @@ export default function FollowButton({ targetUserId, initialFollowing = false }:
       onClick={handleToggle}
       disabled={loading}
       className={`px-5 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
-        following
+        status === "following"
           ? "border border-border text-muted hover:border-red-500/50 hover:text-red-400"
-          : "bg-accent text-white hover:bg-accent-hover"
+          : status === "requested"
+            ? "border border-border text-muted"
+            : "bg-accent text-white hover:bg-accent-hover"
       } disabled:opacity-50`}
     >
-      {following ? "Following" : "Follow"}
+      {status === "following" ? "Following" : status === "requested" ? "Requested" : "Follow"}
     </button>
   );
 }

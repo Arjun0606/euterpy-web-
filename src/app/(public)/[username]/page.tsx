@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ProfilePage from "@/components/profile/ProfilePage";
+import PrivateProfileGate from "@/components/profile/PrivateProfileGate";
 
 interface Props {
   params: Promise<{ username: string }>;
@@ -41,6 +42,42 @@ async function getFullProfile(username: string) {
     .single();
   if (!profile) return null;
 
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser();
+  const isOwner = user?.id === profile.id;
+
+  // Check if private profile should be gated
+  if (profile.is_private && !isOwner) {
+    // Check if current user follows this profile
+    let isFollowing = false;
+    let requestPending = false;
+
+    if (user) {
+      const { data: follow } = await supabase
+        .from("follows")
+        .select("id")
+        .eq("follower_id", user.id)
+        .eq("following_id", profile.id)
+        .single();
+      isFollowing = !!follow;
+
+      if (!isFollowing) {
+        const { data: request } = await supabase
+          .from("follow_requests")
+          .select("id")
+          .eq("requester_id", user.id)
+          .eq("target_id", profile.id)
+          .eq("status", "pending")
+          .single();
+        requestPending = !!request;
+      }
+    }
+
+    if (!isFollowing) {
+      return { gated: true as const, profile, requestPending };
+    }
+  }
+
   const [
     { data: getToKnowMe },
     { data: ratings },
@@ -63,7 +100,9 @@ async function getFullProfile(username: string) {
   }));
 
   return {
+    gated: false as const,
     profile,
+    currentUserId: user?.id || null,
     getToKnowMe: getToKnowMe || [],
     ratings: ratings || [],
     songRatings: songRatings || [],
@@ -77,6 +116,15 @@ export default async function UserProfilePage({ params }: Props) {
   const { username } = await params;
   const data = await getFullProfile(username);
   if (!data) notFound();
+
+  if (data.gated) {
+    return (
+      <PrivateProfileGate
+        profile={JSON.parse(JSON.stringify(data.profile))}
+        requestPending={data.requestPending}
+      />
+    );
+  }
 
   return (
     <ProfilePage

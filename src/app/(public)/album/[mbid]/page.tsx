@@ -31,6 +31,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${album.title} by ${album.artist_name}`,
     description: `${ratingText} on Euterpy. Community reactions and ratings.`,
+    openGraph: {
+      title: `${album.title} by ${album.artist_name} — Euterpy`,
+      description: `${ratingText}`,
+      images: [{ url: `/api/og/album/${appleId}`, width: 1200, height: 630 }],
+    },
   };
 }
 
@@ -49,6 +54,9 @@ async function getAlbumData(appleId: string) {
     .single();
 
   if (!album) return null;
+
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser();
 
   // Album ratings with profiles
   const { data: ratings } = await supabase
@@ -75,6 +83,7 @@ async function getAlbumData(appleId: string) {
     ratings: ratings || [],
     songRatings: songRatings || [],
     reviews: reviews || [],
+    userId: user?.id || null,
   };
 }
 
@@ -83,7 +92,7 @@ export default async function AlbumPage({ params }: Props) {
   const data = await getAlbumData(appleId);
   if (!data) notFound();
 
-  const { album, ratings, songRatings, reviews } = data;
+  const { album, ratings, songRatings, reviews, userId } = data;
 
   return (
     <div className="min-h-screen bg-background">
@@ -163,7 +172,7 @@ export default async function AlbumPage({ params }: Props) {
         <ReviewSection
           reviews={JSON.parse(JSON.stringify(reviews))}
           albumId={album.id}
-          userId="50529ee4-72ed-4595-b1a9-5ee51870c8d5"
+          userId={userId}
         />
 
         {/* Community Reactions */}

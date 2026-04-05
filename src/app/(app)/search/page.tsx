@@ -148,7 +148,7 @@ export default function SearchPage() {
                 href={
                   tab === "albums"
                     ? `/album/${item.appleId}`
-                    : `/album/${item.appleId}` // TODO: song detail page
+                    : `/song/${item.appleId}`
                 }
                 className="flex items-center gap-4 p-3 -mx-3 rounded-lg hover:bg-card-hover transition-colors"
               >
