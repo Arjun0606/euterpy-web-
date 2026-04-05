@@ -94,7 +94,7 @@ export default function ProfilePage({ data }: Props) {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-2xl mx-auto px-4 py-8">
+      <div className="max-w-3xl mx-auto px-4 sm:px-8 py-8">
         {/* ====== Profile Header ====== */}
         <div className="flex items-start gap-5 mb-6">
           <div className="w-20 h-20 rounded-full bg-card border-2 border-border flex items-center justify-center text-2xl text-muted shrink-0">

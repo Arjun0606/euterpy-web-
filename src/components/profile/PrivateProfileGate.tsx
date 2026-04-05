@@ -20,7 +20,7 @@ interface Props {
 export default function PrivateProfileGate({ profile, requestPending }: Props) {
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-2xl mx-auto px-4 py-8">
+      <div className="max-w-3xl mx-auto px-4 sm:px-8 py-8">
         <div className="flex flex-col items-center text-center">
           {/* Avatar */}
           <div className="w-24 h-24 rounded-full bg-card border-2 border-border flex items-center justify-center text-3xl text-muted mb-4">

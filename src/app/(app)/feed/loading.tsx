@@ -1,6 +1,6 @@
 export default function FeedLoading() {
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
+    <div className="max-w-3xl mx-auto px-4 sm:px-8 py-8">
       <div className="h-8 w-32 bg-card rounded-lg animate-pulse mb-6" />
       <div className="space-y-4">
         {[1, 2, 3, 4, 5].map((i) => (

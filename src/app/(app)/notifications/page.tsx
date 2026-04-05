@@ -24,7 +24,7 @@ export default async function NotificationsPage() {
     .eq("is_read", false);
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
+    <div className="max-w-3xl mx-auto px-4 sm:px-8 py-8">
       <h1 className="font-display text-2xl mb-6">Notifications</h1>
       <NotificationsList initial={JSON.parse(JSON.stringify(notifications || []))} />
     </div>

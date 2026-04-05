@@ -48,7 +48,7 @@ export default function ShelfDetail({ shelf, items: initialItems, isOwner }: Pro
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
+    <div className="max-w-3xl mx-auto px-4 sm:px-8 py-8">
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>

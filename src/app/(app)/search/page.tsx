@@ -75,7 +75,7 @@ export default function SearchPage() {
     <div className="min-h-screen bg-background">
       {/* Top Bar */}
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="max-w-3xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between">
           <Link href="/feed">
             <h1 className="font-display text-2xl">Euterpy</h1>
           </Link>
@@ -90,7 +90,7 @@ export default function SearchPage() {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-6">
+      <main className="max-w-3xl mx-auto px-4 sm:px-8 py-6">
         {/* Search Input */}
         <div className="mb-4">
           <input

@@ -110,7 +110,7 @@ export default async function AlbumPage({ params }: Props) {
         </div>
       )}
 
-      <div className="max-w-2xl mx-auto px-4 py-12 relative z-10">
+      <div className="max-w-3xl mx-auto px-4 sm:px-8 py-12 relative z-10">
         {/* Album Header */}
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8 mb-12">
           {/* Vinyl Cover */}

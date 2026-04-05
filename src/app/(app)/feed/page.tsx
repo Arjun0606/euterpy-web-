@@ -74,7 +74,7 @@ export default async function HomePage() {
   allFeedEntries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
-    <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6">
+    <main className="max-w-3xl mx-auto px-4 sm:px-8 py-6">
       {/* Search bar */}
       <HomeSearch />
 

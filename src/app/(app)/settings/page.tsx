@@ -155,7 +155,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-8">
+    <div className="max-w-2xl mx-auto px-4 sm:px-8 py-8">
       <h2 className="text-xl font-semibold mb-8">Settings</h2>
 
       <div className="space-y-6">
