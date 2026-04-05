@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import TasteProfile from "./TasteProfile";
 import TopArtistsChart from "./TopArtistsChart";
 import GenreChart from "./GenreChart";
 import SongLengthPie from "./SongLengthPie";
@@ -32,6 +33,7 @@ interface Rating {
   score: number;
   reaction: string | null;
   ownership?: string;
+  created_at?: string;
   albums: Album;
 }
 
@@ -39,6 +41,7 @@ interface SongRating {
   id: string;
   score: number;
   reaction: string | null;
+  created_at?: string;
   songs: Song;
 }
 
@@ -49,10 +52,6 @@ interface Props {
 
 export default function StatsView({ ratings, songRatings }: Props) {
   const [viewMode, setViewMode] = useState<"album" | "song">("album");
-
-  // ============================================================
-  // Computed stats
-  // ============================================================
 
   const stats = useMemo(() => {
     // Top artists by album count
@@ -69,21 +68,21 @@ export default function StatsView({ ratings, songRatings }: Props) {
       artistSongCounts[artist] = (artistSongCounts[artist] || 0) + 1;
     }
 
-    // Genre distribution (from albums)
+    // Genre distribution
     const genreCounts: Record<string, number> = {};
     for (const r of ratings) {
-      const genres = r.albums.genre_names || [];
-      for (const g of genres) {
-        if (g !== "Music") {
-          genreCounts[g] = (genreCounts[g] || 0) + 1;
-        }
+      for (const g of (r.albums.genre_names || [])) {
+        if (g !== "Music") genreCounts[g] = (genreCounts[g] || 0) + 1;
+      }
+    }
+    for (const sr of songRatings) {
+      for (const g of (sr.songs.genre_names || [])) {
+        if (g !== "Music") genreCounts[g] = (genreCounts[g] || 0) + 1;
       }
     }
 
     // Song length distribution
-    let under3 = 0;
-    let between3and5 = 0;
-    let over5 = 0;
+    let under3 = 0, between3and5 = 0, over5 = 0;
     for (const sr of songRatings) {
       const ms = sr.songs.duration_ms;
       if (!ms) continue;
@@ -94,52 +93,35 @@ export default function StatsView({ ratings, songRatings }: Props) {
     }
 
     // Ownership distribution
-    const ownershipCounts: Record<string, number> = {
-      vinyl: 0,
-      cd: 0,
-      cassette: 0,
-      digital: 0,
-    };
+    const ownershipCounts: Record<string, number> = { vinyl: 0, cd: 0, cassette: 0, digital: 0 };
     for (const r of ratings) {
       const type = r.ownership || "digital";
       ownershipCounts[type] = (ownershipCounts[type] || 0) + 1;
     }
 
-    // Total minutes listened (estimated from songs)
+    // Total minutes
     let totalMinutes = 0;
     for (const sr of songRatings) {
-      if (sr.songs.duration_ms) {
-        totalMinutes += sr.songs.duration_ms / 60000;
-      }
+      if (sr.songs.duration_ms) totalMinutes += sr.songs.duration_ms / 60000;
     }
 
     // Minutes by genre
     const genreMinutes: Record<string, number> = {};
     for (const sr of songRatings) {
-      const genres = sr.songs.genre_names || [];
       const mins = (sr.songs.duration_ms || 0) / 60000;
-      for (const g of genres) {
-        if (g !== "Music") {
-          genreMinutes[g] = (genreMinutes[g] || 0) + mins;
-        }
+      for (const g of (sr.songs.genre_names || [])) {
+        if (g !== "Music") genreMinutes[g] = (genreMinutes[g] || 0) + mins;
       }
     }
 
-    // Rating distribution (albums)
+    // Rating distributions
     const albumRatingDist: Record<string, number> = {};
-    for (const r of ratings) {
-      const key = r.score.toString();
-      albumRatingDist[key] = (albumRatingDist[key] || 0) + 1;
-    }
+    for (const r of ratings) albumRatingDist[r.score.toString()] = (albumRatingDist[r.score.toString()] || 0) + 1;
 
-    // Rating distribution (songs)
     const songRatingDist: Record<string, number> = {};
-    for (const sr of songRatings) {
-      const key = sr.score.toString();
-      songRatingDist[key] = (songRatingDist[key] || 0) + 1;
-    }
+    for (const sr of songRatings) songRatingDist[sr.score.toString()] = (songRatingDist[sr.score.toString()] || 0) + 1;
 
-    // Decade distribution (albums)
+    // Decade distribution
     const albumDecades: Record<string, number> = {};
     for (const r of ratings) {
       if (r.albums.release_date) {
@@ -149,9 +131,41 @@ export default function StatsView({ ratings, songRatings }: Props) {
       }
     }
 
-    // Decade distribution (songs — from album_name or parent data)
-    const songDecades: Record<string, number> = {};
-    // Songs don't have release_date directly, so we skip this for now
+    // === NEW: Taste Profile data ===
+
+    // Average rating
+    const allScores = [...ratings.map((r) => r.score), ...songRatings.map((sr) => sr.score)];
+    const avgRating = allScores.length > 0 ? allScores.reduce((a, b) => a + b, 0) / allScores.length : 0;
+
+    // Top genre
+    const topGenre = Object.entries(genreCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+
+    // Top artist (by albums)
+    const topArtist = Object.entries(artistAlbumCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+
+    // Top decade
+    const topDecade = Object.entries(albumDecades).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+
+    // Dominant ownership
+    const physicalOwnership = Object.entries(ownershipCounts)
+      .filter(([k]) => k !== "digital")
+      .sort((a, b) => b[1] - a[1]);
+    const dominantOwnership = physicalOwnership[0]?.[1] > 0 ? physicalOwnership[0][0] : null;
+
+    // Superfan artists (3+ albums rated)
+    const superfanArtists = Object.entries(artistAlbumCounts)
+      .filter(([, count]) => count >= 2)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([name, count]) => ({ name, count }));
+
+    // Highest rated album
+    const highestRatedAlbum = ratings.length > 0
+      ? ratings.reduce((best, r) => r.score > best.score ? r : best, ratings[0])
+      : null;
+    const highestRated = highestRatedAlbum
+      ? { title: highestRatedAlbum.albums.title, artist: highestRatedAlbum.albums.artist_name, score: highestRatedAlbum.score }
+      : null;
 
     return {
       artistAlbumCounts,
@@ -164,34 +178,47 @@ export default function StatsView({ ratings, songRatings }: Props) {
       albumRatingDist,
       songRatingDist,
       albumDecades,
-      songDecades,
+      avgRating,
+      topGenre,
+      topArtist,
+      topDecade,
+      dominantOwnership,
+      superfanArtists,
+      highestRated,
     };
   }, [ratings, songRatings]);
 
-  const isEmpty = ratings.length === 0 && songRatings.length === 0;
-
-  if (isEmpty) {
+  if (ratings.length === 0 && songRatings.length === 0) {
     return (
       <div className="text-center py-20">
         <p className="text-muted text-lg">No stats yet.</p>
-        <p className="text-muted/60 text-sm mt-2">
-          Rate some albums and songs to see your taste breakdown.
-        </p>
+        <p className="text-muted/60 text-sm mt-2">Rate some albums and songs to see your taste breakdown.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-10">
+      {/* Taste Profile — the hero summary */}
+      <TasteProfile
+        topGenre={stats.topGenre}
+        topArtist={stats.topArtist}
+        albumCount={ratings.length}
+        songCount={songRatings.length}
+        avgRating={stats.avgRating}
+        topDecade={stats.topDecade}
+        dominantOwnership={stats.dominantOwnership}
+        superfanArtists={stats.superfanArtists}
+        highestRated={stats.highestRated}
+      />
+
       {/* Toggle: Album / Song */}
       <div className="flex justify-center">
         <div className="flex gap-1 bg-card rounded-lg p-1 border border-border">
           <button
             onClick={() => setViewMode("album")}
             className={`px-6 py-2 text-sm font-medium rounded-md transition-colors ${
-              viewMode === "album"
-                ? "bg-accent text-white"
-                : "text-muted hover:text-foreground"
+              viewMode === "album" ? "bg-accent text-white" : "text-muted hover:text-foreground"
             }`}
           >
             By Album
@@ -199,9 +226,7 @@ export default function StatsView({ ratings, songRatings }: Props) {
           <button
             onClick={() => setViewMode("song")}
             className={`px-6 py-2 text-sm font-medium rounded-md transition-colors ${
-              viewMode === "song"
-                ? "bg-accent text-white"
-                : "text-muted hover:text-foreground"
+              viewMode === "song" ? "bg-accent text-white" : "text-muted hover:text-foreground"
             }`}
           >
             By Song
@@ -209,7 +234,7 @@ export default function StatsView({ ratings, songRatings }: Props) {
         </div>
       </div>
 
-      {/* 5. All time minutes listened */}
+      {/* All time numbers */}
       <ListeningStats
         totalMinutes={stats.totalMinutes}
         totalAlbums={ratings.length}
@@ -217,41 +242,30 @@ export default function StatsView({ ratings, songRatings }: Props) {
         genreMinutes={stats.genreMinutes}
       />
 
-      {/* 1. Top Artists — horizontal bar */}
+      {/* Top Artists */}
       <TopArtistsChart
-        data={
-          viewMode === "album"
-            ? stats.artistAlbumCounts
-            : stats.artistSongCounts
-        }
+        data={viewMode === "album" ? stats.artistAlbumCounts : stats.artistSongCounts}
         label={viewMode === "album" ? "Albums" : "Songs"}
       />
 
-      {/* 2. Genres — vertical bar */}
+      {/* Genres */}
       <GenreChart data={stats.genreCounts} />
 
-      {/* 7 & 8. Rating Distribution with toggle */}
+      {/* Rating Distribution */}
       <RatingDistribution
         albumData={stats.albumRatingDist}
         songData={stats.songRatingDist}
         viewMode={viewMode}
       />
 
-      {/* 9. By Decade */}
-      <DecadeChart
-        albumData={stats.albumDecades}
-        viewMode={viewMode}
-      />
+      {/* By Decade */}
+      <DecadeChart albumData={stats.albumDecades} viewMode={viewMode} />
 
-      {/* 3. Song Length pie */}
-      {songRatings.length > 0 && (
-        <SongLengthPie data={stats.songLength} />
-      )}
+      {/* Song Length */}
+      {songRatings.length > 0 && <SongLengthPie data={stats.songLength} />}
 
-      {/* 4. Ownership pie */}
-      {ratings.length > 0 && (
-        <OwnershipPie data={stats.ownershipCounts} />
-      )}
+      {/* Ownership */}
+      {ratings.length > 0 && <OwnershipPie data={stats.ownershipCounts} />}
     </div>
   );
 }
