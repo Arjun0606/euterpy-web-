@@ -1,7 +1,8 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getArtworkUrl } from "@/lib/apple-music/client";
+import { createServiceClient } from "@/lib/supabase/server";
+import { getArtworkUrl, getSong as fetchSongFromApple } from "@/lib/apple-music/client";
 import SongActions from "./SongActions";
 import ReviewSection from "@/components/album/ReviewSection";
 import Stars from "@/components/ui/Stars";
@@ -41,14 +42,34 @@ export default async function SongPage({ params }: Props) {
   const { appleId } = await params;
   const supabase = await createClient();
 
-  // Ensure song exists in DB (fetch from Apple Music if needed)
-  const songRes = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL ? "" : ""}${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"}/api/songs/${appleId}`, { cache: "no-store" }).catch(() => null);
-
-  const { data: song } = await supabase
+  // Check DB first, if not found fetch from Apple Music and insert
+  let { data: song } = await supabase
     .from("songs")
     .select("*")
     .eq("apple_id", appleId)
     .single();
+
+  if (!song) {
+    const appleSong = await fetchSongFromApple(appleId);
+    if (!appleSong) notFound();
+
+    const serviceClient = createServiceClient();
+    const { data: inserted } = await serviceClient.from("songs").insert({
+      apple_id: appleId,
+      title: appleSong.attributes.name,
+      artist_name: appleSong.attributes.artistName,
+      album_name: appleSong.attributes.albumName,
+      duration_ms: appleSong.attributes.durationInMillis,
+      artwork_url: appleSong.attributes.artwork.url,
+      track_number: appleSong.attributes.trackNumber,
+      genre_names: appleSong.attributes.genreNames,
+      composer_name: appleSong.attributes.composerName || null,
+      apple_url: appleSong.attributes.url || null,
+    }).select().single();
+
+    if (!inserted) notFound();
+    song = inserted;
+  }
 
   if (!song) notFound();
 
@@ -113,13 +134,24 @@ export default async function SongPage({ params }: Props) {
                 )}
               </p>
             )}
-            <div className="flex items-center gap-3 text-sm text-muted/40 mb-6 justify-center sm:justify-start">
+            <div className="flex flex-wrap items-center gap-3 text-sm text-muted/40 mb-2 justify-center sm:justify-start">
               {song.track_number && <span>Track {song.track_number}</span>}
               {durationMin !== null && <span>{durationMin}:{String(durationSec).padStart(2, "0")}</span>}
               {song.genre_names?.length > 0 && (
                 <span>{song.genre_names.filter((g: string) => g !== "Music").join(" · ")}</span>
               )}
             </div>
+            {song.composer_name && (
+              <p className="text-xs text-muted/30 mb-2">Written by {song.composer_name}</p>
+            )}
+            <a
+              href={song.apple_url || `https://music.apple.com/song/${appleId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 mb-4 px-4 py-1.5 bg-card border border-border rounded-full text-xs text-muted hover:text-foreground hover:border-foreground/20 transition-colors"
+            >
+              <span>🎵</span> Listen on Apple Music
+            </a>
 
             {/* Rating Summary */}
             {song.rating_count > 0 ? (

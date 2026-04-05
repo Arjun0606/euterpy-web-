@@ -80,13 +80,27 @@ export interface AppleMusicAlbum {
     artistName: string;
     releaseDate?: string;
     artwork: {
-      url: string; // template: {w}x{h}
+      url: string;
       width: number;
       height: number;
     };
     genreNames: string[];
     trackCount: number;
     isComplete: boolean;
+    editorialNotes?: {
+      standard?: string;
+      short?: string;
+      tagline?: string;
+    };
+    recordLabel?: string;
+    copyright?: string;
+    contentRating?: string;
+    url?: string;
+    isSingle?: boolean;
+    isCompilation?: boolean;
+  };
+  relationships?: {
+    artists?: { data: { id: string; type: string; attributes?: { name: string; url?: string } }[] };
   };
 }
 
@@ -106,6 +120,10 @@ export interface AppleMusicSong {
     };
     genreNames: string[];
     trackNumber: number;
+    composerName?: string;
+    contentRating?: string;
+    isrc?: string;
+    url?: string;
   };
 }
 
@@ -157,10 +175,25 @@ export async function getAlbum(
   appleId: string
 ): Promise<AppleMusicAlbum | null> {
   try {
-    const data = await appleRequest(`/catalog/us/albums/${appleId}`);
+    const data = await appleRequest(`/catalog/us/albums/${appleId}?include=artists`);
     return data.data?.[0] || null;
   } catch {
     return null;
+  }
+}
+
+/**
+ * Get albums related to a given album (Apple Music's "You Might Also Like")
+ */
+export async function getRelatedAlbums(
+  appleId: string,
+  limit = 6
+): Promise<AppleMusicAlbum[]> {
+  try {
+    const data = await appleRequest(`/catalog/us/albums/${appleId}/related?limit=${limit}`);
+    return data.data || [];
+  } catch {
+    return [];
   }
 }
 

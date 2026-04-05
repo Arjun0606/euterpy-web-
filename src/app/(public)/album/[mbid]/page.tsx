@@ -135,10 +135,17 @@ export default async function AlbumPage({ params }: Props) {
               </p>
             )}
             {album.genre_names && album.genre_names.length > 0 && (
-              <p className="text-xs text-muted/40 mb-6">
+              <p className="text-xs text-muted/40 mb-1">
                 {album.genre_names.filter((g: string) => g !== "Music").join(" · ")}
               </p>
             )}
+            {album.record_label && (
+              <p className="text-xs text-muted/30 mb-1">{album.record_label}{album.is_single ? " · Single" : ""}</p>
+            )}
+            {album.copyright && (
+              <p className="text-[10px] text-muted/20 mb-4">{album.copyright}</p>
+            )}
+            {!album.record_label && !album.copyright && <div className="mb-4" />}
 
             {/* Rating Summary */}
             {album.rating_count > 0 ? (
@@ -157,7 +164,7 @@ export default async function AlbumPage({ params }: Props) {
 
             {/* Listen on Apple Music */}
             <a
-              href={`https://music.apple.com/album/${appleId}`}
+              href={album.apple_url || `https://music.apple.com/album/${appleId}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 mt-4 px-4 py-1.5 bg-card border border-border rounded-full text-xs text-muted hover:text-foreground hover:border-foreground/20 transition-colors"
@@ -181,6 +188,14 @@ export default async function AlbumPage({ params }: Props) {
 
         {/* Track Listing */}
         <TrackList albumAppleId={appleId} songRatings={songRatings} />
+
+        {/* Editorial Notes (from Apple Music) */}
+        {album.editorial_notes && (
+          <div className="mb-10">
+            <h2 className="text-xs uppercase tracking-widest text-muted mb-3">About This Album</h2>
+            <p className="text-sm text-muted/80 leading-relaxed">{album.editorial_notes}</p>
+          </div>
+        )}
 
         {/* Reviews */}
         <ReviewSection

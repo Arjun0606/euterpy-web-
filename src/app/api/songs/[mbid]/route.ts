@@ -35,6 +35,8 @@ export async function GET(
       artwork_url: appleSong.attributes.artwork.url,
       track_number: appleSong.attributes.trackNumber,
       genre_names: appleSong.attributes.genreNames,
+      composer_name: appleSong.attributes.composerName || null,
+      apple_url: appleSong.attributes.url || null,
     })
     .select()
     .single();
