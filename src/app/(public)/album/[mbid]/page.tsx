@@ -5,6 +5,7 @@ import { getArtworkUrl } from "@/lib/apple-music/client";
 import VinylCover from "@/components/ui/VinylCover";
 import AlbumActions from "@/components/album/AlbumActions";
 import TrackList from "@/components/album/TrackList";
+import ReviewSection from "@/components/album/ReviewSection";
 import Stars from "@/components/ui/Stars";
 
 interface Props {
@@ -62,10 +63,18 @@ async function getAlbumData(appleId: string) {
     .select("*, songs!inner(apple_id, album_apple_id)")
     .eq("songs.album_apple_id", appleId);
 
+  // Reviews
+  const { data: reviews } = await supabase
+    .from("reviews")
+    .select("*, profiles(username, display_name, avatar_url)")
+    .eq("album_id", album.id)
+    .order("created_at", { ascending: false });
+
   return {
     album,
     ratings: ratings || [],
     songRatings: songRatings || [],
+    reviews: reviews || [],
   };
 }
 
@@ -74,7 +83,7 @@ export default async function AlbumPage({ params }: Props) {
   const data = await getAlbumData(appleId);
   if (!data) notFound();
 
-  const { album, ratings, songRatings } = data;
+  const { album, ratings, songRatings, reviews } = data;
 
   return (
     <div className="min-h-screen bg-background">
@@ -149,6 +158,13 @@ export default async function AlbumPage({ params }: Props) {
 
         {/* Track Listing */}
         <TrackList albumAppleId={appleId} songRatings={songRatings} />
+
+        {/* Reviews */}
+        <ReviewSection
+          reviews={JSON.parse(JSON.stringify(reviews))}
+          albumId={album.id}
+          userId="50529ee4-72ed-4595-b1a9-5ee51870c8d5"
+        />
 
         {/* Community Reactions */}
         <div>

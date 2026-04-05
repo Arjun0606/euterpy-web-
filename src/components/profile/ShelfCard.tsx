@@ -35,7 +35,6 @@ interface Shelf {
 
 interface Props {
   shelf: Shelf;
-  username: string;
 }
 
 export default function ShelfCard({ shelf }: Props) {
