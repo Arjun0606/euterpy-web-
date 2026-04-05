@@ -1,20 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { SEED_ALBUMS } from "@/lib/seed-albums";
 import { getArtworkUrl } from "@/lib/apple-music/client";
-import Link from "next/link";
 
 type Step = "rate" | "gtkm" | "follow";
 
-interface AlbumData {
+interface AlbumResult {
   appleId: string;
   title: string;
-  artist: string;
+  artistName: string;
   artworkUrl: string | null;
-  dbId: string | null;
+  dbId?: string | null;
+}
+
+interface RatedAlbum extends AlbumResult {
+  score: number;
+  dbId: string;
 }
 
 interface SuggestedUser {
@@ -33,80 +36,115 @@ function art(url: string | null, size = 200): string | null {
 
 export default function WelcomePage() {
   const [step, setStep] = useState<Step>("rate");
-  const [albums, setAlbums] = useState<AlbumData[]>([]);
-  const [ratings, setRatings] = useState<Record<string, number>>({});
-  const [gtkmSelections, setGtkmSelections] = useState<(string | null)[]>([null, null, null]);
-  const [gtkmStories, setGtkmStories] = useState<string[]>(["", "", ""]);
-  const [suggestedUsers, setSuggestedUsers] = useState<SuggestedUser[]>([]);
-  const [followedIds, setFollowedIds] = useState<Set<string>>(new Set());
-  const [saving, setSaving] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
 
-  const ratedCount = Object.keys(ratings).length;
-  const gtkmCount = gtkmSelections.filter(Boolean).length;
-  const followCount = followedIds.size;
+  // Step 1: Rate
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<AlbumResult[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [selectedAlbum, setSelectedAlbum] = useState<AlbumResult | null>(null);
+  const [ratingScore, setRatingScore] = useState(0);
+  const [ratedAlbums, setRatedAlbums] = useState<RatedAlbum[]>([]);
+  const [saving, setSaving] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  // Load albums and auth
+  // Step 2: GTKM
+  const [gtkmSearch, setGtkmSearch] = useState("");
+  const [gtkmResults, setGtkmResults] = useState<AlbumResult[]>([]);
+  const [gtkmLoading, setGtkmLoading] = useState(false);
+  const [gtkmSlot, setGtkmSlot] = useState<number | null>(null);
+  const [gtkmSelections, setGtkmSelections] = useState<(RatedAlbum | null)[]>([null, null, null]);
+  const [gtkmStories, setGtkmStories] = useState(["", "", ""]);
+  const gtkmDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Step 3: Follow
+  const [suggestedUsers, setSuggestedUsers] = useState<SuggestedUser[]>([]);
+  const [followedIds, setFollowedIds] = useState<Set<string>>(new Set());
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) setUserId(user.id);
     });
-
-    // Fetch album data from our API (ensures they exist in DB)
-    async function loadAlbums() {
-      const shuffled = [...SEED_ALBUMS].sort(() => Math.random() - 0.5).slice(0, 12);
-      const loaded: AlbumData[] = [];
-      for (const seed of shuffled) {
-        try {
-          const res = await fetch(`/api/albums/${seed.appleId}`);
-          const data = await res.json();
-          if (data.album) {
-            loaded.push({
-              appleId: seed.appleId,
-              title: data.album.title || seed.title,
-              artist: data.album.artist_name || seed.artist,
-              artworkUrl: data.album.artwork_url,
-              dbId: data.album.id,
-            });
-          }
-        } catch {
-          loaded.push({ appleId: seed.appleId, title: seed.title, artist: seed.artist, artworkUrl: null, dbId: null });
-        }
-      }
-      setAlbums(loaded);
-    }
-    loadAlbums();
   }, []);
 
-  function handleRate(appleId: string, score: number) {
-    setRatings((prev) => {
-      const next = { ...prev };
-      if (next[appleId] === score) {
-        delete next[appleId];
-      } else {
-        next[appleId] = score;
-      }
-      return next;
-    });
+  // Search for albums (step 1)
+  const searchAlbums = useCallback(async (q: string) => {
+    if (q.trim().length < 2) { setSearchResults([]); return; }
+    setSearchLoading(true);
+    try {
+      const res = await fetch(`/api/albums/search?q=${encodeURIComponent(q.trim())}`);
+      const data = await res.json();
+      setSearchResults((data.results || []).slice(0, 8));
+    } catch { setSearchResults([]); }
+    setSearchLoading(false);
+  }, []);
+
+  function handleSearchInput(value: string) {
+    setSearchQuery(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => searchAlbums(value), 350);
   }
 
-  async function submitRatings() {
-    if (!userId || ratedCount < 5) return;
+  async function handleRateAlbum() {
+    if (!selectedAlbum || ratingScore === 0 || !userId) return;
     setSaving(true);
 
-    for (const [appleId, score] of Object.entries(ratings)) {
-      const album = albums.find((a) => a.appleId === appleId);
-      if (!album?.dbId) continue;
-      await supabase.from("ratings").upsert(
-        { user_id: userId, album_id: album.dbId, score },
-        { onConflict: "user_id,album_id" }
-      );
-    }
+    // Ensure album exists in DB
+    const res = await fetch(`/api/albums/${selectedAlbum.appleId}`);
+    const { album } = await res.json();
+    if (!album) { setSaving(false); return; }
 
+    await supabase.from("ratings").upsert(
+      { user_id: userId, album_id: album.id, score: ratingScore },
+      { onConflict: "user_id,album_id" }
+    );
+
+    setRatedAlbums((prev) => [...prev, {
+      ...selectedAlbum,
+      dbId: album.id,
+      score: ratingScore,
+    }]);
+
+    setSelectedAlbum(null);
+    setRatingScore(0);
+    setSearchQuery("");
+    setSearchResults([]);
     setSaving(false);
-    setStep("gtkm");
+  }
+
+  // Search for GTKM albums (step 2)
+  const searchGtkm = useCallback(async (q: string) => {
+    if (q.trim().length < 2) { setGtkmResults([]); return; }
+    setGtkmLoading(true);
+    try {
+      const res = await fetch(`/api/albums/search?q=${encodeURIComponent(q.trim())}`);
+      const data = await res.json();
+      setGtkmResults((data.results || []).slice(0, 6));
+    } catch { setGtkmResults([]); }
+    setGtkmLoading(false);
+  }, []);
+
+  function handleGtkmSearchInput(value: string) {
+    setGtkmSearch(value);
+    if (gtkmDebounceRef.current) clearTimeout(gtkmDebounceRef.current);
+    gtkmDebounceRef.current = setTimeout(() => searchGtkm(value), 350);
+  }
+
+  async function handleSelectGtkmAlbum(album: AlbumResult) {
+    if (gtkmSlot === null) return;
+    // Ensure it's in DB
+    const res = await fetch(`/api/albums/${album.appleId}`);
+    const { album: dbAlbum } = await res.json();
+    if (!dbAlbum) return;
+
+    const next = [...gtkmSelections];
+    next[gtkmSlot] = { ...album, dbId: dbAlbum.id, score: 0 };
+    setGtkmSelections(next);
+    setGtkmSlot(null);
+    setGtkmSearch("");
+    setGtkmResults([]);
   }
 
   async function submitGtkm() {
@@ -114,11 +152,8 @@ export default function WelcomePage() {
     setSaving(true);
 
     for (let i = 0; i < 3; i++) {
-      const appleId = gtkmSelections[i];
-      if (!appleId) continue;
-      const album = albums.find((a) => a.appleId === appleId);
+      const album = gtkmSelections[i];
       if (!album?.dbId) continue;
-
       await supabase.from("get_to_know_me").upsert(
         { user_id: userId, position: i + 1, album_id: album.dbId, story: gtkmStories[i].trim() || null },
         { onConflict: "user_id,position" }
@@ -126,20 +161,18 @@ export default function WelcomePage() {
     }
 
     setSaving(false);
-    // Load suggested users for follow step
     await loadSuggestions();
     setStep("follow");
   }
 
   async function loadSuggestions() {
-    if (!userId) return;
-    const ratedAlbumIds = albums.filter((a) => ratings[a.appleId] && a.dbId).map((a) => a.dbId!);
-    if (ratedAlbumIds.length === 0) return;
+    if (!userId || ratedAlbums.length === 0) return;
+    const albumIds = ratedAlbums.map((a) => a.dbId);
 
     const { data: similar } = await supabase
       .from("ratings")
       .select("user_id, profiles(id, username, display_name, avatar_url, album_count)")
-      .in("album_id", ratedAlbumIds)
+      .in("album_id", albumIds)
       .neq("user_id", userId)
       .limit(50);
 
@@ -172,157 +205,204 @@ export default function WelcomePage() {
     setFollowedIds(next);
   }
 
-  function finish() {
-    router.push("/feed");
-  }
-
   const gtkmLabels = ["The album that shaped me", "The one I keep coming back to", "The one that changed everything"];
-  const ratedAlbums = albums.filter((a) => ratings[a.appleId]);
 
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 py-8">
         {/* Progress */}
         <div className="flex items-center gap-2 mb-8">
-          {["rate", "gtkm", "follow"].map((s, i) => (
+          {["rate", "gtkm", "follow"].map((s) => (
             <div key={s} className={`h-1 flex-1 rounded-full transition-colors ${
-              (s === "rate" && step === "rate") || (s === "gtkm" && step === "gtkm") || (s === "follow" && step === "follow")
-                ? "bg-accent"
-                : step === "gtkm" && s === "rate" ? "bg-accent/40"
-                : step === "follow" && (s === "rate" || s === "gtkm") ? "bg-accent/40"
+              s === step ? "bg-accent"
+                : (step === "gtkm" && s === "rate") || (step === "follow" && s !== "follow") ? "bg-accent/40"
                 : "bg-border"
             }`} />
           ))}
         </div>
 
-        {/* Step 1: Rate Albums */}
+        {/* ===== STEP 1: RATE ===== */}
         {step === "rate" && (
           <div>
             <h1 className="font-display text-3xl mb-2">Welcome to Euterpy</h1>
-            <p className="text-muted mb-1">Rate at least 5 albums to get started.</p>
-            <p className="text-xs text-muted/40 mb-8">This builds your taste profile and populates your collection.</p>
+            <p className="text-muted mb-6">Search and rate at least 5 albums to build your shelf.</p>
 
-            {albums.length === 0 ? (
-              <div className="text-center py-16">
-                <p className="text-muted">Loading albums...</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
-                {albums.map((album) => {
-                  const score = ratings[album.appleId] || 0;
-                  return (
-                    <div key={album.appleId} className="text-center">
-                      <div className={`aspect-square rounded-xl overflow-hidden bg-card border-2 mb-2 transition-all ${
-                        score > 0 ? "border-accent shadow-lg shadow-accent/10" : "border-border"
-                      }`}>
-                        {album.artworkUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={art(album.artworkUrl)!} alt={album.title} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-border text-xl">♪</div>
-                        )}
+            {/* Search */}
+            <div className="relative mb-6">
+              <input
+                type="text"
+                placeholder="Search for an album..."
+                value={searchQuery}
+                onChange={(e) => handleSearchInput(e.target.value)}
+                autoFocus
+                className="w-full px-4 py-3 bg-card border border-border rounded-xl text-sm placeholder:text-muted/30 focus:outline-none focus:border-accent transition-colors"
+              />
+              {searchLoading && <p className="text-xs text-muted mt-2">Searching Apple Music...</p>}
+
+              {/* Results */}
+              {searchResults.length > 0 && !selectedAlbum && (
+                <div className="mt-2 border border-border rounded-xl bg-background overflow-hidden">
+                  {searchResults.map((album) => (
+                    <button
+                      key={album.appleId}
+                      onClick={() => { setSelectedAlbum(album); setSearchResults([]); }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-card-hover transition-colors text-left"
+                    >
+                      {album.artworkUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={art(album.artworkUrl, 80)!} alt="" className="w-10 h-10 rounded object-cover" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{album.title}</p>
+                        <p className="text-xs text-muted truncate">{album.artistName}</p>
                       </div>
-                      <p className="text-xs font-medium truncate">{album.title}</p>
-                      <p className="text-[10px] text-muted truncate mb-1.5">{album.artist}</p>
-                      <div className="flex justify-center gap-0.5">
-                        {[1, 2, 3, 4, 5].map((v) => (
-                          <button
-                            key={v}
-                            onClick={() => handleRate(album.appleId, v)}
-                            className={`text-sm transition-colors ${v <= score ? "text-accent" : "text-border/40 hover:text-accent/40"}`}
-                          >
-                            ★
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Selected album — rate it */}
+            {selectedAlbum && (
+              <div className="bg-card border border-border rounded-xl p-5 mb-6">
+                <div className="flex items-center gap-4 mb-4">
+                  {selectedAlbum.artworkUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={art(selectedAlbum.artworkUrl, 160)!} alt="" className="w-16 h-16 rounded-lg object-cover" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{selectedAlbum.title}</p>
+                    <p className="text-sm text-muted truncate">{selectedAlbum.artistName}</p>
+                  </div>
+                  <button onClick={() => { setSelectedAlbum(null); setRatingScore(0); }} className="text-xs text-muted hover:text-foreground">Cancel</button>
+                </div>
+                <div className="flex items-center justify-center gap-1 mb-4">
+                  {[1, 2, 3, 4, 5].map((v) => (
+                    <button key={v} onClick={() => setRatingScore(v === ratingScore ? 0 : v)}
+                      className={`text-3xl transition-colors ${v <= ratingScore ? "text-accent" : "text-border hover:text-accent/50"}`}>★</button>
+                  ))}
+                </div>
+                <button
+                  onClick={handleRateAlbum}
+                  disabled={ratingScore === 0 || saving}
+                  className="w-full py-2.5 bg-accent text-white font-medium rounded-lg text-sm hover:bg-accent-hover disabled:opacity-40"
+                >
+                  {saving ? "Saving..." : `Log ★ ${ratingScore}`}
+                </button>
               </div>
             )}
 
-            <div className="sticky bottom-4 mt-8">
-              <button
-                onClick={submitRatings}
-                disabled={ratedCount < 5 || saving}
-                className="w-full py-3.5 bg-accent text-white font-medium rounded-xl hover:bg-accent-hover disabled:opacity-40 transition-all text-sm"
-              >
-                {saving ? "Saving..." : ratedCount < 5 ? `Rate ${5 - ratedCount} more to continue` : `Continue with ${ratedCount} ratings`}
-              </button>
-            </div>
+            {/* Rated albums so far */}
+            {ratedAlbums.length > 0 && (
+              <div className="mb-6">
+                <p className="text-xs text-muted/40 mb-3">Rated ({ratedAlbums.length})</p>
+                <div className="flex gap-2 flex-wrap">
+                  {ratedAlbums.map((album) => (
+                    <div key={album.appleId} className="flex items-center gap-2 px-3 py-1.5 bg-card border border-border rounded-full">
+                      {album.artworkUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={art(album.artworkUrl, 40)!} alt="" className="w-5 h-5 rounded object-cover" />
+                      )}
+                      <span className="text-xs font-medium truncate max-w-[120px]">{album.title}</span>
+                      <span className="text-xs text-accent">★{album.score}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Continue button */}
+            <button
+              onClick={() => setStep("gtkm")}
+              disabled={ratedAlbums.length < 5}
+              className="w-full py-3.5 bg-accent text-white font-medium rounded-xl hover:bg-accent-hover disabled:opacity-40 transition-all text-sm sticky bottom-4"
+            >
+              {ratedAlbums.length < 5 ? `Rate ${5 - ratedAlbums.length} more to continue` : `Continue with ${ratedAlbums.length} ratings`}
+            </button>
           </div>
         )}
 
-        {/* Step 2: Get to Know Me */}
+        {/* ===== STEP 2: GET TO KNOW ME ===== */}
         {step === "gtkm" && (
           <div>
             <h1 className="font-display text-3xl mb-2">Tell your story in 3 albums</h1>
-            <p className="text-muted mb-8">Pick 3 albums that define you. This is the hero of your profile.</p>
+            <p className="text-muted mb-8">These are the hero of your profile. Search for any album.</p>
 
-            <div className="space-y-6">
+            <div className="space-y-4">
               {[0, 1, 2].map((position) => {
-                const selectedId = gtkmSelections[position];
-                const selectedAlbum = albums.find((a) => a.appleId === selectedId);
+                const selected = gtkmSelections[position];
 
                 return (
                   <div key={position} className="bg-card border border-border rounded-xl p-5">
                     <p className="text-accent text-xs font-medium mb-3">{gtkmLabels[position]}</p>
 
-                    {selectedAlbum ? (
+                    {selected ? (
                       <div>
                         <div className="flex items-center gap-3 mb-3">
-                          {selectedAlbum.artworkUrl && (
+                          {selected.artworkUrl && (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={art(selectedAlbum.artworkUrl, 80)!} alt="" className="w-12 h-12 rounded-lg object-cover" />
+                            <img src={art(selected.artworkUrl, 80)!} alt="" className="w-12 h-12 rounded-lg object-cover" />
                           )}
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">{selectedAlbum.title}</p>
-                            <p className="text-xs text-muted">{selectedAlbum.artist}</p>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{selected.title}</p>
+                            <p className="text-xs text-muted truncate">{selected.artistName}</p>
                           </div>
-                          <button
-                            onClick={() => {
-                              const next = [...gtkmSelections];
-                              next[position] = null;
-                              setGtkmSelections(next);
-                            }}
-                            className="text-xs text-muted hover:text-foreground"
-                          >
-                            Change
-                          </button>
+                          <button onClick={() => { const next = [...gtkmSelections]; next[position] = null; setGtkmSelections(next); }}
+                            className="text-xs text-muted hover:text-foreground">Change</button>
                         </div>
                         <input
                           type="text"
                           value={gtkmStories[position]}
-                          onChange={(e) => {
-                            const next = [...gtkmStories];
-                            next[position] = e.target.value;
-                            setGtkmStories(next);
-                          }}
+                          onChange={(e) => { const next = [...gtkmStories]; next[position] = e.target.value; setGtkmStories(next); }}
                           placeholder="Why this album? (optional)"
                           maxLength={500}
                           className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm placeholder:text-muted/30 focus:outline-none focus:border-accent"
                         />
                       </div>
                     ) : (
-                      <div className="grid grid-cols-4 gap-2">
-                        {ratedAlbums.filter((a) => !gtkmSelections.includes(a.appleId)).map((album) => (
-                          <button
-                            key={album.appleId}
-                            onClick={() => {
-                              const next = [...gtkmSelections];
-                              next[position] = album.appleId;
-                              setGtkmSelections(next);
-                            }}
-                            className="aspect-square rounded-lg overflow-hidden bg-card border border-border hover:border-accent transition-colors"
-                          >
-                            {album.artworkUrl ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={art(album.artworkUrl, 120)!} alt={album.title} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-xs text-border">♪</div>
+                      <div>
+                        {gtkmSlot === position ? (
+                          <div>
+                            <input
+                              type="text"
+                              value={gtkmSearch}
+                              onChange={(e) => handleGtkmSearchInput(e.target.value)}
+                              placeholder="Search for an album..."
+                              autoFocus
+                              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm placeholder:text-muted/30 focus:outline-none focus:border-accent mb-2"
+                            />
+                            {gtkmLoading && <p className="text-xs text-muted">Searching...</p>}
+                            {gtkmResults.length > 0 && (
+                              <div className="space-y-1 max-h-48 overflow-y-auto">
+                                {gtkmResults.map((album) => (
+                                  <button
+                                    key={album.appleId}
+                                    onClick={() => handleSelectGtkmAlbum(album)}
+                                    className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-card-hover text-left"
+                                  >
+                                    {album.artworkUrl && (
+                                      // eslint-disable-next-line @next/next/no-img-element
+                                      <img src={art(album.artworkUrl, 60)!} alt="" className="w-9 h-9 rounded object-cover" />
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium truncate">{album.title}</p>
+                                      <p className="text-xs text-muted truncate">{album.artistName}</p>
+                                    </div>
+                                  </button>
+                                ))}
+                              </div>
                             )}
+                            <button onClick={() => { setGtkmSlot(null); setGtkmSearch(""); setGtkmResults([]); }}
+                              className="text-xs text-muted mt-2 hover:text-foreground">Cancel</button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setGtkmSlot(position)}
+                            className="w-full py-3 border border-dashed border-border rounded-lg text-sm text-muted/40 hover:text-muted hover:border-accent/30 transition-colors"
+                          >
+                            Search and add an album
                           </button>
-                        ))}
+                        )}
                       </div>
                     )}
                   </div>
@@ -331,37 +411,30 @@ export default function WelcomePage() {
             </div>
 
             <div className="flex gap-3 mt-8">
-              <button
-                onClick={() => setStep("follow")}
-                className="flex-1 py-3 border border-border rounded-xl text-sm text-muted hover:text-foreground"
-              >
-                Skip
-              </button>
-              <button
-                onClick={submitGtkm}
-                disabled={gtkmCount === 0 || saving}
-                className="flex-1 py-3 bg-accent text-white font-medium rounded-xl hover:bg-accent-hover disabled:opacity-40 text-sm"
-              >
+              <button onClick={async () => { await loadSuggestions(); setStep("follow"); }}
+                className="flex-1 py-3 border border-border rounded-xl text-sm text-muted hover:text-foreground">Skip</button>
+              <button onClick={submitGtkm} disabled={!gtkmSelections.some(Boolean) || saving}
+                className="flex-1 py-3 bg-accent text-white font-medium rounded-xl hover:bg-accent-hover disabled:opacity-40 text-sm">
                 {saving ? "Saving..." : "Continue"}
               </button>
             </div>
           </div>
         )}
 
-        {/* Step 3: Find People */}
+        {/* ===== STEP 3: FOLLOW ===== */}
         {step === "follow" && (
           <div>
             <h1 className="font-display text-3xl mb-2">Find your people</h1>
-            <p className="text-muted mb-8">Follow curators to fill your feed with great taste.</p>
+            <p className="text-muted mb-8">Follow curators to fill your feed.</p>
 
             {suggestedUsers.length > 0 ? (
               <div className="space-y-2">
                 {suggestedUsers.map((user) => (
                   <div key={user.id} className="flex items-center gap-4 p-4 bg-card border border-border rounded-xl">
-                    <div className="w-12 h-12 rounded-full bg-background border border-border flex items-center justify-center text-lg text-muted shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-background border border-border flex items-center justify-center text-lg text-muted shrink-0 overflow-hidden">
                       {user.avatar_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={user.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+                        <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
                       ) : (
                         user.username[0].toUpperCase()
                       )}
@@ -373,9 +446,7 @@ export default function WelcomePage() {
                     <button
                       onClick={() => handleFollow(user.id)}
                       className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
-                        followedIds.has(user.id)
-                          ? "border border-border text-muted"
-                          : "bg-accent text-white hover:bg-accent-hover"
+                        followedIds.has(user.id) ? "border border-border text-muted" : "bg-accent text-white hover:bg-accent-hover"
                       }`}
                     >
                       {followedIds.has(user.id) ? "Following" : "Follow"}
@@ -386,15 +457,15 @@ export default function WelcomePage() {
             ) : (
               <div className="text-center py-12">
                 <p className="text-muted">No suggestions yet.</p>
-                <p className="text-xs text-muted/40 mt-1">You can discover people later on the Discover page.</p>
+                <p className="text-xs text-muted/40 mt-1">Discover people later on the Discover page.</p>
               </div>
             )}
 
             <button
-              onClick={finish}
+              onClick={() => router.push("/feed")}
               className="w-full mt-8 py-3.5 bg-accent text-white font-medium rounded-xl hover:bg-accent-hover transition-all text-sm"
             >
-              {followCount > 0 ? `Enter Euterpy (following ${followCount})` : "Enter Euterpy"}
+              {followedIds.size > 0 ? `Enter Euterpy` : "Enter Euterpy"}
             </button>
           </div>
         )}
