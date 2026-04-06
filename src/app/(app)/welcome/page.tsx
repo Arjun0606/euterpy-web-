@@ -64,9 +64,19 @@ export default function WelcomePage() {
   const [followedIds, setFollowedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) setUserId(user.id);
-    });
+    // Try to get user, retry once if not immediately available (post-signup timing)
+    async function getUser() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+      } else {
+        // Session might not be ready yet — wait and retry
+        await new Promise((r) => setTimeout(r, 1000));
+        const { data: { user: retryUser } } = await supabase.auth.getUser();
+        if (retryUser) setUserId(retryUser.id);
+      }
+    }
+    getUser();
   }, []);
 
   // Search for albums (step 1)
@@ -91,21 +101,46 @@ export default function WelcomePage() {
     if (!selectedAlbum || ratingScore === 0 || !userId) return;
     setSaving(true);
 
-    // Ensure album exists in DB
-    const res = await fetch(`/api/albums/${selectedAlbum.appleId}`);
-    const { album } = await res.json();
-    if (!album) { setSaving(false); return; }
+    try {
+      // Ensure album exists in DB via API (uses service role to insert)
+      const res = await fetch(`/api/albums/${selectedAlbum.appleId}`);
+      const data = await res.json();
+      if (!data.album) { setSaving(false); return; }
+      const albumDbId = data.album.id;
 
-    await supabase.from("ratings").upsert(
-      { user_id: userId, album_id: album.id, score: ratingScore },
-      { onConflict: "user_id,album_id" }
-    );
+      // Check if already rated
+      const { data: existing } = await supabase
+        .from("ratings")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("album_id", albumDbId)
+        .single();
 
-    setRatedAlbums((prev) => [...prev, {
-      ...selectedAlbum,
-      dbId: album.id,
-      score: ratingScore,
-    }]);
+      if (existing) {
+        // Update existing rating
+        await supabase
+          .from("ratings")
+          .update({ score: ratingScore })
+          .eq("id", existing.id);
+      } else {
+        // Insert new rating
+        const { error } = await supabase
+          .from("ratings")
+          .insert({ user_id: userId, album_id: albumDbId, score: ratingScore });
+
+        if (error) {
+          setSaving(false);
+          return;
+        }
+      }
+
+      setRatedAlbums((prev) => [
+        ...prev.filter((a) => a.appleId !== selectedAlbum.appleId),
+        { ...selectedAlbum, dbId: albumDbId, score: ratingScore },
+      ]);
+    } catch {
+      // silent
+    }
 
     setSelectedAlbum(null);
     setRatingScore(0);
