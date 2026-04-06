@@ -83,7 +83,7 @@ export default function SongActions({ songAppleId, songDbId, songTitle, artistNa
             onClick={() => setShowShelfModal(true)}
             className="px-4 py-2 border border-border rounded-full text-sm text-muted hover:text-foreground hover:border-foreground/20 transition-colors"
           >
-            + Shelf
+            + Add to
           </button>
         )}
       </div>
@@ -104,7 +104,8 @@ export default function SongActions({ songAppleId, songDbId, songTitle, artistNa
       {showShelfModal && (
         <AddToShelfModal
           songDbId={songDbId}
-          itemTitle={`${songTitle} by ${artistName}`}
+          itemTitle={songTitle}
+          artistName={artistName}
           onClose={() => setShowShelfModal(false)}
         />
       )}
