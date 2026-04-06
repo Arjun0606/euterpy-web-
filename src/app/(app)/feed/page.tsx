@@ -147,7 +147,7 @@ export default async function HomePage() {
               const album = rating?.album;
 
               return (
-                <div key={`r-${item.id}`} className="flex items-start gap-4 p-5 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:border-white/[0.08] transition-colors">
+                <div key={`r-${item.id}`} className="flex items-start gap-4 p-5 rounded-2xl bg-card border border-border hover:border-border transition-colors">
                   <Link href={`/${actor.username}`} className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center text-sm text-muted shrink-0 overflow-hidden">
                     {actor.avatar_url ? (
                       // eslint-disable-next-line @next/next/no-img-element

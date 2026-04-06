@@ -74,7 +74,7 @@ export default function ProfilePage({ data }: Props) {
 
         {/* ====== Profile Header ====== */}
         <div className="flex items-start gap-5 sm:gap-6 mb-10">
-          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-zinc-900 border border-white/[0.08] flex items-center justify-center shrink-0 overflow-hidden">
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-zinc-900 border border-border flex items-center justify-center shrink-0 overflow-hidden">
             {profile.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" />
@@ -129,11 +129,11 @@ export default function ProfilePage({ data }: Props) {
             <div className="flex flex-wrap items-center gap-2 mt-5">
               {isOwnProfile ? (
                 <>
-                  <a href="/settings" className="px-5 py-2 bg-white/[0.06] text-zinc-200 text-xs font-medium rounded-full hover:bg-white/[0.1] transition-colors">
+                  <a href="/settings" className="px-5 py-2 bg-card-hover text-zinc-200 text-xs font-medium rounded-full hover:bg-card-hover transition-colors">
                     Edit Profile
                   </a>
                   <button onClick={handleShare}
-                    className="px-5 py-2 bg-white/[0.03] border border-white/[0.06] text-zinc-400 text-xs font-medium rounded-full hover:text-zinc-200 hover:border-white/[0.12] transition-colors">
+                    className="px-5 py-2 bg-card border border-border text-zinc-400 text-xs font-medium rounded-full hover:text-zinc-200 hover:border-border transition-colors">
                     {copied ? "Copied!" : "Share"}
                   </button>
                 </>
@@ -141,7 +141,7 @@ export default function ProfilePage({ data }: Props) {
                 <>
                   <FollowButton targetUserId={profile.id} />
                   <button onClick={handleShare}
-                    className="px-5 py-2 bg-white/[0.03] border border-white/[0.06] text-zinc-400 text-xs font-medium rounded-full hover:text-zinc-200 hover:border-white/[0.12] transition-colors">
+                    className="px-5 py-2 bg-card border border-border text-zinc-400 text-xs font-medium rounded-full hover:text-zinc-200 hover:border-border transition-colors">
                     {copied ? "Copied!" : "Share"}
                   </button>
                   <TasteMatch targetUserId={profile.id} />
@@ -153,7 +153,7 @@ export default function ProfilePage({ data }: Props) {
         </div>
 
         {/* ====== Tabs ====== */}
-        <div className="flex gap-1 border-b border-white/[0.04] mb-8">
+        <div className="flex gap-1 border-b border-border mb-8">
           {([
             ["collection", isOwnProfile ? "My Collection" : "Collection"],
             ["stats", "Stats"],
@@ -189,7 +189,7 @@ export default function ProfilePage({ data }: Props) {
               <RecordShelf items={shelfItems} title="The Shelf" showSort={isOwnProfile || shelfItems.length > 5} />
             )}
             {shelfItems.length === 0 && isOwnProfile && (
-              <div className="mb-10 text-center py-12 border border-dashed border-white/[0.06] rounded-2xl">
+              <div className="mb-10 text-center py-12 border border-dashed border-border rounded-2xl">
                 <p className="text-zinc-500 text-sm">Your shelf is empty.</p>
                 <p className="text-zinc-700 text-xs mt-1">Rate albums to start building your collection.</p>
               </div>
@@ -209,7 +209,7 @@ export default function ProfilePage({ data }: Props) {
                     {shelves.map((shelf: any) => <ShelfCard key={shelf.id} shelf={shelf} />)}
                   </div>
                 ) : (
-                  <div className="text-center py-8 border border-dashed border-white/[0.06] rounded-2xl">
+                  <div className="text-center py-8 border border-dashed border-border rounded-2xl">
                     <p className="text-zinc-600 text-sm">No shelves yet.</p>
                   </div>
                 )}
@@ -248,7 +248,7 @@ export default function ProfilePage({ data }: Props) {
                   const item = review.albums || review.songs;
                   const isAlbum = !!review.albums;
                   return (
-                    <div key={review.id} className="bg-white/[0.02] border border-white/[0.05] rounded-2xl p-5">
+                    <div key={review.id} className="bg-card border border-border rounded-2xl p-5">
                       <div className="flex items-center gap-3 mb-3">
                         {item?.artwork_url && (
                           // eslint-disable-next-line @next/next/no-img-element
@@ -262,7 +262,7 @@ export default function ProfilePage({ data }: Props) {
                       </div>
                       {review.title && <h3 className="font-semibold text-sm mb-1">{review.title}</h3>}
                       <p className="text-sm text-zinc-400 leading-relaxed">{review.body}</p>
-                      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-white/[0.04]">
+                      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border">
                         <span className="text-[11px] text-zinc-600">
                           {new Date(review.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                         </span>

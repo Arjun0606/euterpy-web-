@@ -128,7 +128,7 @@ export default function AddToShelfModal({ albumDbId, songDbId, itemTitle, artist
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={onClose}>
       <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
-      <div className="relative w-full max-w-md bg-zinc-950 border border-white/[0.08] rounded-t-3xl sm:rounded-3xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      <div className="relative w-full max-w-md bg-zinc-950 border border-border rounded-t-3xl sm:rounded-3xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
 
         {/* Header */}
         <div className="px-6 pt-6 pb-4">
@@ -147,7 +147,7 @@ export default function AddToShelfModal({ albumDbId, songDbId, itemTitle, artist
                 {gtkmSlots.map((slot) => (
                   <button key={slot.position} onClick={() => handleAddToGtkm(slot.position)}
                     disabled={saving === `gtkm-${slot.position}` || slot.album_id === albumDbId}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/[0.04] transition-colors text-left disabled:opacity-40 group">
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-card-hover transition-colors text-left disabled:opacity-40 group">
                     <span className="w-7 h-7 rounded-full bg-accent/10 text-accent text-xs font-bold flex items-center justify-center shrink-0">
                       {slot.position}
                     </span>
@@ -168,7 +168,7 @@ export default function AddToShelfModal({ albumDbId, songDbId, itemTitle, artist
             )}
 
             {/* Divider */}
-            {isAlbum && shelves.length > 0 && <div className="border-t border-white/[0.04] my-2" />}
+            {isAlbum && shelves.length > 0 && <div className="border-t border-border my-2" />}
 
             {/* Shelves */}
             {shelves.length > 0 && (
@@ -177,7 +177,7 @@ export default function AddToShelfModal({ albumDbId, songDbId, itemTitle, artist
                 {shelves.map((shelf) => (
                   <button key={shelf.id} onClick={() => handleAddToShelf(shelf.id, shelf.is_favorites ? "Favorites" : shelf.title)}
                     disabled={saving === `shelf-${shelf.id}`}
-                    className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-white/[0.04] transition-colors text-left">
+                    className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-card-hover transition-colors text-left">
                     <div>
                       <p className="text-sm font-medium text-zinc-200">{shelf.is_favorites ? "★ Favorites" : shelf.title}</p>
                       <p className="text-[11px] text-zinc-600">{shelf.item_count} items</p>
@@ -196,7 +196,7 @@ export default function AddToShelfModal({ albumDbId, songDbId, itemTitle, artist
 
         {/* Cancel */}
         <div className="px-4 pb-6 pt-2">
-          <button onClick={onClose} className="w-full py-3 bg-white/[0.04] border border-white/[0.06] rounded-2xl text-sm text-zinc-400 hover:text-white hover:bg-white/[0.06] transition-colors font-medium">
+          <button onClick={onClose} className="w-full py-3 bg-card-hover border border-border rounded-2xl text-sm text-zinc-400 hover:text-white hover:bg-card-hover transition-colors font-medium">
             Cancel
           </button>
         </div>

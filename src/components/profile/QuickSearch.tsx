@@ -103,7 +103,7 @@ export default function QuickSearch() {
   }
 
   return (
-    <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-5">
+    <div className="bg-card border border-border rounded-2xl p-5">
       {/* Tabs + Search */}
       <div className="flex gap-2 mb-3">
         <div className="flex gap-1 bg-background rounded-lg p-0.5">

@@ -122,7 +122,7 @@ export default function RecordShelf({ items, title = "The Shelf", showSort = tru
       {/* Filter + Sort */}
       {showSort && (
         <div className="flex items-center gap-2 mb-5">
-          <div className="flex gap-0.5 bg-white/[0.03] rounded-lg p-0.5 border border-white/[0.04]">
+          <div className="flex gap-0.5 bg-card rounded-lg p-0.5 border border-border">
             {([["all", "All"], ["album", "Albums"], ["song", "Songs"]] as [typeof filter, string][]).map(([f, label]) => (
               <button key={f} onClick={() => setFilter(f)}
                 className={`px-3 py-1 text-[11px] rounded-md transition-colors ${

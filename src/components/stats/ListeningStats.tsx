@@ -31,17 +31,17 @@ export default function ListeningStats({
 
       {/* Big numbers */}
       <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-8">
-        <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-3 sm:p-5 text-center">
+        <div className="bg-card border border-border rounded-2xl p-3 sm:p-5 text-center">
           <p className="text-2xl sm:text-3xl font-semibold text-accent">
             {totalMinutes > 0 ? (hours > 0 ? `${hours}h ${mins}m` : `${mins}m`) : "—"}
           </p>
           <p className="text-[10px] sm:text-xs text-muted mt-1">Minutes</p>
         </div>
-        <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-3 sm:p-5 text-center">
+        <div className="bg-card border border-border rounded-2xl p-3 sm:p-5 text-center">
           <p className="text-2xl sm:text-3xl font-semibold text-foreground">{totalAlbums}</p>
           <p className="text-[10px] sm:text-xs text-muted mt-1">Albums</p>
         </div>
-        <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-3 sm:p-5 text-center">
+        <div className="bg-card border border-border rounded-2xl p-3 sm:p-5 text-center">
           <p className="text-2xl sm:text-3xl font-semibold text-foreground">{totalSongs}</p>
           <p className="text-[10px] sm:text-xs text-muted mt-1">Songs</p>
         </div>

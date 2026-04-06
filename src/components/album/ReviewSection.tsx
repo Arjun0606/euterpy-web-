@@ -184,7 +184,7 @@ export default function ReviewSection({ reviews, albumId, songId, userId }: Prop
 
       {/* Write review form */}
       {showWrite && userId && (
-        <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5 mb-6">
+        <div className="bg-card border border-border rounded-2xl p-5 mb-6">
           {/* Stars */}
           <div className="flex items-center gap-2 mb-4">
             {[1, 2, 3, 4, 5].map((v) => (
@@ -236,7 +236,7 @@ export default function ReviewSection({ reviews, albumId, songId, userId }: Prop
       ) : (
         <div className="space-y-4">
           {localReviews.map((review) => (
-            <div key={review.id} className="bg-white/[0.02] border border-white/[0.05] rounded-2xl p-5">
+            <div key={review.id} className="bg-card border border-border rounded-2xl p-5">
               {/* Header */}
               <div className="flex items-center gap-3 mb-2">
                 <a href={`/${review.profiles?.username}`} className="w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center text-xs text-muted shrink-0 hover:border-accent transition-colors">

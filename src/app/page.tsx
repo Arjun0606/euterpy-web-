@@ -29,7 +29,7 @@ export default function Home() {
             </Link>
             <Link
               href="/login"
-              className="px-8 py-3 border border-white/[0.08] text-zinc-300 text-sm font-medium rounded-full hover:bg-white/[0.04] hover:border-white/[0.12] transition-all"
+              className="px-8 py-3 border border-border text-zinc-300 text-sm font-medium rounded-full hover:bg-card-hover hover:border-border transition-all"
             >
               Log In
             </Link>
@@ -38,7 +38,7 @@ export default function Home() {
       </div>
 
       {/* Value Props */}
-      <div className="max-w-4xl mx-auto px-6 sm:px-12 py-20 border-t border-white/[0.04]">
+      <div className="max-w-4xl mx-auto px-6 sm:px-12 py-20 border-t border-border">
         <div className="grid sm:grid-cols-3 gap-12 sm:gap-10">
           <div>
             <p className="text-accent text-xs font-semibold uppercase tracking-widest mb-3">The Shelf</p>
@@ -67,7 +67,7 @@ export default function Home() {
       </div>
 
       {/* CTA */}
-      <div className="text-center px-6 py-20 border-t border-white/[0.04]">
+      <div className="text-center px-6 py-20 border-t border-border">
         <p className="text-zinc-700 text-xs mb-8 uppercase tracking-widest">
           Free forever. No streaming account needed.
         </p>
