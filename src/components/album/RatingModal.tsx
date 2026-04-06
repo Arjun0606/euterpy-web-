@@ -67,7 +67,7 @@ export default function RatingModal({
     try {
       const albumRes = await fetch(`/api/albums/${albumAppleId}`);
       const { album } = await albumRes.json();
-      if (!album) throw new Error("Album not found");
+      if (!album?.id) throw new Error("Album not found");
 
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();

@@ -67,10 +67,11 @@ export default function QuickSearch() {
     try {
       if (tab === "albums") {
         const albumRes = await fetch(`/api/albums/${selected.appleId}`);
-        const { album } = await albumRes.json();
+        const data = await albumRes.json();
+        if (!data.album?.id) throw new Error("Album not found");
         const { error } = await supabase.from("ratings").insert({
           user_id: userId,
-          album_id: album.id,
+          album_id: data.album.id,
           score,
           reaction: reaction.trim() || null,
           ownership,
@@ -78,10 +79,11 @@ export default function QuickSearch() {
         if (error) throw error;
       } else {
         const songRes = await fetch(`/api/songs/${selected.appleId}`);
-        const { song } = await songRes.json();
+        const data = await songRes.json();
+        if (!data.song?.id) throw new Error("Song not found");
         const { error } = await supabase.from("song_ratings").insert({
           user_id: userId,
-          song_id: song.id,
+          song_id: data.song.id,
           score,
           reaction: reaction.trim() || null,
         });

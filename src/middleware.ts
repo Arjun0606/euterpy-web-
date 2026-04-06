@@ -5,14 +5,18 @@ const publicPaths = ["/", "/login", "/signup"];
 
 function isPublicPath(pathname: string): boolean {
   if (publicPaths.includes(pathname)) return true;
-  // Album pages are public
+  // Album and song pages are public
   if (pathname.startsWith("/album/")) return true;
+  if (pathname.startsWith("/song/")) return true;
   // API routes handle their own auth
   if (pathname.startsWith("/api/")) return true;
-  // User profiles are public (single-segment paths that aren't reserved)
-  const reserved = ["feed", "search", "settings", "login", "signup"];
+  // User profiles are public (single-segment paths like /@username)
+  // But reserved app routes must NOT be treated as profiles
+  const reserved = ["feed", "search", "settings", "login", "signup", "discover", "notifications", "welcome", "shelf"];
   const segments = pathname.split("/").filter(Boolean);
   if (segments.length === 1 && !reserved.includes(segments[0])) return true;
+  // Stats subpage is public (/@username/stats)
+  if (segments.length === 2 && segments[1] === "stats" && !reserved.includes(segments[0])) return true;
   return false;
 }
 
@@ -28,7 +32,7 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
+          cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
           supabaseResponse = NextResponse.next({ request });
@@ -46,12 +50,10 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Allow public paths
   if (isPublicPath(pathname)) {
     return supabaseResponse;
   }
 
-  // Redirect to login if not authenticated
   if (!user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
