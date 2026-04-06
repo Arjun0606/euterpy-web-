@@ -5,10 +5,10 @@ import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-type Step = "welcome" | "email" | "password" | "username";
+type Step = "credentials" | "username";
 
 export default function SignUpPage() {
-  const [step, setStep] = useState<Step>("welcome");
+  const [step, setStep] = useState<Step>("credentials");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
@@ -19,7 +19,7 @@ export default function SignUpPage() {
   async function handleSignUp() {
     setError(null);
     if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
-      setError("Username must be 3-20 characters (letters, numbers, underscores)");
+      setError("3-20 characters, letters, numbers, underscores only");
       return;
     }
 
@@ -33,7 +33,7 @@ export default function SignUpPage() {
       .single();
 
     if (existing) {
-      setError("Username is taken");
+      setError("That username is taken");
       setLoading(false);
       return;
     }
@@ -54,90 +54,76 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-6 bg-background">
+    <div className="flex flex-col items-center justify-center min-h-screen px-6 bg-black">
       <div className="w-full max-w-sm">
 
-        {/* Step 1: Welcome */}
-        {step === "welcome" && (
-          <div className="text-center">
-            <h1 className="font-display text-5xl mb-2">Hello,</h1>
-            <h1 className="font-display text-5xl text-accent mb-8">Musical Maven!</h1>
-            <p className="text-muted text-sm mb-12">
-              Your music taste deserves a home.
-            </p>
-            <button
-              onClick={() => setStep("email")}
-              className="w-full py-3.5 bg-accent text-white font-medium rounded-full hover:bg-accent-hover transition-colors text-lg"
-            >
-              Get Started
-            </button>
-            <p className="text-center text-sm text-muted mt-8">
-              Already have an account?{" "}
-              <Link href="/login" className="text-accent hover:underline">Log in</Link>
-            </p>
-          </div>
-        )}
+        {/* Header */}
+        <Link href="/">
+          <h1 className="font-display text-5xl text-center mb-3">Euterpy</h1>
+        </Link>
+        <p className="text-center text-zinc-500 text-sm mb-10">
+          {step === "credentials" ? "Create your account" : "Choose your identity"}
+        </p>
 
-        {/* Step 2: Email */}
-        {step === "email" && (
+        {/* Step indicator */}
+        <div className="flex gap-2 mb-8">
+          <div className={`h-[2px] flex-1 rounded-full ${step === "credentials" ? "bg-accent" : "bg-zinc-800"}`} />
+          <div className={`h-[2px] flex-1 rounded-full ${step === "username" ? "bg-accent" : "bg-zinc-800"}`} />
+        </div>
+
+        {/* Step 1: Email + Password */}
+        {step === "credentials" && (
           <div>
-            <button onClick={() => setStep("welcome")} className="text-muted text-sm mb-8 hover:text-foreground">← Back</button>
-            <h2 className="font-display text-3xl mb-2">What&apos;s your email?</h2>
-            <p className="text-muted text-sm mb-6">We&apos;ll use this to create your account.</p>
-            <input
-              type="email"
-              placeholder="you@email.com"
-              value={email}
-              onChange={(e) => { setEmail(e.target.value); setError(null); }}
-              autoFocus
-              onKeyDown={(e) => e.key === "Enter" && email.includes("@") && setStep("password")}
-              className="w-full px-4 py-3.5 bg-input border border-border rounded-xl text-foreground placeholder:text-muted/50 focus:outline-none focus:border-zinc-700 transition-colors text-lg"
-            />
+            <div className="space-y-3 mb-4">
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); setError(null); }}
+                autoFocus
+                className="w-full px-4 py-3.5 bg-input border border-border rounded-xl text-foreground placeholder:text-muted/50 focus:outline-none focus:border-zinc-700 transition-colors"
+              />
+              <input
+                type="password"
+                placeholder="Password (6+ characters)"
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setError(null); }}
+                onKeyDown={(e) => e.key === "Enter" && email.includes("@") && password.length >= 6 && setStep("username")}
+                className="w-full px-4 py-3.5 bg-input border border-border rounded-xl text-foreground placeholder:text-muted/50 focus:outline-none focus:border-zinc-700 transition-colors"
+              />
+            </div>
+
+            {error && <p className="text-sm text-red-400 text-center mb-3">{error}</p>}
+
             <button
-              onClick={() => email.includes("@") ? setStep("password") : setError("Enter a valid email")}
-              disabled={!email.includes("@")}
-              className="w-full py-3.5 mt-4 bg-accent text-white font-medium rounded-xl hover:bg-accent-hover transition-colors disabled:opacity-40"
+              onClick={() => {
+                if (!email.includes("@")) { setError("Enter a valid email"); return; }
+                if (password.length < 6) { setError("Password must be at least 6 characters"); return; }
+                setError(null);
+                setStep("username");
+              }}
+              disabled={!email.includes("@") || password.length < 6}
+              className="w-full py-3.5 bg-accent text-white font-medium rounded-xl hover:bg-accent-hover transition-colors disabled:opacity-30"
             >
               Continue
             </button>
-            {error && <p className="text-sm text-red-400 mt-3 text-center">{error}</p>}
           </div>
         )}
 
-        {/* Step 3: Password */}
-        {step === "password" && (
-          <div>
-            <button onClick={() => setStep("email")} className="text-muted text-sm mb-8 hover:text-foreground">← Back</button>
-            <h2 className="font-display text-3xl mb-2">Set a password</h2>
-            <p className="text-muted text-sm mb-6">At least 6 characters.</p>
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => { setPassword(e.target.value); setError(null); }}
-              autoFocus
-              onKeyDown={(e) => e.key === "Enter" && password.length >= 6 && setStep("username")}
-              className="w-full px-4 py-3.5 bg-input border border-border rounded-xl text-foreground placeholder:text-muted/50 focus:outline-none focus:border-zinc-700 transition-colors text-lg"
-            />
-            <button
-              onClick={() => password.length >= 6 ? setStep("username") : setError("Password must be at least 6 characters")}
-              disabled={password.length < 6}
-              className="w-full py-3.5 mt-4 bg-accent text-white font-medium rounded-xl hover:bg-accent-hover transition-colors disabled:opacity-40"
-            >
-              Continue
-            </button>
-            {error && <p className="text-sm text-red-400 mt-3 text-center">{error}</p>}
-          </div>
-        )}
-
-        {/* Step 4: Username */}
+        {/* Step 2: Username */}
         {step === "username" && (
           <div>
-            <button onClick={() => setStep("password")} className="text-muted text-sm mb-8 hover:text-foreground">← Back</button>
-            <h2 className="font-display text-3xl mb-2">Claim your username</h2>
-            <p className="text-muted text-sm mb-6">This is your identity. Choose well.</p>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-accent text-lg">@</span>
+            <button onClick={() => setStep("credentials")} className="text-zinc-600 text-sm mb-6 hover:text-zinc-300 transition-colors">
+              ← Back
+            </button>
+
+            <p className="text-zinc-400 text-sm mb-1">Your profile will live at</p>
+            <p className="text-zinc-300 text-sm mb-5 font-mono">
+              euterpy.app/<span className="text-accent">{username || "..."}</span>
+            </p>
+
+            <div className="relative mb-4">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500">@</span>
               <input
                 type="text"
                 placeholder="username"
@@ -146,19 +132,27 @@ export default function SignUpPage() {
                 autoFocus
                 maxLength={20}
                 onKeyDown={(e) => e.key === "Enter" && username.length >= 3 && handleSignUp()}
-                className="w-full pl-9 pr-4 py-3.5 bg-input border border-border rounded-xl text-foreground placeholder:text-muted/50 focus:outline-none focus:border-zinc-700 transition-colors text-lg"
+                className="w-full pl-9 pr-4 py-3.5 bg-input border border-border rounded-xl text-foreground placeholder:text-muted/50 focus:outline-none focus:border-zinc-700 transition-colors"
               />
             </div>
+
+            {error && <p className="text-sm text-red-400 text-center mb-3">{error}</p>}
+
             <button
               onClick={handleSignUp}
               disabled={loading || username.length < 3}
-              className="w-full py-3.5 mt-4 bg-accent text-white font-medium rounded-xl hover:bg-accent-hover transition-colors disabled:opacity-40"
+              className="w-full py-3.5 bg-accent text-white font-medium rounded-xl hover:bg-accent-hover transition-colors disabled:opacity-30"
             >
-              {loading ? "Creating your world..." : "Create Account"}
+              {loading ? "Setting up..." : "Create Account"}
             </button>
-            {error && <p className="text-sm text-red-400 mt-3 text-center">{error}</p>}
           </div>
         )}
+
+        {/* Footer */}
+        <p className="text-center text-sm text-zinc-600 mt-10">
+          Already have an account?{" "}
+          <Link href="/login" className="text-accent hover:underline">Log in</Link>
+        </p>
       </div>
     </div>
   );

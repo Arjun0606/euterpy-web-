@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { getArtworkUrl } from "@/lib/apple-music/client";
 import { toast } from "sonner";
 
-type Step = "rate" | "gtkm" | "follow";
+type Step = "rate" | "gtkm";
 
 interface AlbumResult {
   appleId: string;
@@ -18,15 +18,6 @@ interface AlbumResult {
 interface RatedAlbum extends AlbumResult {
   score: number;
   dbId: string;
-}
-
-interface SuggestedUser {
-  id: string;
-  username: string;
-  display_name: string | null;
-  avatar_url: string | null;
-  album_count: number;
-  overlap: number;
 }
 
 function art(url: string | null, size = 200): string | null {
@@ -41,249 +32,159 @@ export default function WelcomePage() {
   const router = useRouter();
   const supabase = createClient();
 
-  // Rate state
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<AlbumResult[]>([]);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [selectedAlbum, setSelectedAlbum] = useState<AlbumResult | null>(null);
-  const [ratingScore, setRatingScore] = useState(0);
-  const [ratedAlbums, setRatedAlbums] = useState<RatedAlbum[]>([]);
+  // Rate
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<AlbumResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [selected, setSelected] = useState<AlbumResult | null>(null);
+  const [score, setScore] = useState(0);
+  const [rated, setRated] = useState<RatedAlbum[]>([]);
   const [saving, setSaving] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const debounce = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  // GTKM state
+  // GTKM
   const [gtkmSearch, setGtkmSearch] = useState("");
   const [gtkmResults, setGtkmResults] = useState<AlbumResult[]>([]);
-  const [gtkmLoading, setGtkmLoading] = useState(false);
+  const [gtkmSearching, setGtkmSearching] = useState(false);
   const [gtkmSlot, setGtkmSlot] = useState<number | null>(null);
-  const [gtkmSelections, setGtkmSelections] = useState<(AlbumResult & { dbId: string } | null)[]>([null, null, null]);
-  const [gtkmStories, setGtkmStories] = useState(["", "", ""]);
-  const gtkmDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [gtkm, setGtkm] = useState<(AlbumResult & { dbId: string } | null)[]>([null, null, null]);
+  const gtkmDebounce = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  // Follow state
-  const [suggestedUsers, setSuggestedUsers] = useState<SuggestedUser[]>([]);
-  const [followedIds, setFollowedIds] = useState<Set<string>>(new Set());
-
-  // Auth — wait for session reliably
+  // Auth
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUserId(session.user.id);
-        setAuthReady(true);
-      }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      if (session?.user) { setUserId(session.user.id); setAuthReady(true); }
     });
-    // Also check immediately
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) { setUserId(user.id); setAuthReady(true); }
     });
     return () => subscription.unsubscribe();
   }, []);
 
-  // Search albums
-  const searchAlbums = useCallback(async (q: string) => {
-    if (q.trim().length < 2) { setSearchResults([]); return; }
-    setSearchLoading(true);
+  // Search
+  const search = useCallback(async (q: string) => {
+    if (q.trim().length < 2) { setResults([]); return; }
+    setSearching(true);
     try {
-      const res = await fetch(`/api/albums/search?q=${encodeURIComponent(q.trim())}`);
-      const data = await res.json();
-      setSearchResults((data.results || []).slice(0, 8));
-    } catch { setSearchResults([]); }
-    setSearchLoading(false);
+      const r = await fetch(`/api/albums/search?q=${encodeURIComponent(q.trim())}`);
+      const d = await r.json();
+      setResults((d.results || []).slice(0, 6));
+    } catch { setResults([]); }
+    setSearching(false);
   }, []);
 
-  function handleSearchInput(value: string) {
-    setSearchQuery(value);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => searchAlbums(value), 350);
+  function onSearch(v: string) {
+    setQuery(v);
+    if (debounce.current) clearTimeout(debounce.current);
+    debounce.current = setTimeout(() => search(v), 300);
   }
 
-  async function handleRateAlbum() {
-    if (!selectedAlbum || ratingScore === 0 || !userId) return;
+  async function rate() {
+    if (!selected || score === 0 || !userId) return;
     setSaving(true);
-
     try {
-      const res = await fetch(`/api/albums/${selectedAlbum.appleId}`);
-      const data = await res.json();
-      if (!data.album) { toast.error("Album not found"); setSaving(false); return; }
-      const albumDbId = data.album.id;
+      const r = await fetch(`/api/albums/${selected.appleId}`);
+      const { album } = await r.json();
+      if (!album?.id) { toast.error("Album not found"); setSaving(false); return; }
 
-      // Check existing
-      const { data: existing } = await supabase
-        .from("ratings")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("album_id", albumDbId)
-        .single();
-
+      const { data: existing } = await supabase.from("ratings").select("id").eq("user_id", userId).eq("album_id", album.id).single();
       if (existing) {
-        const { error } = await supabase.from("ratings").update({ score: ratingScore }).eq("id", existing.id);
-        if (error) { toast.error("Failed to update rating"); setSaving(false); return; }
+        await supabase.from("ratings").update({ score }).eq("id", existing.id);
       } else {
-        const { error } = await supabase.from("ratings").insert({ user_id: userId, album_id: albumDbId, score: ratingScore });
-        if (error) { toast.error("Failed to save rating"); setSaving(false); return; }
+        const { error } = await supabase.from("ratings").insert({ user_id: userId, album_id: album.id, score });
+        if (error) { toast.error("Failed to save"); setSaving(false); return; }
       }
 
-      toast(`★ ${ratingScore} — ${selectedAlbum.title}`);
-      setRatedAlbums((prev) => [
-        ...prev.filter((a) => a.appleId !== selectedAlbum.appleId),
-        { ...selectedAlbum, dbId: albumDbId, score: ratingScore },
-      ]);
-    } catch {
-      toast.error("Something went wrong");
-    }
-
-    setSelectedAlbum(null);
-    setRatingScore(0);
-    setSearchQuery("");
-    setSearchResults([]);
-    setSaving(false);
+      toast(`★ ${score} — ${selected.title}`);
+      setRated(prev => [...prev.filter(a => a.appleId !== selected.appleId), { ...selected, dbId: album.id, score }]);
+    } catch { toast.error("Something went wrong"); }
+    setSelected(null); setScore(0); setQuery(""); setResults([]); setSaving(false);
   }
 
   // GTKM search
   const searchGtkm = useCallback(async (q: string) => {
     if (q.trim().length < 2) { setGtkmResults([]); return; }
-    setGtkmLoading(true);
+    setGtkmSearching(true);
     try {
-      const res = await fetch(`/api/albums/search?q=${encodeURIComponent(q.trim())}`);
-      const data = await res.json();
-      setGtkmResults((data.results || []).slice(0, 6));
+      const r = await fetch(`/api/albums/search?q=${encodeURIComponent(q.trim())}`);
+      const d = await r.json();
+      setGtkmResults((d.results || []).slice(0, 5));
     } catch { setGtkmResults([]); }
-    setGtkmLoading(false);
+    setGtkmSearching(false);
   }, []);
 
-  function handleGtkmSearchInput(value: string) {
-    setGtkmSearch(value);
-    if (gtkmDebounceRef.current) clearTimeout(gtkmDebounceRef.current);
-    gtkmDebounceRef.current = setTimeout(() => searchGtkm(value), 350);
+  function onGtkmSearch(v: string) {
+    setGtkmSearch(v);
+    if (gtkmDebounce.current) clearTimeout(gtkmDebounce.current);
+    gtkmDebounce.current = setTimeout(() => searchGtkm(v), 300);
   }
 
-  async function handleSelectGtkmAlbum(album: AlbumResult) {
+  async function selectGtkm(album: AlbumResult) {
     if (gtkmSlot === null) return;
-    const res = await fetch(`/api/albums/${album.appleId}`);
-    const { album: dbAlbum } = await res.json();
-    if (!dbAlbum) { toast.error("Album not found"); return; }
+    const r = await fetch(`/api/albums/${album.appleId}`);
+    const { album: db } = await r.json();
+    if (!db?.id) { toast.error("Album not found"); return; }
 
-    const next = [...gtkmSelections];
-    next[gtkmSlot] = { ...album, dbId: dbAlbum.id };
-    setGtkmSelections(next);
-    setGtkmSlot(null);
-    setGtkmSearch("");
-    setGtkmResults([]);
+    const next = [...gtkm];
+    next[gtkmSlot] = { ...album, dbId: db.id };
+    setGtkm(next);
+    setGtkmSlot(null); setGtkmSearch(""); setGtkmResults([]);
   }
 
-  async function submitGtkm() {
+  async function saveGtkm() {
     if (!userId) return;
     setSaving(true);
-    let saved = 0;
-
     for (let i = 0; i < 3; i++) {
-      const album = gtkmSelections[i];
-      if (!album?.dbId) continue;
-      const { error } = await supabase.from("get_to_know_me").upsert(
-        { user_id: userId, position: i + 1, album_id: album.dbId, story: gtkmStories[i].trim() || null },
-        { onConflict: "user_id,position" }
-      );
-      if (!error) saved++;
-    }
-
-    if (saved > 0) toast(`Saved ${saved} album${saved > 1 ? "s" : ""} to your profile`);
-    setSaving(false);
-    await loadSuggestions();
-    setStep("follow");
-  }
-
-  async function loadSuggestions() {
-    if (!userId || ratedAlbums.length === 0) return;
-    const albumIds = ratedAlbums.map((a) => a.dbId);
-
-    const { data: similar } = await supabase
-      .from("ratings")
-      .select("user_id, profiles(id, username, display_name, avatar_url, album_count)")
-      .in("album_id", albumIds)
-      .neq("user_id", userId)
-      .limit(50);
-
-    if (similar) {
-      const overlap: Record<string, { count: number; profile: any }> = {};
-      for (const r of similar) {
-        if (!overlap[r.user_id]) overlap[r.user_id] = { count: 0, profile: r.profiles };
-        overlap[r.user_id].count++;
+      const a = gtkm[i];
+      if (!a?.dbId) continue;
+      const { data: existing } = await supabase.from("get_to_know_me").select("id").eq("user_id", userId).eq("position", i + 1).single();
+      if (existing) {
+        await supabase.from("get_to_know_me").update({ album_id: a.dbId }).eq("id", existing.id);
+      } else {
+        await supabase.from("get_to_know_me").insert({ user_id: userId, position: i + 1, album_id: a.dbId });
       }
-      setSuggestedUsers(
-        Object.values(overlap).sort((a, b) => b.count - a.count).slice(0, 8)
-          .map((u) => ({ ...u.profile, overlap: u.count }))
-      );
     }
+    toast("Profile set up");
+    setSaving(false);
+    router.push("/feed");
   }
 
-  async function handleFollow(targetId: string) {
-    if (!userId) return;
-    const next = new Set(followedIds);
-    if (next.has(targetId)) {
-      next.delete(targetId);
-      await supabase.from("follows").delete().eq("follower_id", userId).eq("following_id", targetId);
-    } else {
-      next.add(targetId);
-      await supabase.from("follows").insert({ follower_id: userId, following_id: targetId });
-      toast("Following");
-    }
-    setFollowedIds(next);
-  }
+  const labels = ["The album that shaped me", "The one I keep coming back to", "The one that changed everything"];
 
-  const gtkmLabels = ["The album that shaped me", "The one I keep coming back to", "The one that changed everything"];
-
-  // Auth not ready — show loading
   if (!authReady) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted text-sm">Loading...</p>
-      </div>
-    );
+    return <div className="min-h-screen bg-black flex items-center justify-center"><p className="text-zinc-600 text-sm">Loading...</p></div>;
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-3xl mx-auto px-4 sm:px-8 py-8">
+    <div className="min-h-screen bg-black">
+      <div className="max-w-xl mx-auto px-5 sm:px-8 py-10">
+
         {/* Progress */}
-        <div className="flex items-center gap-2 mb-8">
-          {["rate", "gtkm", "follow"].map((s) => (
-            <div key={s} className={`h-1 flex-1 rounded-full transition-colors ${
-              s === step ? "bg-accent"
-                : (step === "gtkm" && s === "rate") || (step === "follow" && s !== "follow") ? "bg-accent/40"
-                : "bg-border"
-            }`} />
-          ))}
+        <div className="flex gap-2 mb-10">
+          <div className={`h-[2px] flex-1 rounded-full ${step === "rate" ? "bg-accent" : "bg-zinc-800"}`} />
+          <div className={`h-[2px] flex-1 rounded-full ${step === "gtkm" ? "bg-accent" : "bg-zinc-800"}`} />
         </div>
 
-        {/* STEP 1: RATE */}
+        {/* ===== RATE ===== */}
         {step === "rate" && (
           <div>
-            <h1 className="font-display text-3xl mb-2">Welcome to Euterpy</h1>
-            <p className="text-muted mb-6">Search and rate at least 5 albums to build your shelf.</p>
+            <h1 className="font-display text-3xl sm:text-4xl mb-2">Build your shelf</h1>
+            <p className="text-zinc-500 text-sm mb-8">Search and rate at least 5 albums. This is the foundation of your taste.</p>
 
+            {/* Search */}
             <div className="relative mb-6">
-              <input
-                type="text"
-                placeholder="Search for an album..."
-                value={searchQuery}
-                onChange={(e) => handleSearchInput(e.target.value)}
-                autoFocus
-                className="w-full px-4 py-3 bg-input border border-border rounded-xl text-sm placeholder:text-muted/50 focus:outline-none focus:border-zinc-700"
-              />
-              {searchLoading && <p className="text-xs text-muted mt-2">Searching...</p>}
-
-              {searchResults.length > 0 && !selectedAlbum && (
-                <div className="mt-2 border border-border rounded-xl bg-background overflow-hidden">
-                  {searchResults.map((album) => (
-                    <button key={album.appleId} onClick={() => { setSelectedAlbum(album); setSearchResults([]); }}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-card-hover transition-colors text-left">
-                      {album.artworkUrl && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={art(album.artworkUrl, 80)!} alt="" className="w-10 h-10 rounded object-cover" />
-                      )}
+              <input type="text" placeholder="Search for an album..." value={query} onChange={(e) => onSearch(e.target.value)} autoFocus
+                className="w-full px-4 py-3 bg-input border border-border rounded-xl text-sm placeholder:text-muted/50 focus:outline-none focus:border-zinc-700" />
+              {searching && <p className="text-xs text-zinc-600 mt-2">Searching...</p>}
+              {results.length > 0 && !selected && (
+                <div className="mt-2 border border-border rounded-xl bg-card overflow-hidden">
+                  {results.map(a => (
+                    <button key={a.appleId} onClick={() => { setSelected(a); setResults([]); }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-card-hover text-left">
+                      {a.artworkUrl && <img src={art(a.artworkUrl, 80)!} alt="" className="w-10 h-10 rounded object-cover" />}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{album.title}</p>
-                        <p className="text-xs text-muted truncate">{album.artistName}</p>
+                        <p className="text-sm font-medium truncate">{a.title}</p>
+                        <p className="text-xs text-zinc-500 truncate">{a.artistName}</p>
                       </div>
                     </button>
                   ))}
@@ -291,118 +192,96 @@ export default function WelcomePage() {
               )}
             </div>
 
-            {selectedAlbum && (
-              <div className="bg-card border border-border rounded-xl p-5 mb-6">
+            {/* Rate selected */}
+            {selected && (
+              <div className="bg-card border border-border rounded-2xl p-5 mb-6">
                 <div className="flex items-center gap-4 mb-4">
-                  {selectedAlbum.artworkUrl && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={art(selectedAlbum.artworkUrl, 160)!} alt="" className="w-16 h-16 rounded-lg object-cover" />
-                  )}
+                  {selected.artworkUrl && <img src={art(selected.artworkUrl, 160)!} alt="" className="w-14 h-14 rounded-xl object-cover" />}
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{selectedAlbum.title}</p>
-                    <p className="text-sm text-muted truncate">{selectedAlbum.artistName}</p>
+                    <p className="font-medium text-sm truncate">{selected.title}</p>
+                    <p className="text-xs text-zinc-500 truncate">{selected.artistName}</p>
                   </div>
-                  <button onClick={() => { setSelectedAlbum(null); setRatingScore(0); }} className="text-xs text-muted hover:text-foreground">Cancel</button>
+                  <button onClick={() => { setSelected(null); setScore(0); }} className="text-xs text-zinc-600 hover:text-zinc-300">×</button>
                 </div>
                 <div className="flex items-center justify-center gap-1 mb-4">
-                  {[1, 2, 3, 4, 5].map((v) => (
-                    <button key={v} onClick={() => setRatingScore(v === ratingScore ? 0 : v)}
-                      className={`text-3xl transition-colors ${v <= ratingScore ? "text-accent" : "text-border hover:text-accent/50"}`}>★</button>
+                  {[1,2,3,4,5].map(v => (
+                    <button key={v} onClick={() => setScore(v === score ? 0 : v)}
+                      className={`text-2xl ${v <= score ? "text-accent" : "text-zinc-800 hover:text-zinc-600"}`}>★</button>
                   ))}
                 </div>
-                <button onClick={handleRateAlbum} disabled={ratingScore === 0 || saving}
-                  className="w-full py-2.5 bg-accent text-white font-medium rounded-lg text-sm hover:bg-accent-hover disabled:opacity-40">
-                  {saving ? "Saving..." : `Log ★ ${ratingScore}`}
+                <button onClick={rate} disabled={score === 0 || saving}
+                  className="w-full py-2.5 bg-accent text-white text-sm font-medium rounded-xl hover:bg-accent-hover disabled:opacity-30">
+                  {saving ? "Saving..." : `Rate ★ ${score}`}
                 </button>
               </div>
             )}
 
-            {ratedAlbums.length > 0 && (
-              <div className="mb-6">
-                <p className="text-xs text-muted/40 mb-3">Your shelf so far ({ratedAlbums.length})</p>
-                <div className="flex gap-2 flex-wrap">
-                  {ratedAlbums.map((album) => (
-                    <div key={album.appleId} className="flex items-center gap-2 px-3 py-1.5 bg-card border border-border rounded-full">
-                      {album.artworkUrl && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={art(album.artworkUrl, 40)!} alt="" className="w-5 h-5 rounded object-cover" />
-                      )}
-                      <span className="text-xs font-medium truncate max-w-[120px]">{album.title}</span>
-                      <span className="text-xs text-accent">★{album.score}</span>
+            {/* Rated so far */}
+            {rated.length > 0 && (
+              <div className="mb-8">
+                <p className="text-[10px] uppercase tracking-[0.15em] text-zinc-600 font-medium mb-3">{rated.length} rated</p>
+                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                  {rated.map(a => (
+                    <div key={a.appleId} className="shrink-0 w-16 text-center">
+                      {a.artworkUrl && <img src={art(a.artworkUrl, 120)!} alt="" className="w-16 h-16 rounded-lg object-cover mb-1" />}
+                      <p className="text-[10px] text-zinc-400 truncate">{a.title}</p>
+                      <p className="text-[10px] text-accent">★{a.score}</p>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            <button onClick={() => setStep("gtkm")} disabled={ratedAlbums.length < 5}
-              className="w-full py-3.5 bg-accent text-white font-medium rounded-xl hover:bg-accent-hover disabled:opacity-40 text-sm sticky bottom-4">
-              {ratedAlbums.length < 5 ? `Rate ${5 - ratedAlbums.length} more to continue` : `Continue with ${ratedAlbums.length} ratings`}
+            <button onClick={() => setStep("gtkm")} disabled={rated.length < 5}
+              className="w-full py-3.5 bg-accent text-white font-medium rounded-xl hover:bg-accent-hover disabled:opacity-20 text-sm">
+              {rated.length < 5 ? `${5 - rated.length} more to go` : "Continue"}
             </button>
           </div>
         )}
 
-        {/* STEP 2: GTKM */}
+        {/* ===== GTKM ===== */}
         {step === "gtkm" && (
           <div>
-            <h1 className="font-display text-3xl mb-2">Tell your story in 3 albums</h1>
-            <p className="text-muted mb-8">These are the hero of your profile. Search for any album.</p>
+            <h1 className="font-display text-3xl sm:text-4xl mb-2">Your story in 3 albums</h1>
+            <p className="text-zinc-500 text-sm mb-8">These sit at the top of your profile. The first thing anyone sees.</p>
 
-            <div className="space-y-4">
-              {[0, 1, 2].map((position) => {
-                const selected = gtkmSelections[position];
+            <div className="space-y-3">
+              {[0, 1, 2].map(i => {
+                const sel = gtkm[i];
                 return (
-                  <div key={position} className="bg-card border border-border rounded-xl p-5">
-                    <p className="text-accent text-xs font-medium mb-3">{gtkmLabels[position]}</p>
-                    {selected ? (
-                      <div>
-                        <div className="flex items-center gap-3 mb-3">
-                          {selected.artworkUrl && (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={art(selected.artworkUrl, 80)!} alt="" className="w-12 h-12 rounded-lg object-cover" />
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{selected.title}</p>
-                            <p className="text-xs text-muted truncate">{selected.artistName}</p>
-                          </div>
-                          <button onClick={() => { const next = [...gtkmSelections]; next[position] = null; setGtkmSelections(next); }}
-                            className="text-xs text-muted hover:text-foreground">Change</button>
+                  <div key={i} className="bg-card border border-border rounded-2xl p-4">
+                    <p className="text-accent text-[11px] font-medium mb-3">{labels[i]}</p>
+                    {sel ? (
+                      <div className="flex items-center gap-3">
+                        {sel.artworkUrl && <img src={art(sel.artworkUrl, 80)!} alt="" className="w-11 h-11 rounded-lg object-cover" />}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{sel.title}</p>
+                          <p className="text-xs text-zinc-500 truncate">{sel.artistName}</p>
                         </div>
-                        <input type="text" value={gtkmStories[position]}
-                          onChange={(e) => { const next = [...gtkmStories]; next[position] = e.target.value; setGtkmStories(next); }}
-                          placeholder="Why this album? (optional)" maxLength={500}
-                          className="w-full px-3 py-2 bg-input border border-border rounded-lg text-sm placeholder:text-muted/50 focus:outline-none focus:border-zinc-700" />
+                        <button onClick={() => { const n = [...gtkm]; n[i] = null; setGtkm(n); }} className="text-xs text-zinc-600 hover:text-zinc-300">×</button>
                       </div>
-                    ) : gtkmSlot === position ? (
+                    ) : gtkmSlot === i ? (
                       <div>
-                        <input type="text" value={gtkmSearch} onChange={(e) => handleGtkmSearchInput(e.target.value)}
-                          placeholder="Search for an album..." autoFocus
+                        <input type="text" value={gtkmSearch} onChange={(e) => onGtkmSearch(e.target.value)} placeholder="Search..." autoFocus
                           className="w-full px-3 py-2 bg-input border border-border rounded-lg text-sm placeholder:text-muted/50 focus:outline-none focus:border-zinc-700 mb-2" />
-                        {gtkmLoading && <p className="text-xs text-muted">Searching...</p>}
-                        {gtkmResults.length > 0 && (
-                          <div className="space-y-1 max-h-48 overflow-y-auto">
-                            {gtkmResults.map((album) => (
-                              <button key={album.appleId} onClick={() => handleSelectGtkmAlbum(album)}
-                                className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-card-hover text-left">
-                                {album.artworkUrl && (
-                                  // eslint-disable-next-line @next/next/no-img-element
-                                  <img src={art(album.artworkUrl, 60)!} alt="" className="w-9 h-9 rounded object-cover" />
-                                )}
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium truncate">{album.title}</p>
-                                  <p className="text-xs text-muted truncate">{album.artistName}</p>
-                                </div>
-                              </button>
-                            ))}
-                          </div>
-                        )}
+                        {gtkmSearching && <p className="text-xs text-zinc-600">Searching...</p>}
+                        {gtkmResults.map(a => (
+                          <button key={a.appleId} onClick={() => selectGtkm(a)}
+                            className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-card-hover text-left">
+                            {a.artworkUrl && <img src={art(a.artworkUrl, 60)!} alt="" className="w-9 h-9 rounded object-cover" />}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{a.title}</p>
+                              <p className="text-xs text-zinc-500 truncate">{a.artistName}</p>
+                            </div>
+                          </button>
+                        ))}
                         <button onClick={() => { setGtkmSlot(null); setGtkmSearch(""); setGtkmResults([]); }}
-                          className="text-xs text-muted mt-2 hover:text-foreground">Cancel</button>
+                          className="text-xs text-zinc-700 mt-1 hover:text-zinc-400">Cancel</button>
                       </div>
                     ) : (
-                      <button onClick={() => setGtkmSlot(position)}
-                        className="w-full py-3 border border-dashed border-border rounded-lg text-sm text-muted/40 hover:text-muted hover:border-zinc-700 transition-colors">
-                        Search and add an album
+                      <button onClick={() => setGtkmSlot(i)}
+                        className="w-full py-2.5 border border-dashed border-zinc-800 rounded-xl text-sm text-zinc-700 hover:text-zinc-400 hover:border-zinc-700">
+                        Search and add
                       </button>
                     )}
                   </div>
@@ -411,56 +290,14 @@ export default function WelcomePage() {
             </div>
 
             <div className="flex gap-3 mt-8">
-              <button onClick={async () => { await loadSuggestions(); setStep("follow"); }}
-                className="flex-1 py-3 border border-border rounded-xl text-sm text-muted hover:text-foreground">Skip</button>
-              <button onClick={submitGtkm} disabled={!gtkmSelections.some(Boolean) || saving}
-                className="flex-1 py-3 bg-accent text-white font-medium rounded-xl hover:bg-accent-hover disabled:opacity-40 text-sm">
-                {saving ? "Saving..." : "Continue"}
+              <button onClick={() => router.push("/feed")} className="flex-1 py-3 border border-border rounded-xl text-sm text-zinc-600 hover:text-zinc-300">
+                Skip for now
+              </button>
+              <button onClick={saveGtkm} disabled={!gtkm.some(Boolean) || saving}
+                className="flex-1 py-3 bg-accent text-white font-medium rounded-xl hover:bg-accent-hover disabled:opacity-20 text-sm">
+                {saving ? "Saving..." : "Finish setup"}
               </button>
             </div>
-          </div>
-        )}
-
-        {/* STEP 3: FOLLOW */}
-        {step === "follow" && (
-          <div>
-            <h1 className="font-display text-3xl mb-2">Find your people</h1>
-            <p className="text-muted mb-8">Follow curators to fill your feed.</p>
-
-            {suggestedUsers.length > 0 ? (
-              <div className="space-y-2">
-                {suggestedUsers.map((user) => (
-                  <div key={user.id} className="flex items-center gap-4 p-4 bg-card border border-border rounded-xl">
-                    <div className="w-12 h-12 rounded-full bg-background border border-border flex items-center justify-center text-lg text-muted shrink-0 overflow-hidden">
-                      {user.avatar_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
-                      ) : user.username[0].toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">{user.display_name || user.username}</p>
-                      <p className="text-xs text-muted">{user.album_count} albums · {user.overlap} in common</p>
-                    </div>
-                    <button onClick={() => handleFollow(user.id)}
-                      className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
-                        followedIds.has(user.id) ? "border border-border text-muted" : "bg-accent text-white hover:bg-accent-hover"
-                      }`}>
-                      {followedIds.has(user.id) ? "Following" : "Follow"}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-muted">No suggestions yet.</p>
-                <p className="text-xs text-muted/40 mt-1">Discover people later on the Discover page.</p>
-              </div>
-            )}
-
-            <button onClick={() => router.push("/feed")}
-              className="w-full mt-8 py-3.5 bg-accent text-white font-medium rounded-xl hover:bg-accent-hover text-sm">
-              Enter Euterpy
-            </button>
           </div>
         )}
       </div>
