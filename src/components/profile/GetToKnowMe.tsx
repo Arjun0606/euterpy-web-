@@ -53,7 +53,14 @@ export default function GetToKnowMe({ items, username }: Props) {
     return () => container.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);
 
-  if (items.length === 0) return null;
+  if (items.length === 0) {
+    return (
+      <div className="mb-10 text-center py-8 border border-dashed border-border rounded-xl">
+        <p className="text-muted text-sm">No &ldquo;Get to Know Me&rdquo; albums yet.</p>
+        <p className="text-xs text-muted/40 mt-1">Add 3 albums that define you in Settings.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="mb-10">
@@ -96,21 +103,21 @@ export default function GetToKnowMe({ items, username }: Props) {
                   )}
 
                   {/* Content */}
-                  <div className="relative p-8 flex flex-col sm:flex-row gap-8 items-center min-h-[320px]">
-                    {/* Vinyl cover */}
+                  <div className="relative p-5 sm:p-8 flex flex-col sm:flex-row gap-5 sm:gap-8 items-center min-h-[280px] sm:min-h-[320px]">
+                    {/* Vinyl cover — smaller on mobile */}
                     <VinylCover
                       artworkUrl={album.artwork_url}
                       title={album.title}
-                      size="lg"
+                      size="md"
                       showVinyl={true}
                     />
 
                     {/* Text */}
-                    <div className="flex-1 text-center sm:text-left sm:pl-4">
-                      <p className="text-xs uppercase tracking-widest text-accent mb-3 font-medium">
+                    <div className="flex-1 text-center sm:text-left">
+                      <p className="text-[10px] sm:text-xs uppercase tracking-widest text-accent mb-2 sm:mb-3 font-medium">
                         {SLIDE_LABELS[index] || ""}
                       </p>
-                      <h3 className="text-2xl sm:text-3xl font-semibold mb-1 font-display">
+                      <h3 className="text-xl sm:text-3xl font-semibold mb-1 font-display">
                         {album.title}
                       </h3>
                       <p className="text-muted mb-5">

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
 interface Props {
   songAppleId: string;
@@ -61,10 +62,11 @@ export default function SongRatingModal({
         });
       }
 
+      toast(`★ ${score} — ${songTitle}`);
       onSaved();
       onClose();
-    } catch (error) {
-      // silent fail — toast handled by parent
+    } catch {
+      toast.error("Something went wrong. Try again.");
     } finally {
       setSaving(false);
     }

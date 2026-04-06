@@ -270,20 +270,20 @@ export default function ReviewSection({ reviews, albumId, songId, userId }: Prop
                       onClick={() => vote(review.id, "up")}
                       className={`text-xs transition-colors ${myVotes[review.id] === "up" ? "text-accent font-medium" : "text-muted hover:text-accent"}`}
                     >
-                      ▲{userId === (review as any).user_id ? ` ${review.upvotes}` : ""}
+                      ▲ {review.upvotes}
                     </button>
                     <button
                       onClick={() => vote(review.id, "down")}
                       className={`text-xs transition-colors ${myVotes[review.id] === "down" ? "text-red-400 font-medium" : "text-muted hover:text-red-400"}`}
                     >
-                      ▼{userId === (review as any).user_id ? ` ${review.downvotes}` : ""}
+                      ▼ {review.downvotes}
                     </button>
                   </>
                 )}
                 {!userId && (
                   <>
-                    <span className="text-xs text-muted">▲</span>
-                    <span className="text-xs text-muted">▼</span>
+                    <span className="text-xs text-muted">▲ {review.upvotes}</span>
+                    <span className="text-xs text-muted">▼ {review.downvotes}</span>
                   </>
                 )}
               </div>

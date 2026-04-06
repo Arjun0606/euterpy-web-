@@ -70,8 +70,8 @@ export default function NavBar({ username, avatarUrl }: Props) {
       </header>
 
       {/* Mobile: bottom tab bar */}
-      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-20 bg-background/90 backdrop-blur-xl border-t border-border safe-area-bottom">
-        <div className="flex items-center justify-around py-2 px-4">
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-20 bg-background/90 backdrop-blur-xl border-t border-border">
+        <div className="flex items-center justify-around py-2 px-4 pb-[env(safe-area-inset-bottom,8px)]">
           {links.slice(0, 3).map((link) => {
             const isActive = pathname === link.href || (link.href !== "/feed" && link.href.length > 1 && pathname.startsWith(link.href));
             return (
