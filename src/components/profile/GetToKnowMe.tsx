@@ -57,7 +57,7 @@ export default function GetToKnowMe({ items, username }: Props) {
 
   return (
     <div className="mb-10">
-      <h2 className="text-xs uppercase tracking-widest text-muted mb-4 px-4">
+      <h2 className="text-[10px] uppercase tracking-[0.15em] text-zinc-600 font-medium mb-4">
         Get to Know {username}
       </h2>
 
@@ -65,12 +65,7 @@ export default function GetToKnowMe({ items, username }: Props) {
       <div className="relative">
         <div
           ref={scrollRef}
-          className="flex overflow-x-auto snap-x snap-mandatory -mx-4 px-4"
-          style={{
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
-            WebkitOverflowScrolling: "touch",
-          }}
+          className="flex overflow-x-auto snap-x snap-mandatory -mx-4 px-4 no-scrollbar"
         >
           {items.map((item, index) => {
             const album = item.albums;

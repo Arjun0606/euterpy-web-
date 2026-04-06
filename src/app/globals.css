@@ -5,12 +5,10 @@
   --foreground: #f0f0f0;
   --accent: #FF1493;
   --accent-hover: #ff3da5;
-  --accent-glow: rgba(255, 20, 147, 0.15);
-  --muted: #a1a1aa;
+  --muted: #71717a;
   --border: rgba(255, 255, 255, 0.06);
   --card: rgba(255, 255, 255, 0.03);
   --card-hover: rgba(255, 255, 255, 0.06);
-  --card-solid: #0a0a0a;
 }
 
 @theme inline {
@@ -27,40 +25,44 @@
   --font-display: var(--font-instrument-serif);
 }
 
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.01em;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 4px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 2px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.15);
-}
+/* Scrollbar — nearly invisible */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.06); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.12); }
 
 /* Selection */
 ::selection {
-  background: rgba(255, 20, 147, 0.3);
+  background: rgba(255, 20, 147, 0.25);
   color: white;
 }
 
-/* Focus visible */
+/* Focus */
 :focus-visible {
-  outline: 1px solid var(--accent);
+  outline: 1px solid rgba(255, 255, 255, 0.15);
   outline-offset: 2px;
 }
+
+/* Smooth transitions globally */
+button, a, input, textarea {
+  transition-property: color, background-color, border-color, opacity, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hide scrollbar for carousels */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
