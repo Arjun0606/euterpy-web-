@@ -91,7 +91,7 @@ export default function SignUpPage() {
               onChange={(e) => { setEmail(e.target.value); setError(null); }}
               autoFocus
               onKeyDown={(e) => e.key === "Enter" && email.includes("@") && setStep("password")}
-              className="w-full px-4 py-3.5 bg-card border border-border rounded-xl text-foreground placeholder:text-muted/30 focus:outline-none focus:border-accent transition-colors text-lg"
+              className="w-full px-4 py-3.5 bg-input border border-border rounded-xl text-foreground placeholder:text-muted/50 focus:outline-none focus:border-zinc-700 transition-colors text-lg"
             />
             <button
               onClick={() => email.includes("@") ? setStep("password") : setError("Enter a valid email")}
@@ -117,7 +117,7 @@ export default function SignUpPage() {
               onChange={(e) => { setPassword(e.target.value); setError(null); }}
               autoFocus
               onKeyDown={(e) => e.key === "Enter" && password.length >= 6 && setStep("username")}
-              className="w-full px-4 py-3.5 bg-card border border-border rounded-xl text-foreground placeholder:text-muted/30 focus:outline-none focus:border-accent transition-colors text-lg"
+              className="w-full px-4 py-3.5 bg-input border border-border rounded-xl text-foreground placeholder:text-muted/50 focus:outline-none focus:border-zinc-700 transition-colors text-lg"
             />
             <button
               onClick={() => password.length >= 6 ? setStep("username") : setError("Password must be at least 6 characters")}
@@ -146,7 +146,7 @@ export default function SignUpPage() {
                 autoFocus
                 maxLength={20}
                 onKeyDown={(e) => e.key === "Enter" && username.length >= 3 && handleSignUp()}
-                className="w-full pl-9 pr-4 py-3.5 bg-card border border-border rounded-xl text-foreground placeholder:text-muted/30 focus:outline-none focus:border-accent transition-colors text-lg"
+                className="w-full pl-9 pr-4 py-3.5 bg-input border border-border rounded-xl text-foreground placeholder:text-muted/50 focus:outline-none focus:border-zinc-700 transition-colors text-lg"
               />
             </div>
             <button

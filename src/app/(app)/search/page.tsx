@@ -101,7 +101,7 @@ export default function SearchPage() {
             value={query}
             onChange={(e) => handleInputChange(e.target.value)}
             autoFocus
-            className="w-full px-4 py-3 bg-card border border-border rounded-lg text-foreground placeholder:text-muted/40 focus:outline-none focus:border-accent transition-colors text-lg"
+            className="w-full px-4 py-3 bg-card border border-border rounded-lg text-foreground placeholder:text-muted/40 focus:outline-none focus:border-zinc-700 transition-colors text-lg"
           />
         </div>
 

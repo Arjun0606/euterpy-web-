@@ -64,7 +64,7 @@ export default function ShelfEditor({ shelf, onClose, onSaved }: Props) {
               placeholder="Late Night Drives"
               maxLength={100}
               autoFocus
-              className="w-full px-4 py-3 bg-card border border-border rounded-xl text-sm placeholder:text-muted/30 focus:outline-none focus:border-accent"
+              className="w-full px-4 py-3 bg-input border border-border rounded-xl text-sm placeholder:text-muted/50 focus:outline-none focus:border-zinc-700"
             />
           </div>
 
@@ -76,7 +76,7 @@ export default function ShelfEditor({ shelf, onClose, onSaved }: Props) {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Albums for the road..."
               maxLength={300}
-              className="w-full px-4 py-3 bg-card border border-border rounded-xl text-sm placeholder:text-muted/30 focus:outline-none focus:border-accent"
+              className="w-full px-4 py-3 bg-input border border-border rounded-xl text-sm placeholder:text-muted/50 focus:outline-none focus:border-zinc-700"
             />
           </div>
 

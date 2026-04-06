@@ -20,10 +20,7 @@ function LoginForm() {
     setLoading(true);
 
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       setError(error.message);
@@ -38,49 +35,43 @@ function LoginForm() {
     <div className="flex flex-col items-center justify-center min-h-screen px-6">
       <div className="w-full max-w-sm">
         <Link href="/">
-          <h1 className="font-display text-4xl text-center mb-8">Euterpy</h1>
+          <h1 className="font-display text-5xl text-center mb-2">Euterpy</h1>
         </Link>
+        <p className="text-center text-sm text-muted mb-10">Welcome back.</p>
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-4 py-3 bg-card border border-border rounded-lg text-foreground placeholder:text-muted/40 focus:outline-none focus:border-accent transition-colors"
-            />
-          </div>
-          <div>
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full px-4 py-3 bg-card border border-border rounded-lg text-foreground placeholder:text-muted/40 focus:outline-none focus:border-accent transition-colors"
-            />
-          </div>
+        <form onSubmit={handleLogin} className="space-y-3">
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoFocus
+            className="w-full px-4 py-3.5 bg-input border border-border rounded-xl text-foreground placeholder:text-muted/50 focus:outline-none focus:border-zinc-700 transition-colors"
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="w-full px-4 py-3.5 bg-input border border-border rounded-xl text-foreground placeholder:text-muted/50 focus:outline-none focus:border-zinc-700 transition-colors"
+          />
 
-          {error && (
-            <p className="text-sm text-red-400">{error}</p>
-          )}
+          {error && <p className="text-sm text-red-400 text-center">{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-accent text-white font-medium rounded-lg hover:bg-accent-hover transition-colors disabled:opacity-50"
+            className="w-full py-3.5 bg-accent text-white font-medium rounded-xl hover:bg-accent-hover transition-colors disabled:opacity-50"
           >
             {loading ? "Logging in..." : "Log In"}
           </button>
         </form>
 
-        <p className="text-center text-sm text-muted mt-6">
+        <p className="text-center text-sm text-muted mt-8">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-accent hover:underline">
-            Sign up
-          </Link>
+          <Link href="/signup" className="text-accent hover:underline">Sign up</Link>
         </p>
       </div>
     </div>
@@ -88,9 +79,5 @@ function LoginForm() {
 }
 
 export default function LoginPage() {
-  return (
-    <Suspense>
-      <LoginForm />
-    </Suspense>
-  );
+  return <Suspense><LoginForm /></Suspense>;
 }

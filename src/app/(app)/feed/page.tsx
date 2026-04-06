@@ -91,7 +91,7 @@ export default async function HomePage() {
                 <Link
                   key={review.id}
                   href={isAlbum ? `/album/${item?.apple_id}` : `/song/${item?.apple_id}`}
-                  className="block bg-card border border-border rounded-xl p-4 hover:border-accent/20 transition-colors"
+                  className="block bg-card border border-border rounded-xl p-4 hover:border-zinc-700 transition-colors"
                 >
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center text-xs text-muted shrink-0">
@@ -147,7 +147,7 @@ export default async function HomePage() {
               const album = rating?.album;
 
               return (
-                <div key={`r-${item.id}`} className="flex items-start gap-4 p-5 rounded-2xl bg-card border border-border hover:border-border transition-colors">
+                <div key={`r-${item.id}`} className="flex items-start gap-4 p-5 rounded-2xl bg-card border border-border hover:border-zinc-700 transition-colors">
                   <Link href={`/${actor.username}`} className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center text-sm text-muted shrink-0 overflow-hidden">
                     {actor.avatar_url ? (
                       // eslint-disable-next-line @next/next/no-img-element

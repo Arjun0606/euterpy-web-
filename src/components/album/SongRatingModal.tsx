@@ -121,7 +121,7 @@ export default function SongRatingModal({
             onChange={(e) => setReaction(e.target.value)}
             maxLength={280}
             rows={2}
-            className="w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-muted/30 focus:outline-none focus:border-accent transition-colors resize-none text-sm"
+            className="w-full px-4 py-3 bg-input border border-border rounded-xl text-foreground placeholder:text-muted/50 focus:outline-none focus:border-zinc-700 transition-colors resize-none text-sm"
           />
         </div>
 

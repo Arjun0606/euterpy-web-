@@ -205,7 +205,7 @@ export default function ReviewSection({ reviews, albumId, songId, userId }: Prop
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             maxLength={200}
-            className="w-full px-3 py-2 mb-3 bg-background border border-border rounded-lg text-sm placeholder:text-muted/30 focus:outline-none focus:border-accent"
+            className="w-full px-3 py-2 mb-3 bg-input border border-border rounded-lg text-sm placeholder:text-muted/50 focus:outline-none focus:border-zinc-700"
           />
 
           <textarea
@@ -214,7 +214,7 @@ export default function ReviewSection({ reviews, albumId, songId, userId }: Prop
             onChange={(e) => setBody(e.target.value)}
             maxLength={5000}
             rows={4}
-            className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm placeholder:text-muted/30 focus:outline-none focus:border-accent resize-none"
+            className="w-full px-3 py-2 bg-input border border-border rounded-lg text-sm placeholder:text-muted/50 focus:outline-none focus:border-zinc-700 resize-none"
           />
 
           <div className="flex justify-between items-center mt-3">

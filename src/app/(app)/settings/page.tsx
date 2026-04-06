@@ -184,7 +184,7 @@ export default function SettingsPage() {
             onChange={(e) => setDisplayName(e.target.value)}
             placeholder="Your name"
             maxLength={50}
-            className="w-full px-4 py-3 bg-card border border-border rounded-xl text-foreground placeholder:text-muted/30 focus:outline-none focus:border-accent transition-colors"
+            className="w-full px-4 py-3 bg-input border border-border rounded-xl text-foreground placeholder:text-muted/50 focus:outline-none focus:border-zinc-700 transition-colors"
           />
         </div>
 
@@ -197,7 +197,7 @@ export default function SettingsPage() {
             placeholder="One sentence about your relationship with music..."
             maxLength={160}
             rows={2}
-            className="w-full px-4 py-3 bg-card border border-border rounded-xl text-foreground placeholder:text-muted/30 focus:outline-none focus:border-accent transition-colors resize-none"
+            className="w-full px-4 py-3 bg-input border border-border rounded-xl text-foreground placeholder:text-muted/50 focus:outline-none focus:border-zinc-700 transition-colors resize-none"
           />
           <p className="text-right text-xs text-muted/30 mt-1">{bio.length}/160</p>
         </div>
@@ -213,7 +213,7 @@ export default function SettingsPage() {
                 value={socialLinks.instagram}
                 onChange={(e) => setSocialLinks({ ...socialLinks, instagram: e.target.value })}
                 placeholder="Instagram username"
-                className="flex-1 px-3 py-2 bg-card border border-border rounded-lg text-sm placeholder:text-muted/30 focus:outline-none focus:border-accent"
+                className="flex-1 px-3 py-2 bg-input border border-border rounded-lg text-sm placeholder:text-muted/50 focus:outline-none focus:border-zinc-700"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -223,7 +223,7 @@ export default function SettingsPage() {
                 value={socialLinks.twitter}
                 onChange={(e) => setSocialLinks({ ...socialLinks, twitter: e.target.value })}
                 placeholder="X / Twitter username"
-                className="flex-1 px-3 py-2 bg-card border border-border rounded-lg text-sm placeholder:text-muted/30 focus:outline-none focus:border-accent"
+                className="flex-1 px-3 py-2 bg-input border border-border rounded-lg text-sm placeholder:text-muted/50 focus:outline-none focus:border-zinc-700"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -233,7 +233,7 @@ export default function SettingsPage() {
                 value={socialLinks.spotify}
                 onChange={(e) => setSocialLinks({ ...socialLinks, spotify: e.target.value })}
                 placeholder="Spotify username"
-                className="flex-1 px-3 py-2 bg-card border border-border rounded-lg text-sm placeholder:text-muted/30 focus:outline-none focus:border-accent"
+                className="flex-1 px-3 py-2 bg-input border border-border rounded-lg text-sm placeholder:text-muted/50 focus:outline-none focus:border-zinc-700"
               />
             </div>
           </div>

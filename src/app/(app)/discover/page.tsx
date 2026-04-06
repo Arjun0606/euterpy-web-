@@ -87,7 +87,7 @@ export default async function DiscoverPage() {
               <Link
                 key={user.id}
                 href={`/${user.username}`}
-                className="bg-card border border-border rounded-2xl p-4 hover:border-border transition-all duration-200 text-center"
+                className="bg-card border border-border rounded-2xl p-4 hover:border-zinc-700 transition-all duration-200 text-center"
               >
                 <div className="w-14 h-14 rounded-full bg-background border border-border flex items-center justify-center text-xl text-muted mx-auto mb-2">
                   {user.avatar_url ? (
@@ -117,7 +117,7 @@ export default async function DiscoverPage() {
               <Link
                 key={u.id}
                 href={`/${u.username}`}
-                className="shrink-0 w-[140px] sm:w-auto bg-card border border-border rounded-2xl p-4 hover:border-border transition-all duration-200 text-center"
+                className="shrink-0 w-[140px] sm:w-auto bg-card border border-border rounded-2xl p-4 hover:border-zinc-700 transition-all duration-200 text-center"
               >
                 <div className="w-12 h-12 rounded-full bg-background border border-border flex items-center justify-center text-lg text-muted mx-auto mb-2">
                   {u.username[0].toUpperCase()}

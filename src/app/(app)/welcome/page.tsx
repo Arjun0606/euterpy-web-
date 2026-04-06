@@ -268,7 +268,7 @@ export default function WelcomePage() {
                 value={searchQuery}
                 onChange={(e) => handleSearchInput(e.target.value)}
                 autoFocus
-                className="w-full px-4 py-3 bg-card border border-border rounded-xl text-sm placeholder:text-muted/30 focus:outline-none focus:border-accent"
+                className="w-full px-4 py-3 bg-input border border-border rounded-xl text-sm placeholder:text-muted/50 focus:outline-none focus:border-zinc-700"
               />
               {searchLoading && <p className="text-xs text-muted mt-2">Searching...</p>}
 
@@ -371,13 +371,13 @@ export default function WelcomePage() {
                         <input type="text" value={gtkmStories[position]}
                           onChange={(e) => { const next = [...gtkmStories]; next[position] = e.target.value; setGtkmStories(next); }}
                           placeholder="Why this album? (optional)" maxLength={500}
-                          className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm placeholder:text-muted/30 focus:outline-none focus:border-accent" />
+                          className="w-full px-3 py-2 bg-input border border-border rounded-lg text-sm placeholder:text-muted/50 focus:outline-none focus:border-zinc-700" />
                       </div>
                     ) : gtkmSlot === position ? (
                       <div>
                         <input type="text" value={gtkmSearch} onChange={(e) => handleGtkmSearchInput(e.target.value)}
                           placeholder="Search for an album..." autoFocus
-                          className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm placeholder:text-muted/30 focus:outline-none focus:border-accent mb-2" />
+                          className="w-full px-3 py-2 bg-input border border-border rounded-lg text-sm placeholder:text-muted/50 focus:outline-none focus:border-zinc-700 mb-2" />
                         {gtkmLoading && <p className="text-xs text-muted">Searching...</p>}
                         {gtkmResults.length > 0 && (
                           <div className="space-y-1 max-h-48 overflow-y-auto">
@@ -401,7 +401,7 @@ export default function WelcomePage() {
                       </div>
                     ) : (
                       <button onClick={() => setGtkmSlot(position)}
-                        className="w-full py-3 border border-dashed border-border rounded-lg text-sm text-muted/40 hover:text-muted hover:border-accent/30 transition-colors">
+                        className="w-full py-3 border border-dashed border-border rounded-lg text-sm text-muted/40 hover:text-muted hover:border-zinc-700 transition-colors">
                         Search and add an album
                       </button>
                     )}

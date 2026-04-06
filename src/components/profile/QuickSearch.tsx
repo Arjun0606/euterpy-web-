@@ -122,7 +122,7 @@ export default function QuickSearch() {
           value={query}
           onChange={(e) => handleInput(e.target.value)}
           autoFocus
-          className="flex-1 px-3 py-1.5 bg-background border border-border rounded-lg text-sm text-foreground placeholder:text-muted/30 focus:outline-none focus:border-white/[0.15]"
+          className="flex-1 px-3 py-1.5 bg-input border border-border rounded-lg text-sm text-foreground placeholder:text-muted/50 focus:outline-none focus:border-zinc-700"
         />
       </div>
 
@@ -177,14 +177,14 @@ export default function QuickSearch() {
           {/* Reaction */}
           <input type="text" value={reaction} onChange={(e) => setReaction(e.target.value)}
             placeholder="Say something..." maxLength={280}
-            className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm placeholder:text-muted/30 focus:outline-none focus:border-white/[0.15]" />
+            className="w-full px-3 py-2 bg-input border border-border rounded-lg text-sm placeholder:text-muted/50 focus:outline-none focus:border-zinc-700" />
 
           {/* Ownership (albums only) */}
           {tab === "albums" && (
             <div className="flex gap-2">
               {[["vinyl","🎵 Vinyl"],["cd","💿 CD"],["cassette","📼 Cassette"],["digital","🎧 Stream"]].map(([o, label]) => (
                 <button key={o} onClick={() => setOwnership(o)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium ${ownership === o ? "bg-accent text-white" : "bg-background border border-border text-muted"}`}>
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium ${ownership === o ? "bg-accent text-white" : "bg-input border border-border text-muted"}`}>
                   {label}
                 </button>
               ))}

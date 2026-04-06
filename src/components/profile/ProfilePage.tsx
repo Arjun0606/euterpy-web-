@@ -133,7 +133,7 @@ export default function ProfilePage({ data }: Props) {
                     Edit Profile
                   </a>
                   <button onClick={handleShare}
-                    className="px-5 py-2 bg-card border border-border text-zinc-400 text-xs font-medium rounded-full hover:text-zinc-200 hover:border-border transition-colors">
+                    className="px-5 py-2 bg-card border border-border text-zinc-400 text-xs font-medium rounded-full hover:text-zinc-200 hover:border-zinc-700 transition-colors">
                     {copied ? "Copied!" : "Share"}
                   </button>
                 </>
@@ -141,7 +141,7 @@ export default function ProfilePage({ data }: Props) {
                 <>
                   <FollowButton targetUserId={profile.id} />
                   <button onClick={handleShare}
-                    className="px-5 py-2 bg-card border border-border text-zinc-400 text-xs font-medium rounded-full hover:text-zinc-200 hover:border-border transition-colors">
+                    className="px-5 py-2 bg-card border border-border text-zinc-400 text-xs font-medium rounded-full hover:text-zinc-200 hover:border-zinc-700 transition-colors">
                     {copied ? "Copied!" : "Share"}
                   </button>
                   <TasteMatch targetUserId={profile.id} />

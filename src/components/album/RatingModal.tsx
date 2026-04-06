@@ -166,7 +166,7 @@ export default function RatingModal({
                 className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${
                   ownership === opt.value
                     ? "bg-accent text-white"
-                    : "bg-background border border-border text-muted hover:text-foreground"
+                    : "bg-input border border-border text-muted hover:text-foreground"
                 }`}
               >
                 {opt.emoji} {opt.label}
@@ -182,7 +182,7 @@ export default function RatingModal({
               <button
                 key={chip}
                 onClick={() => setReaction(reaction ? `${reaction} ${chip}` : chip)}
-                className="px-2.5 py-1 bg-background border border-border rounded-full text-[11px] text-muted hover:text-accent hover:border-accent/30 transition-colors"
+                className="px-2.5 py-1 bg-card border border-border rounded-full text-[11px] text-muted hover:text-accent hover:border-zinc-700 transition-colors"
               >
                 {chip}
               </button>
@@ -203,7 +203,7 @@ export default function RatingModal({
             }}
             maxLength={5000}
             rows={2}
-            className="w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-muted/30 focus:outline-none focus:border-accent transition-colors resize-none text-sm"
+            className="w-full px-4 py-3 bg-input border border-border rounded-xl text-foreground placeholder:text-muted/30 focus:outline-none focus:border-zinc-700 transition-colors resize-none text-sm"
           />
           <p className="text-right text-xs text-muted/30 mt-1">
             {reaction.length}/5000
@@ -229,7 +229,7 @@ export default function RatingModal({
                 value={reviewTitle}
                 onChange={(e) => setReviewTitle(e.target.value)}
                 maxLength={200}
-                className="w-full mt-2 px-3 py-2 bg-background border border-border rounded-lg text-sm placeholder:text-muted/30 focus:outline-none focus:border-accent"
+                className="w-full mt-2 px-3 py-2 bg-input border border-border rounded-lg text-sm placeholder:text-muted/30 focus:outline-none focus:border-zinc-700"
               />
             )}
           </div>

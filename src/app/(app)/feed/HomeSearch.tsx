@@ -57,7 +57,7 @@ export default function HomeSearch() {
           onChange={(e) => handleInput(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setTimeout(() => setFocused(false), 200)}
-          className="w-full pl-10 pr-4 py-3 bg-card border border-border rounded-xl text-sm text-foreground placeholder:text-muted/30 focus:outline-none focus:border-accent transition-colors"
+          className="w-full pl-10 pr-4 py-3 bg-input border border-border rounded-xl text-sm text-foreground placeholder:text-muted/50 focus:outline-none focus:border-zinc-700 transition-colors"
         />
       </div>
 
