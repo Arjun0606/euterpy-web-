@@ -180,7 +180,7 @@ export default function WelcomePage() {
                 <div className="mt-2 border border-border rounded-xl bg-card overflow-hidden">
                   {results.map(a => (
                     <button key={a.appleId} onClick={() => { setSelected(a); setResults([]); }}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-card-hover text-left">
+                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-card-hover transition-colors text-left">
                       {a.artworkUrl && <img src={art(a.artworkUrl, 80)!} alt="" className="w-10 h-10 rounded object-cover" />}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{a.title}</p>
@@ -194,14 +194,14 @@ export default function WelcomePage() {
 
             {/* Rate selected */}
             {selected && (
-              <div className="bg-card border border-border rounded-2xl p-5 mb-6">
+              <div className="bg-card border border-border rounded-xl p-5 mb-6">
                 <div className="flex items-center gap-4 mb-4">
                   {selected.artworkUrl && <img src={art(selected.artworkUrl, 160)!} alt="" className="w-14 h-14 rounded-xl object-cover" />}
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{selected.title}</p>
                     <p className="text-xs text-zinc-500 truncate">{selected.artistName}</p>
                   </div>
-                  <button onClick={() => { setSelected(null); setScore(0); }} className="text-xs text-zinc-600 hover:text-zinc-300">×</button>
+                  <button onClick={() => { setSelected(null); setScore(0); }} className="text-xs text-zinc-600 hover:text-zinc-300 transition-colors">×</button>
                 </div>
                 <div className="flex items-center justify-center gap-1 mb-4">
                   {[1,2,3,4,5].map(v => (
@@ -249,7 +249,7 @@ export default function WelcomePage() {
               {[0, 1, 2].map(i => {
                 const sel = gtkm[i];
                 return (
-                  <div key={i} className="bg-card border border-border rounded-2xl p-4">
+                  <div key={i} className="bg-card border border-border rounded-xl p-4">
                     <p className="text-accent text-[11px] font-medium mb-3">{labels[i]}</p>
                     {sel ? (
                       <div className="flex items-center gap-3">
@@ -258,7 +258,7 @@ export default function WelcomePage() {
                           <p className="text-sm font-medium truncate">{sel.title}</p>
                           <p className="text-xs text-zinc-500 truncate">{sel.artistName}</p>
                         </div>
-                        <button onClick={() => { const n = [...gtkm]; n[i] = null; setGtkm(n); }} className="text-xs text-zinc-600 hover:text-zinc-300">×</button>
+                        <button onClick={() => { const n = [...gtkm]; n[i] = null; setGtkm(n); }} className="text-xs text-zinc-600 hover:text-zinc-300 transition-colors">×</button>
                       </div>
                     ) : gtkmSlot === i ? (
                       <div>
@@ -267,7 +267,7 @@ export default function WelcomePage() {
                         {gtkmSearching && <p className="text-xs text-zinc-600">Searching...</p>}
                         {gtkmResults.map(a => (
                           <button key={a.appleId} onClick={() => selectGtkm(a)}
-                            className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-card-hover text-left">
+                            className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-card-hover transition-colors text-left">
                             {a.artworkUrl && <img src={art(a.artworkUrl, 60)!} alt="" className="w-9 h-9 rounded object-cover" />}
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium truncate">{a.title}</p>
@@ -276,7 +276,7 @@ export default function WelcomePage() {
                           </button>
                         ))}
                         <button onClick={() => { setGtkmSlot(null); setGtkmSearch(""); setGtkmResults([]); }}
-                          className="text-xs text-zinc-700 mt-1 hover:text-zinc-400">Cancel</button>
+                          className="text-xs text-zinc-700 mt-1 hover:text-zinc-400 transition-colors">Cancel</button>
                       </div>
                     ) : (
                       <button onClick={() => setGtkmSlot(i)}
@@ -290,7 +290,7 @@ export default function WelcomePage() {
             </div>
 
             <div className="flex gap-3 mt-8">
-              <button onClick={() => router.push("/feed")} className="flex-1 py-3 border border-border rounded-xl text-sm text-zinc-600 hover:text-zinc-300">
+              <button onClick={() => router.push("/feed")} className="flex-1 py-3 border border-border rounded-xl text-sm text-zinc-600 hover:text-zinc-300 transition-colors">
                 Skip for now
               </button>
               <button onClick={saveGtkm} disabled={!gtkm.some(Boolean) || saving}

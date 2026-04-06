@@ -117,7 +117,7 @@ export default function RatingModal({
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
 
       <div
-        className="relative w-full max-w-md bg-card border border-border rounded-t-2xl sm:rounded-2xl p-6 animate-in slide-in-from-bottom duration-300 max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-md bg-card border border-border rounded-t-2xl sm:rounded-xl p-6 animate-in slide-in-from-bottom duration-300 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Album info */}
@@ -166,7 +166,7 @@ export default function RatingModal({
                 className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${
                   ownership === opt.value
                     ? "bg-accent text-white"
-                    : "bg-input border border-border text-muted hover:text-foreground"
+                    : "bg-input border border-border text-muted hover:text-foreground transition-colors"
                 }`}
               >
                 {opt.emoji} {opt.label}

@@ -23,7 +23,7 @@ export default function NavBar({ username, avatarUrl }: Props) {
   return (
     <>
       {/* Desktop: top bar */}
-      <header className="hidden sm:block sticky top-0 z-20 bg-black/70 backdrop-blur-2xl border-b border-border">
+      <header className="hidden sm:block sticky top-0 z-20 bg-background/80 backdrop-blur-2xl border-b border-border">
         <div className="max-w-5xl mx-auto px-8 py-3.5 flex items-center gap-8">
           <Link href="/feed" className="font-display text-2xl shrink-0">
             Euterpy
@@ -37,7 +37,7 @@ export default function NavBar({ username, avatarUrl }: Props) {
                 className={`px-4 py-2 rounded-full text-sm transition-colors ${
                   pathname === link.href || (link.href !== "/feed" && pathname.startsWith(link.href))
                     ? "text-accent font-medium"
-                    : "text-muted hover:text-foreground"
+                    : "text-muted hover:text-foreground transition-colors"
                 }`}
               >
                 {link.label}
@@ -50,7 +50,7 @@ export default function NavBar({ username, avatarUrl }: Props) {
             <NotificationBell />
             <Link
               href="/settings"
-              className={`text-sm transition-colors ${pathname === "/settings" ? "text-accent" : "text-muted hover:text-foreground"}`}
+              className={`text-sm transition-colors ${pathname === "/settings" ? "text-accent" : "text-muted hover:text-foreground transition-colors"}`}
             >
               Settings
             </Link>

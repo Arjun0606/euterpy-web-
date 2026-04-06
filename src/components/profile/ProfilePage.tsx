@@ -161,7 +161,7 @@ export default function ProfilePage({ data }: Props) {
           ] as [Tab, string][]).map(([tab, label]) => (
             <button key={tab} onClick={() => setActiveTab(tab)}
               className={`px-5 py-3 text-sm font-medium transition-colors relative ${
-                activeTab === tab ? "text-white" : "text-zinc-600 hover:text-zinc-300"
+                activeTab === tab ? "text-white" : "text-zinc-600 hover:text-zinc-300 transition-colors"
               }`}>
               {label}
               {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-accent" />}
@@ -248,7 +248,7 @@ export default function ProfilePage({ data }: Props) {
                   const item = review.albums || review.songs;
                   const isAlbum = !!review.albums;
                   return (
-                    <div key={review.id} className="bg-card border border-border rounded-2xl p-5">
+                    <div key={review.id} className="bg-card border border-border rounded-xl p-5">
                       <div className="flex items-center gap-3 mb-3">
                         {item?.artwork_url && (
                           // eslint-disable-next-line @next/next/no-img-element

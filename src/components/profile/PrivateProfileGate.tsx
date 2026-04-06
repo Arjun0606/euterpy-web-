@@ -23,7 +23,7 @@ export default function PrivateProfileGate({ profile, requestPending }: Props) {
       <div className="max-w-3xl mx-auto px-4 sm:px-8 py-8">
         <div className="flex flex-col items-center text-center">
           {/* Avatar */}
-          <div className="w-24 h-24 rounded-full bg-card border-2 border-border flex items-center justify-center text-3xl text-muted mb-4">
+          <div className="w-24 h-24 rounded-full bg-card border border-border flex items-center justify-center text-3xl text-muted mb-4">
             {profile.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={profile.avatar_url} alt={profile.username} className="w-full h-full rounded-full object-cover" />

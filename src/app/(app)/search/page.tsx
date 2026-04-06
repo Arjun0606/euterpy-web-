@@ -112,7 +112,7 @@ export default function SearchPage() {
             className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
               tab === "albums"
                 ? "bg-accent text-white"
-                : "text-muted hover:text-foreground"
+                : "text-muted hover:text-foreground transition-colors"
             }`}
           >
             Albums
@@ -122,7 +122,7 @@ export default function SearchPage() {
             className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
               tab === "songs"
                 ? "bg-accent text-white"
-                : "text-muted hover:text-foreground"
+                : "text-muted hover:text-foreground transition-colors"
             }`}
           >
             Songs

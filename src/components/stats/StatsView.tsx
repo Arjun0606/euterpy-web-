@@ -218,7 +218,7 @@ export default function StatsView({ ratings, songRatings }: Props) {
           <button
             onClick={() => setViewMode("album")}
             className={`px-6 py-2 text-sm font-medium rounded-md transition-colors ${
-              viewMode === "album" ? "bg-accent text-white" : "text-muted hover:text-foreground"
+              viewMode === "album" ? "bg-accent text-white" : "text-muted hover:text-foreground transition-colors"
             }`}
           >
             By Album
@@ -226,7 +226,7 @@ export default function StatsView({ ratings, songRatings }: Props) {
           <button
             onClick={() => setViewMode("song")}
             className={`px-6 py-2 text-sm font-medium rounded-md transition-colors ${
-              viewMode === "song" ? "bg-accent text-white" : "text-muted hover:text-foreground"
+              viewMode === "song" ? "bg-accent text-white" : "text-muted hover:text-foreground transition-colors"
             }`}
           >
             By Song

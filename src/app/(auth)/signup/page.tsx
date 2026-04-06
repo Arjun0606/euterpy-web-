@@ -114,7 +114,7 @@ export default function SignUpPage() {
         {/* ===== STEP 2: EMAIL + PASSWORD ===== */}
         {step === "credentials" && (
           <div>
-            <button onClick={() => setStep("hello")} className="text-zinc-700 text-sm mb-8 hover:text-zinc-400">← Back</button>
+            <button onClick={() => setStep("hello")} className="text-zinc-700 text-sm mb-8 hover:text-zinc-400 transition-colors">← Back</button>
 
             <h2 className="font-display text-2xl sm:text-3xl mb-2">First, the basics</h2>
             <p className="text-zinc-500 text-sm mb-8">Your email and a password. That&apos;s it.</p>
@@ -142,7 +142,7 @@ export default function SignUpPage() {
         {/* ===== STEP 3: USERNAME ===== */}
         {step === "username" && (
           <div>
-            <button onClick={() => setStep("credentials")} className="text-zinc-700 text-sm mb-8 hover:text-zinc-400">← Back</button>
+            <button onClick={() => setStep("credentials")} className="text-zinc-700 text-sm mb-8 hover:text-zinc-400 transition-colors">← Back</button>
 
             <h2 className="font-display text-2xl sm:text-3xl mb-2">Pick your name</h2>
             <p className="text-zinc-500 text-sm mb-2">This is how people find you.</p>
@@ -171,13 +171,13 @@ export default function SignUpPage() {
         {/* ===== STEP 4: PROFILE (NAME + BIO) ===== */}
         {step === "bio" && (
           <div>
-            <button onClick={() => setStep("username")} className="text-zinc-700 text-sm mb-8 hover:text-zinc-400">← Back</button>
+            <button onClick={() => setStep("username")} className="text-zinc-700 text-sm mb-8 hover:text-zinc-400 transition-colors">← Back</button>
 
             <h2 className="font-display text-2xl sm:text-3xl mb-2">Make it yours</h2>
             <p className="text-zinc-500 text-sm mb-8">A name and a line about your relationship with music. You can change this anytime.</p>
 
             {/* Preview card */}
-            <div className="bg-card border border-border rounded-2xl p-5 mb-6">
+            <div className="bg-card border border-border rounded-xl p-5 mb-6">
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-14 h-14 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0">
                   <span className="font-display text-2xl text-zinc-600">{(displayName || username)[0]?.toUpperCase() || "?"}</span>
@@ -209,7 +209,7 @@ export default function SignUpPage() {
             </button>
 
             <button onClick={() => { setBio(""); setDisplayName(""); handleSignUp(); }}
-              className="w-full py-2 text-zinc-700 text-sm mt-2 hover:text-zinc-400">
+              className="w-full py-2 text-zinc-700 text-sm mt-2 hover:text-zinc-400 transition-colors">
               Skip this step
             </button>
           </div>

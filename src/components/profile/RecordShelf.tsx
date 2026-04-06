@@ -126,7 +126,7 @@ export default function RecordShelf({ items, title = "The Shelf", showSort = tru
             {([["all", "All"], ["album", "Albums"], ["song", "Songs"]] as [typeof filter, string][]).map(([f, label]) => (
               <button key={f} onClick={() => setFilter(f)}
                 className={`px-3 py-1 text-[11px] rounded-md transition-colors ${
-                  filter === f ? "bg-accent text-white" : "text-zinc-600 hover:text-zinc-300"
+                  filter === f ? "bg-accent text-white" : "text-zinc-600 hover:text-zinc-300 transition-colors"
                 }`}>{label}</button>
             ))}
           </div>
@@ -134,7 +134,7 @@ export default function RecordShelf({ items, title = "The Shelf", showSort = tru
             {([["recent", "Recent"], ["rating", "Top Rated"], ["artist", "Artist"]] as [SortBy, string][]).map(([s, label]) => (
               <button key={s} onClick={() => setSortBy(s)}
                 className={`px-2 py-1 text-[11px] rounded transition-colors ${
-                  sortBy === s ? "text-accent" : "text-zinc-700 hover:text-zinc-400"
+                  sortBy === s ? "text-accent" : "text-zinc-700 hover:text-zinc-400 transition-colors"
                 }`}>{label}</button>
             ))}
           </div>

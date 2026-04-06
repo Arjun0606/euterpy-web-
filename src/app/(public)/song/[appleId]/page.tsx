@@ -110,7 +110,7 @@ export default async function SongPage({ params }: Props) {
       <div className="max-w-3xl mx-auto px-4 sm:px-8 py-12 relative z-10">
         {/* Song Header */}
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8 mb-12">
-          <div className="w-48 h-48 rounded-2xl overflow-hidden bg-card border border-border shrink-0">
+          <div className="w-48 h-48 rounded-xl overflow-hidden bg-card border border-border shrink-0">
             {song.artwork_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={artwork(song.artwork_url)!} alt={song.title} className="w-full h-full object-cover" />

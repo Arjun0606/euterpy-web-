@@ -63,7 +63,7 @@ export default function ShelfDetail({ shelf, items: initialItems, isOwner }: Pro
           <div className="flex gap-2">
             <button
               onClick={() => setShowEdit(true)}
-              className="px-3 py-1.5 border border-border rounded-lg text-xs text-muted hover:text-foreground"
+              className="px-3 py-1.5 border border-border rounded-lg text-xs text-muted hover:text-foreground transition-colors"
             >
               Edit
             </button>

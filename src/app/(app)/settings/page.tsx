@@ -249,7 +249,7 @@ export default function SettingsPage() {
             onClick={() => setIsPrivate(!isPrivate)}
             className={`w-11 h-6 rounded-full transition-colors relative ${isPrivate ? "bg-accent" : "bg-border"}`}
           >
-            <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${isPrivate ? "translate-x-5.5 left-[1px]" : "left-0.5"}`} />
+            <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${isPrivate ? "translate-x-5 left-[1px]" : "left-0.5"}`} />
           </button>
         </div>
 
@@ -350,7 +350,7 @@ export default function SettingsPage() {
                 </div>
                 <button
                   onClick={() => handleUnblock(b.blocked_id)}
-                  className="px-3 py-1 border border-border text-xs text-muted rounded-full hover:text-foreground"
+                  className="px-3 py-1 border border-border text-xs text-muted rounded-full hover:text-foreground transition-colors"
                 >
                   Unblock
                 </button>

@@ -51,7 +51,7 @@ export default function ShelfEditor({ shelf, onClose, onSaved }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={onClose}>
-      <div className="bg-background border border-border rounded-2xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-background border border-border rounded-xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-semibold mb-4">{shelf ? "Edit Shelf" : "New Shelf"}</h2>
 
         <div className="space-y-4">
@@ -99,7 +99,7 @@ export default function ShelfEditor({ shelf, onClose, onSaved }: Props) {
         </div>
 
         <div className="flex gap-2 mt-6">
-          <button onClick={onClose} className="flex-1 py-2.5 border border-border rounded-xl text-sm text-muted hover:text-foreground">
+          <button onClick={onClose} className="flex-1 py-2.5 border border-border rounded-xl text-sm text-muted hover:text-foreground transition-colors">
             Cancel
           </button>
           <button

@@ -128,7 +128,7 @@ export default function AddToShelfModal({ albumDbId, songDbId, itemTitle, artist
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={onClose}>
       <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
-      <div className="relative w-full max-w-md bg-zinc-950 border border-border rounded-t-3xl sm:rounded-3xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      <div className="relative w-full max-w-md bg-card border border-border rounded-t-3xl sm:rounded-3xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
 
         {/* Header */}
         <div className="px-6 pt-6 pb-4">
