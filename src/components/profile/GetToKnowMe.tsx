@@ -88,7 +88,7 @@ export default function GetToKnowMe({ items, username }: Props) {
                 key={item.id}
                 className="snap-center shrink-0 w-full pr-4 last:pr-0"
               >
-                <div className="relative rounded-2xl overflow-hidden bg-card border border-border group">
+                <div className="relative rounded-2xl overflow-hidden bg-white/[0.02] border border-white/[0.06] group">
                   {/* Blurred album art background */}
                   {bgUrl && (
                     <div className="absolute inset-0">

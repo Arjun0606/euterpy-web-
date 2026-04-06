@@ -2,17 +2,20 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-black">
       {/* Hero */}
-      <div className="flex flex-col items-center justify-center min-h-[90vh] px-6">
-        <main className="flex flex-col items-center text-center max-w-xl">
-          <h1 className="font-display text-7xl sm:text-9xl tracking-tight mb-6">
+      <div className="flex flex-col items-center justify-center min-h-[92vh] px-6 relative">
+        {/* Subtle accent glow */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-accent/[0.04] rounded-full blur-[120px] pointer-events-none" />
+
+        <main className="relative flex flex-col items-center text-center max-w-lg z-10">
+          <h1 className="font-display text-7xl sm:text-[7rem] tracking-tight leading-none mb-8">
             Euterpy
           </h1>
-          <p className="text-lg sm:text-xl text-muted mb-3 leading-relaxed">
+          <p className="text-lg text-zinc-400 mb-3 leading-relaxed font-light">
             Your music taste, curated.
           </p>
-          <p className="text-sm text-muted/50 mb-10 max-w-sm leading-relaxed">
+          <p className="text-[13px] text-zinc-600 mb-12 max-w-xs leading-relaxed">
             Rate albums. Build your shelf. Tell your story in three records.
             Find people who hear what you hear.
           </p>
@@ -20,13 +23,13 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
             <Link
               href="/signup"
-              className="px-8 py-3.5 bg-accent text-white font-medium rounded-full hover:bg-accent-hover transition-colors text-center"
+              className="px-8 py-3 bg-accent text-white text-sm font-medium rounded-full hover:bg-accent-hover transition-all hover:shadow-lg hover:shadow-accent/20"
             >
               Claim Your Username
             </Link>
             <Link
               href="/login"
-              className="px-8 py-3.5 border border-border text-foreground font-medium rounded-full hover:bg-card-hover transition-colors text-center"
+              className="px-8 py-3 border border-white/[0.08] text-zinc-300 text-sm font-medium rounded-full hover:bg-white/[0.04] hover:border-white/[0.12] transition-all"
             >
               Log In
             </Link>
@@ -34,27 +37,27 @@ export default function Home() {
         </main>
       </div>
 
-      {/* What is it */}
-      <div className="max-w-3xl mx-auto px-6 py-16 border-t border-border/20">
-        <div className="grid sm:grid-cols-3 gap-10">
+      {/* Value Props */}
+      <div className="max-w-4xl mx-auto px-6 sm:px-12 py-20 border-t border-white/[0.04]">
+        <div className="grid sm:grid-cols-3 gap-12 sm:gap-10">
           <div>
-            <p className="text-accent text-sm font-medium mb-2">The Shelf</p>
-            <p className="text-sm text-muted leading-relaxed">
+            <p className="text-accent text-xs font-semibold uppercase tracking-widest mb-3">The Shelf</p>
+            <p className="text-[13px] text-zinc-500 leading-relaxed">
               Every album, single, and song you rate lives on your shelf.
               Vinyl, CD, cassette, stream — track how you own it.
             </p>
           </div>
           <div>
-            <p className="text-accent text-sm font-medium mb-2">Three Albums</p>
-            <p className="text-sm text-muted leading-relaxed">
+            <p className="text-accent text-xs font-semibold uppercase tracking-widest mb-3">Three Albums</p>
+            <p className="text-[13px] text-zinc-500 leading-relaxed">
               Pick three records that define you.
               Write why. This is the first thing people see
               when they visit your profile.
             </p>
           </div>
           <div>
-            <p className="text-accent text-sm font-medium mb-2">Taste Match</p>
-            <p className="text-sm text-muted leading-relaxed">
+            <p className="text-accent text-xs font-semibold uppercase tracking-widest mb-3">Taste Match</p>
+            <p className="text-[13px] text-zinc-500 leading-relaxed">
               Find curators who share your ear.
               See how your taste compares.
               Discover albums through people, not algorithms.
@@ -64,20 +67,20 @@ export default function Home() {
       </div>
 
       {/* CTA */}
-      <div className="text-center px-6 py-16 border-t border-border/20">
-        <p className="text-muted/40 text-sm mb-6">
-          Free. No streaming account needed.
+      <div className="text-center px-6 py-20 border-t border-white/[0.04]">
+        <p className="text-zinc-700 text-xs mb-8 uppercase tracking-widest">
+          Free forever. No streaming account needed.
         </p>
         <Link
           href="/signup"
-          className="inline-block px-10 py-3.5 bg-accent text-white font-medium rounded-full hover:bg-accent-hover transition-colors"
+          className="inline-block px-10 py-3.5 bg-accent text-white text-sm font-medium rounded-full hover:bg-accent-hover transition-all hover:shadow-lg hover:shadow-accent/20"
         >
           Claim Your Username
         </Link>
       </div>
 
-      <footer className="border-t border-border/10 py-6 text-center">
-        <p className="text-[11px] text-muted/20">Euterpy</p>
+      <footer className="border-t border-white/[0.02] py-8 text-center">
+        <p className="text-[11px] text-zinc-800">Euterpy</p>
       </footer>
     </div>
   );

@@ -93,21 +93,21 @@ export default function ProfilePage({ data }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-3xl mx-auto px-4 sm:px-8 py-8">
+    <div className="min-h-screen bg-black">
+      <div className="max-w-3xl mx-auto px-4 sm:px-8 py-10">
         {/* ====== Profile Header ====== */}
-        <div className="flex items-start gap-5 mb-6">
-          <div className="w-20 h-20 rounded-full bg-card border-2 border-border flex items-center justify-center text-2xl text-muted shrink-0">
+        <div className="flex items-start gap-5 sm:gap-6 mb-8">
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white/[0.03] border border-white/[0.08] flex items-center justify-center text-2xl text-zinc-500 shrink-0">
             {profile.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={profile.avatar_url} alt={profile.username} className="w-full h-full rounded-full object-cover" />
             ) : (
-              <span className="font-display text-3xl">{profile.username[0].toUpperCase()}</span>
+              <span className="font-display text-3xl sm:text-4xl">{profile.username[0].toUpperCase()}</span>
             )}
           </div>
 
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-semibold truncate">
+            <h1 className="text-2xl sm:text-3xl font-semibold truncate tracking-tight">
               {profile.display_name || profile.username}
             </h1>
             <p className="text-accent text-sm">@{profile.username}</p>
@@ -145,10 +145,10 @@ export default function ProfilePage({ data }: Props) {
             )}
 
             {/* Stats row */}
-            <div className="flex gap-4 mt-3 text-sm text-muted">
-              <span><strong className="text-foreground">{profile.album_count}</strong> albums</span>
-              <span><strong className="text-foreground">{profile.follower_count}</strong> followers</span>
-              <span><strong className="text-foreground">{profile.following_count}</strong> following</span>
+            <div className="flex gap-5 mt-3 text-sm">
+              <span className="text-zinc-500"><strong className="text-zinc-200 font-semibold">{profile.album_count}</strong> albums</span>
+              <span className="text-zinc-500"><strong className="text-zinc-200 font-semibold">{profile.follower_count}</strong> followers</span>
+              <span className="text-zinc-500"><strong className="text-zinc-200 font-semibold">{profile.following_count}</strong> following</span>
             </div>
 
             {/* Badges */}
@@ -194,7 +194,7 @@ export default function ProfilePage({ data }: Props) {
         </div>
 
         {/* ====== Sub-menu Tabs ====== */}
-        <div className="flex border-b border-border mb-6">
+        <div className="flex border-b border-white/[0.06] mb-8">
           {([
             ["collection", isOwnProfile ? "My Collection" : "Collection"],
             ["stats", "Stats"],

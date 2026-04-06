@@ -42,7 +42,7 @@ export default function ShelfCard({ shelf }: Props) {
   const previewItems = shelf.items.slice(0, 4);
 
   return (
-    <Link href={`/shelf/${shelf.id}`} className="block rounded-xl bg-card border border-border overflow-hidden hover:border-accent/30 transition-colors">
+    <Link href={`/shelf/${shelf.id}`} className="block rounded-2xl bg-white/[0.02] border border-white/[0.06] overflow-hidden hover:border-white/[0.12] transition-all duration-200">
       {/* Cover art grid preview */}
       <div className="grid grid-cols-2 aspect-square">
         {[0, 1, 2, 3].map((i) => {

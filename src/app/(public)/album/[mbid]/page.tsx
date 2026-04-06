@@ -220,7 +220,7 @@ export default async function AlbumPage({ params }: Props) {
                 return (
                   <div
                     key={rating.id}
-                    className="flex items-start gap-4 p-4 rounded-xl bg-card/50 border border-border backdrop-blur-sm"
+                    className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05]"
                   >
                     <a
                       href={`/${profile?.username}`}

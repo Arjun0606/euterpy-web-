@@ -23,8 +23,8 @@ export default function NavBar({ username, avatarUrl }: Props) {
   return (
     <>
       {/* Desktop: top bar */}
-      <header className="hidden sm:block sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border">
-        <div className="max-w-4xl mx-auto px-6 py-3 flex items-center gap-6">
+      <header className="hidden sm:block sticky top-0 z-20 bg-black/70 backdrop-blur-2xl border-b border-white/[0.04]">
+        <div className="max-w-5xl mx-auto px-8 py-3.5 flex items-center gap-8">
           <Link href="/feed" className="font-display text-2xl shrink-0">
             Euterpy
           </Link>

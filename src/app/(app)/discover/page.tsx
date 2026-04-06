@@ -87,7 +87,7 @@ export default async function DiscoverPage() {
               <Link
                 key={user.id}
                 href={`/${user.username}`}
-                className="bg-card border border-border rounded-xl p-4 hover:border-accent/30 transition-colors text-center"
+                className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-4 hover:border-white/[0.12] transition-all duration-200 text-center"
               >
                 <div className="w-14 h-14 rounded-full bg-background border border-border flex items-center justify-center text-xl text-muted mx-auto mb-2">
                   {user.avatar_url ? (
@@ -117,7 +117,7 @@ export default async function DiscoverPage() {
               <Link
                 key={u.id}
                 href={`/${u.username}`}
-                className="shrink-0 w-[140px] sm:w-auto bg-card border border-border rounded-xl p-4 hover:border-accent/30 transition-colors text-center"
+                className="shrink-0 w-[140px] sm:w-auto bg-white/[0.02] border border-white/[0.06] rounded-2xl p-4 hover:border-white/[0.12] transition-all duration-200 text-center"
               >
                 <div className="w-12 h-12 rounded-full bg-background border border-border flex items-center justify-center text-lg text-muted mx-auto mb-2">
                   {u.username[0].toUpperCase()}
@@ -178,7 +178,7 @@ export default async function DiscoverPage() {
               const album = review.albums;
               const author = review.profiles;
               return (
-                <div key={review.id} className="bg-card border border-border rounded-xl p-4">
+                <div key={review.id} className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-5">
                   <div className="flex items-center gap-3 mb-3">
                     <Link href={`/${author?.username}`} className="w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center text-xs text-muted shrink-0 hover:border-accent">
                       {author?.username?.[0]?.toUpperCase() || "?"}

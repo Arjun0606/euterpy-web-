@@ -41,7 +41,7 @@ export default function TasteProfile({
   return (
     <div className="mb-10">
       {/* Taste identity headline */}
-      <div className="bg-gradient-to-br from-accent/5 via-card to-card border border-border rounded-2xl p-5 sm:p-8 mb-6">
+      <div className="bg-gradient-to-br from-accent/[0.06] via-white/[0.02] to-transparent border border-white/[0.06] rounded-2xl p-5 sm:p-8 mb-6">
         <p className="text-[10px] uppercase tracking-widest text-muted/40 mb-3">Taste Profile</p>
         <h2 className="font-display text-xl sm:text-2xl mb-2 leading-snug">
           A <span className="text-accent">{harshness}</span> curator of {descriptor}
@@ -54,7 +54,7 @@ export default function TasteProfile({
       <div className="grid grid-cols-2 gap-3">
         {/* Highest rated */}
         {highestRated && (
-          <div className="bg-card border border-border rounded-xl p-4">
+          <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-4">
             <p className="text-[10px] uppercase tracking-widest text-muted/40 mb-2">Highest Rated</p>
             <p className="text-sm font-medium truncate">{highestRated.title}</p>
             <p className="text-xs text-muted truncate">{highestRated.artist}</p>
@@ -64,7 +64,7 @@ export default function TasteProfile({
 
         {/* Top artist */}
         {topArtist && (
-          <div className="bg-card border border-border rounded-xl p-4">
+          <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-4">
             <p className="text-[10px] uppercase tracking-widest text-muted/40 mb-2">Most Curated Artist</p>
             <p className="text-sm font-medium truncate">{topArtist}</p>
             <p className="text-xs text-muted mt-1">
