@@ -103,7 +103,7 @@ export default function QuickSearch() {
   }
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 mb-8">
+    <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-5">
       {/* Tabs + Search */}
       <div className="flex gap-2 mb-3">
         <div className="flex gap-1 bg-background rounded-lg p-0.5">
@@ -122,7 +122,7 @@ export default function QuickSearch() {
           value={query}
           onChange={(e) => handleInput(e.target.value)}
           autoFocus
-          className="flex-1 px-3 py-1.5 bg-background border border-border rounded-lg text-sm text-foreground placeholder:text-muted/30 focus:outline-none focus:border-accent"
+          className="flex-1 px-3 py-1.5 bg-background border border-border rounded-lg text-sm text-foreground placeholder:text-muted/30 focus:outline-none focus:border-white/[0.15]"
         />
       </div>
 
@@ -177,7 +177,7 @@ export default function QuickSearch() {
           {/* Reaction */}
           <input type="text" value={reaction} onChange={(e) => setReaction(e.target.value)}
             placeholder="Say something..." maxLength={280}
-            className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm placeholder:text-muted/30 focus:outline-none focus:border-accent" />
+            className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm placeholder:text-muted/30 focus:outline-none focus:border-white/[0.15]" />
 
           {/* Ownership (albums only) */}
           {tab === "albums" && (

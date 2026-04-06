@@ -53,14 +53,7 @@ export default function GetToKnowMe({ items, username }: Props) {
     return () => container.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);
 
-  if (items.length === 0) {
-    return (
-      <div className="mb-10 text-center py-8 border border-dashed border-border rounded-xl">
-        <p className="text-muted text-sm">No &ldquo;Get to Know Me&rdquo; albums yet.</p>
-        <p className="text-xs text-muted/40 mt-1">Add 3 albums that define you in Settings.</p>
-      </div>
-    );
-  }
+  if (items.length === 0) return null;
 
   return (
     <div className="mb-10">

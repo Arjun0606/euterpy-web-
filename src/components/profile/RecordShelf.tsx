@@ -112,8 +112,8 @@ export default function RecordShelf({ items, title = "The Shelf", showSort = tru
     <div className="mb-10">
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
-        <h2 className="text-xs uppercase tracking-widest text-muted">{title}</h2>
-        <span className="text-xs text-muted/40">
+        <h2 className="text-[10px] uppercase tracking-[0.15em] text-zinc-600 font-medium">{title}</h2>
+        <span className="text-[11px] text-zinc-700">
           {albumCount} {albumCount === 1 ? "album" : "albums"}
           {songCount > 0 && ` · ${songCount} ${songCount === 1 ? "song" : "songs"}`}
         </span>
@@ -122,30 +122,20 @@ export default function RecordShelf({ items, title = "The Shelf", showSort = tru
       {/* Filter + Sort */}
       {showSort && (
         <div className="flex items-center gap-2 mb-5">
-          <div className="flex gap-1 bg-card rounded-lg p-0.5 border border-border">
+          <div className="flex gap-0.5 bg-white/[0.03] rounded-lg p-0.5 border border-white/[0.04]">
             {([["all", "All"], ["album", "Albums"], ["song", "Songs"]] as [typeof filter, string][]).map(([f, label]) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
+              <button key={f} onClick={() => setFilter(f)}
                 className={`px-3 py-1 text-[11px] rounded-md transition-colors ${
-                  filter === f ? "bg-accent text-white" : "text-muted hover:text-foreground"
-                }`}
-              >
-                {label}
-              </button>
+                  filter === f ? "bg-accent text-white" : "text-zinc-600 hover:text-zinc-300"
+                }`}>{label}</button>
             ))}
           </div>
           <div className="flex gap-1 ml-auto">
             {([["recent", "Recent"], ["rating", "Top Rated"], ["artist", "Artist"]] as [SortBy, string][]).map(([s, label]) => (
-              <button
-                key={s}
-                onClick={() => setSortBy(s)}
+              <button key={s} onClick={() => setSortBy(s)}
                 className={`px-2 py-1 text-[11px] rounded transition-colors ${
-                  sortBy === s ? "text-accent" : "text-muted/40 hover:text-muted"
-                }`}
-              >
-                {label}
-              </button>
+                  sortBy === s ? "text-accent" : "text-zinc-700 hover:text-zinc-400"
+                }`}>{label}</button>
             ))}
           </div>
         </div>
