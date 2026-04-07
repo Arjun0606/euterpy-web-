@@ -54,38 +54,38 @@ export default async function Home() {
 
           {/* Right: real album collage from Apple Music */}
           {charts.length > 0 && (
-            <div className="relative h-[500px] sm:h-[600px] lg:h-[640px]">
-              {/* Floating album covers — staggered, real data */}
-              <div className="absolute inset-0">
+            <div className="relative">
+              {/* Subtle accent glow behind */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-accent/[0.08] rounded-full blur-[120px] -z-10 pointer-events-none" />
+
+              {/* 3x3 staggered album grid */}
+              <div className="grid grid-cols-3 gap-3 sm:gap-4">
                 {charts.slice(0, 9).map((album, i) => {
-                  const positions = [
-                    { top: "0%", left: "20%", size: "w-40 h-40", rotate: "-rotate-3" },
-                    { top: "8%", left: "62%", size: "w-32 h-32", rotate: "rotate-2" },
-                    { top: "30%", left: "0%", size: "w-36 h-36", rotate: "rotate-1" },
-                    { top: "28%", left: "42%", size: "w-44 h-44", rotate: "-rotate-2" },
-                    { top: "35%", left: "78%", size: "w-28 h-28", rotate: "rotate-3" },
-                    { top: "58%", left: "18%", size: "w-32 h-32", rotate: "rotate-2" },
-                    { top: "62%", left: "55%", size: "w-36 h-36", rotate: "-rotate-1" },
-                    { top: "75%", left: "5%", size: "w-24 h-24", rotate: "-rotate-3" },
-                    { top: "78%", left: "82%", size: "w-28 h-28", rotate: "rotate-2" },
+                  // Stagger via translate so it doesn't look like a perfect grid
+                  const offsets = [
+                    "translate-y-0", "translate-y-6", "translate-y-2",
+                    "translate-y-8", "translate-y-0", "translate-y-10",
+                    "translate-y-4", "translate-y-12", "translate-y-2",
                   ];
-                  const pos = positions[i];
+                  const rotations = [
+                    "-rotate-2", "rotate-1", "-rotate-1",
+                    "rotate-2", "-rotate-1", "rotate-1",
+                    "-rotate-1", "rotate-2", "-rotate-2",
+                  ];
                   const url = art(album.attributes.artwork?.url, 400);
                   if (!url) return null;
                   return (
-                    <div
+                    <Link
                       key={album.id}
-                      className={`absolute ${pos.size} ${pos.rotate} rounded-xl overflow-hidden shadow-2xl border border-white/[0.08] hover:scale-110 hover:rotate-0 hover:z-20 transition-all duration-500 cursor-pointer`}
-                      style={{ top: pos.top, left: pos.left }}
+                      href={`/album/${album.id}`}
+                      className={`aspect-square ${offsets[i]} ${rotations[i]} rounded-xl overflow-hidden shadow-2xl border border-border hover:scale-110 hover:rotate-0 hover:z-10 hover:shadow-accent/20 transition-all duration-500 relative`}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={url} alt={album.attributes.name} className="w-full h-full object-cover" />
-                    </div>
+                    </Link>
                   );
                 })}
               </div>
-              {/* Subtle accent glow behind */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-accent/[0.08] rounded-full blur-[120px] -z-10" />
             </div>
           )}
         </div>
