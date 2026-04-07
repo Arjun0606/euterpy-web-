@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { getArtworkUrl } from "@/lib/apple-music/client";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { getArtworkUrl, getAlbum as fetchAlbumFromApple } from "@/lib/apple-music/client";
 import VinylCover from "@/components/ui/VinylCover";
 import AlbumActions from "@/components/album/AlbumActions";
 import TrackList from "@/components/album/TrackList";
@@ -17,11 +17,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { mbid: appleId } = await params;
   const supabase = await createClient();
 
-  const { data: album } = await supabase
+  let { data: album } = await supabase
     .from("albums")
     .select("title, artist_name, average_rating, rating_count")
     .eq("apple_id", appleId)
     .single();
+
+  // Fall back to Apple Music if not in DB yet
+  if (!album) {
+    const appleAlbum = await fetchAlbumFromApple(appleId);
+    if (appleAlbum) {
+      album = {
+        title: appleAlbum.attributes.name,
+        artist_name: appleAlbum.attributes.artistName,
+        average_rating: null,
+        rating_count: 0,
+      };
+    }
+  }
 
   if (!album) return { title: "Album Not Found" };
 
@@ -48,13 +61,43 @@ function artwork(url: string | null, size = 500): string | null {
 async function getAlbumData(appleId: string) {
   const supabase = await createClient();
 
-  const { data: album } = await supabase
+  let { data: album } = await supabase
     .from("albums")
     .select("*")
     .eq("apple_id", appleId)
     .single();
 
-  if (!album) return null;
+  // If not in our DB, fetch from Apple Music and create it on demand
+  if (!album) {
+    const appleAlbum = await fetchAlbumFromApple(appleId);
+    if (!appleAlbum) return null;
+
+    const attrs = appleAlbum.attributes;
+    const editorialText = attrs.editorialNotes?.standard || attrs.editorialNotes?.short || null;
+
+    const serviceClient = createServiceClient();
+    const { data: inserted } = await serviceClient
+      .from("albums")
+      .insert({
+        apple_id: appleId,
+        title: attrs.name,
+        artist_name: attrs.artistName,
+        release_date: attrs.releaseDate || null,
+        artwork_url: attrs.artwork.url,
+        genre_names: attrs.genreNames,
+        track_count: attrs.trackCount,
+        editorial_notes: editorialText ? editorialText.replace(/<[^>]*>/g, "").trim() : null,
+        record_label: attrs.recordLabel || null,
+        copyright: attrs.copyright || null,
+        apple_url: attrs.url || null,
+        is_single: attrs.isSingle || false,
+      })
+      .select()
+      .single();
+
+    album = inserted;
+    if (!album) return null;
+  }
 
   // Get current user
   const { data: { user } } = await supabase.auth.getUser();

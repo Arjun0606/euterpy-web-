@@ -55,34 +55,43 @@ export default async function Home() {
           {/* Right: real album collage from Apple Music */}
           {charts.length > 0 && (
             <div className="relative">
-              {/* Subtle accent glow behind */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-accent/[0.08] rounded-full blur-[120px] -z-10 pointer-events-none" />
+              {/* Multiple ambient glows for depth */}
+              <div className="absolute top-1/3 left-1/4 w-[400px] h-[400px] bg-accent/[0.12] rounded-full blur-[100px] -z-10 pointer-events-none" />
+              <div className="absolute bottom-1/3 right-1/4 w-[300px] h-[300px] bg-purple-500/[0.08] rounded-full blur-[100px] -z-10 pointer-events-none" />
 
-              {/* 3x3 staggered album grid */}
-              <div className="grid grid-cols-3 gap-3 sm:gap-4">
+              {/* 3x3 staggered album grid with depth */}
+              <div className="grid grid-cols-3 gap-3 sm:gap-4 relative">
                 {charts.slice(0, 9).map((album, i) => {
-                  // Stagger via translate so it doesn't look like a perfect grid
-                  const offsets = [
-                    "translate-y-0", "translate-y-6", "translate-y-2",
-                    "translate-y-8", "translate-y-0", "translate-y-10",
-                    "translate-y-4", "translate-y-12", "translate-y-2",
-                  ];
-                  const rotations = [
-                    "-rotate-2", "rotate-1", "-rotate-1",
-                    "rotate-2", "-rotate-1", "rotate-1",
-                    "-rotate-1", "rotate-2", "-rotate-2",
-                  ];
+                  const offsets = [0, 32, 8, 40, 8, 48, 16, 56, 24];
+                  const rotations = [-3, 2, -1, 2, -2, 3, -2, 1, -3];
+                  const scales = [0.95, 1.0, 0.9, 1.05, 1.0, 0.95, 0.9, 1.0, 0.95];
                   const url = art(album.attributes.artwork?.url, 400);
                   if (!url) return null;
                   return (
-                    <Link
+                    <div
                       key={album.id}
-                      href={`/album/${album.id}`}
-                      className={`aspect-square ${offsets[i]} ${rotations[i]} rounded-xl overflow-hidden shadow-2xl border border-border hover:scale-110 hover:rotate-0 hover:z-10 hover:shadow-accent/20 transition-all duration-500 relative`}
+                      className="aspect-square relative"
+                      style={{
+                        transform: `translateY(${offsets[i]}px) rotate(${rotations[i]}deg) scale(${scales[i]})`,
+                        animation: `float ${5 + (i % 3)}s ease-in-out ${i * 0.3}s infinite`,
+                      }}
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={url} alt={album.attributes.name} className="w-full h-full object-cover" />
-                    </Link>
+                      <Link
+                        href={`/album/${album.id}`}
+                        className="group block w-full h-full relative transition-transform duration-500 ease-out hover:scale-110 hover:z-20"
+                      >
+                        {/* Glow on hover */}
+                        <div className="absolute -inset-2 rounded-2xl bg-accent/0 group-hover:bg-accent/30 blur-2xl transition-all duration-500 -z-10" />
+
+                        {/* Album cover */}
+                        <div className="relative w-full h-full rounded-xl overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.9)] border border-white/[0.08] group-hover:shadow-[0_30px_80px_-15px_rgba(255,20,147,0.5)] group-hover:border-white/[0.18] transition-all duration-500">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={url} alt={album.attributes.name} className="w-full h-full object-cover" />
+                          {/* Inner shine gradient */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-black/30 pointer-events-none" />
+                        </div>
+                      </Link>
+                    </div>
                   );
                 })}
               </div>
