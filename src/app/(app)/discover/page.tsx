@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { getArtworkUrl } from "@/lib/apple-music/client";
+import { getArtworkUrl, getAppleMusicCharts } from "@/lib/apple-music/client";
 import Link from "next/link";
 import Stars from "@/components/ui/Stars";
 
@@ -21,6 +21,15 @@ export default async function DiscoverPage() {
     .gt("rating_count", 0)
     .order("average_rating", { ascending: false })
     .limit(12);
+
+  // Apple Music charts — REAL data from Apple's catalog
+  const appleCharts = await getAppleMusicCharts(12);
+  const appleAlbums = appleCharts.map((a) => ({
+    apple_id: a.id,
+    title: a.attributes.name,
+    artist_name: a.attributes.artistName,
+    artwork_url: a.attributes.artwork?.url || null,
+  }));
 
   // Trending this week
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
@@ -90,7 +99,33 @@ export default async function DiscoverPage() {
         </h1>
       </div>
 
-      {/* Trending This Week */}
+      {/* Apple Music Charts — real data from Apple */}
+      {appleAlbums.length > 0 && (
+        <section className="mb-12">
+          <div className="flex items-baseline justify-between mb-5">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">Trending on Apple Music</p>
+            <p className="text-[11px] text-zinc-600">via MusicKit</p>
+          </div>
+          <div className="flex gap-3 overflow-x-auto -mx-5 sm:-mx-8 px-5 sm:px-8 no-scrollbar pb-2">
+            {appleAlbums.map((album: any) => (
+              <Link key={album.apple_id} href={`/album/${album.apple_id}`} className="shrink-0 w-36 group">
+                <div className="aspect-square rounded-xl overflow-hidden bg-card border border-border mb-2 group-hover:border-zinc-700 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl group-hover:shadow-accent/10">
+                  {album.artwork_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={art(album.artwork_url)!} alt={album.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-zinc-700">♪</div>
+                  )}
+                </div>
+                <p className="text-xs font-medium truncate">{album.title}</p>
+                <p className="text-[11px] text-zinc-500 truncate">{album.artist_name}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Trending This Week (community) */}
       {trending && trending.length > 0 && (
         <section className="mb-12">
           <div className="flex items-baseline justify-between mb-5">

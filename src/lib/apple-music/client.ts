@@ -197,6 +197,19 @@ export async function getRelatedAlbums(
   }
 }
 
+/**
+ * Get the current Apple Music charts — real chart data, not mock
+ * Returns the most popular albums right now on Apple Music
+ */
+export async function getAppleMusicCharts(limit = 10): Promise<AppleMusicAlbum[]> {
+  try {
+    const data = await appleRequest(`/catalog/us/charts?types=albums&limit=${limit}`);
+    return data.results?.albums?.[0]?.data || [];
+  } catch {
+    return [];
+  }
+}
+
 export async function getSong(
   appleId: string
 ): Promise<AppleMusicSong | null> {
