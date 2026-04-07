@@ -1,27 +1,28 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
-import { Instrument_Serif } from "next/font/google";
+import { Inter, Fraunces } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const instrumentSerif = Instrument_Serif({
-  variable: "--font-instrument-serif",
+const fraunces = Fraunces({
+  variable: "--font-display",
   subsets: ["latin"],
-  weight: "400",
+  display: "swap",
+  axes: ["opsz", "SOFT"],
 });
 
 export const metadata: Metadata = {
   title: {
-    default: "Euterpy — Your Music Taste, Curated",
+    default: "Euterpy — Your music taste, curated",
     template: "%s — Euterpy",
   },
   description:
-    "Log albums. Rate them. Build your taste. Share who you are. The Letterboxd for music.",
+    "Rate albums. Build your shelf. Tell your story in three records. The home for music curators.",
   metadataBase: new URL("https://euterpy.app"),
   openGraph: {
     siteName: "Euterpy",
@@ -41,7 +42,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${instrumentSerif.variable} h-full antialiased`}
+      className={`${inter.variable} ${fraunces.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-background text-foreground">
         {children}

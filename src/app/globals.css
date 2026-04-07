@@ -1,15 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  --background: #000000;
-  --foreground: #f4f4f5;
+  /* Backgrounds */
+  --background: #0a0a0b;
+  --card: #131316;
+  --card-hover: #1a1a1e;
+  --input: #18181c;
+  --border: #25252a;
+
+  /* Text */
+  --foreground: #f5f5f4;
+  --muted: #a8a29e;
+
+  /* Accent — Euterpy pink, used sparingly */
   --accent: #FF1493;
   --accent-hover: #ff3da5;
-  --muted: #a1a1aa;
-  --border: #1a1a1e;
-  --card: #0c0c0e;
-  --card-hover: #141416;
-  --input: #111113;
+  --accent-soft: rgba(255, 20, 147, 0.1);
 }
 
 @theme inline {
@@ -22,9 +28,8 @@
   --color-card: var(--card);
   --color-card-hover: var(--card-hover);
   --color-input: var(--input);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-instrument-serif);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
 }
 
 * { -webkit-tap-highlight-color: transparent; }
@@ -35,16 +40,36 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "ss01", "cv11";
+}
+
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
+  font-feature-settings: "ss01";
+}
+
+/* Editorial body text — looser spacing for reading */
+.editorial {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.6;
 }
 
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #222; border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: #333; }
+::-webkit-scrollbar-thumb { background: #2a2a2e; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #3a3a3e; }
 
-::selection { background: rgba(255, 20, 147, 0.25); color: white; }
+::selection {
+  background: rgba(255, 20, 147, 0.3);
+  color: white;
+}
 
-:focus-visible { outline: 1px solid #333; outline-offset: 2px; }
+:focus-visible {
+  outline: 1px solid #3a3a3e;
+  outline-offset: 2px;
+}
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
