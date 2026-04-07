@@ -85,10 +85,10 @@ export default function AlbumActions({
           </button>
         ) : (
           <a
-            href="/login"
+            href="/signup"
             className="px-6 py-2 bg-accent text-white font-medium rounded-full hover:bg-accent-hover transition-colors text-sm"
           >
-            Log in to rate
+            Sign up to rate
           </a>
         )}
 

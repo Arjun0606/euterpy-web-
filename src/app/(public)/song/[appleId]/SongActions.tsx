@@ -73,8 +73,8 @@ export default function SongActions({ songAppleId, songDbId, songTitle, artistNa
             Rate Song
           </button>
         ) : (
-          <a href="/login" className="px-6 py-2 bg-accent text-white font-medium rounded-full hover:bg-accent-hover transition-colors text-sm">
-            Log in to rate
+          <a href="/signup" className="px-6 py-2 bg-accent text-white font-medium rounded-full hover:bg-accent-hover transition-colors text-sm">
+            Sign up to rate
           </a>
         )}
 

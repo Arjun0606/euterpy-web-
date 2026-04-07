@@ -94,6 +94,21 @@ export default async function SongPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Anonymous visitor nav */}
+      {!user && (
+        <nav className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border">
+          <div className="max-w-3xl mx-auto px-5 sm:px-8 py-4 flex items-center justify-between">
+            <a href="/" className="font-display text-xl tracking-tight">Euterpy</a>
+            <div className="flex items-center gap-4">
+              <a href="/login" className="text-sm text-zinc-400 hover:text-foreground transition-colors">Log in</a>
+              <a href="/signup" className="text-sm bg-accent text-white px-4 py-2 rounded-full font-medium hover:bg-accent-hover transition-colors">
+                Sign up
+              </a>
+            </div>
+          </div>
+        </nav>
+      )}
+
       {/* Blurred background */}
       {song.artwork_url && (
         <div className="fixed inset-0 z-0 pointer-events-none">
@@ -222,6 +237,25 @@ export default async function SongPage({ params }: Props) {
             </div>
           )}
         </div>
+
+        {/* Anonymous CTA banner */}
+        {!user && (
+          <div className="mt-16 mb-8 p-8 sm:p-10 rounded-2xl bg-gradient-to-br from-accent/10 via-card to-card border border-border text-center relative overflow-hidden">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[300px] bg-accent/[0.08] rounded-full blur-[100px] -z-0 pointer-events-none" />
+            <div className="relative z-10">
+              <h3 className="font-display text-3xl sm:text-4xl tracking-tight mb-3 leading-tight">
+                Got an opinion on <span className="italic text-accent">{song.title}</span>?
+              </h3>
+              <p className="editorial text-base text-zinc-400 mb-6 max-w-md mx-auto">
+                Join Euterpy. Rate it, review it, add it to your shelf, and find people who hear what you hear.
+              </p>
+              <a href="/signup"
+                className="inline-block px-10 py-3.5 bg-accent text-white text-sm font-medium rounded-full hover:bg-accent-hover transition-all hover:shadow-2xl hover:shadow-accent/30">
+                Start your shelf
+              </a>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
