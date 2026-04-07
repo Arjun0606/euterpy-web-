@@ -171,7 +171,7 @@ export default function ReviewSection({ reviews, albumId, songId, userId }: Prop
   return (
     <div className="mb-10">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xs uppercase tracking-widest text-muted">Reviews</h2>
+        <h2 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">Reviews</h2>
         {userId && (
           <button
             onClick={() => setShowWrite(!showWrite)}

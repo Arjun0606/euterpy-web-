@@ -56,7 +56,7 @@ export default function ShelfEditor({ shelf, onClose, onSaved }: Props) {
 
         <div className="space-y-4">
           <div>
-            <label className="block text-xs uppercase tracking-widest text-muted mb-2">Name</label>
+            <label className="block text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-2">Name</label>
             <input
               type="text"
               value={title}
@@ -69,7 +69,7 @@ export default function ShelfEditor({ shelf, onClose, onSaved }: Props) {
           </div>
 
           <div>
-            <label className="block text-xs uppercase tracking-widest text-muted mb-2">Description</label>
+            <label className="block text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-2">Description</label>
             <input
               type="text"
               value={description}
@@ -81,7 +81,7 @@ export default function ShelfEditor({ shelf, onClose, onSaved }: Props) {
           </div>
 
           <div>
-            <label className="block text-xs uppercase tracking-widest text-muted mb-2">Style</label>
+            <label className="block text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-2">Style</label>
             <div className="flex gap-2">
               {STYLES.map((s) => (
                 <button

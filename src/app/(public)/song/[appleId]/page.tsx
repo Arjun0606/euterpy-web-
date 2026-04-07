@@ -120,7 +120,7 @@ export default async function SongPage({ params }: Props) {
           </div>
 
           <div className="text-center sm:text-left flex-1">
-            <p className="text-xs uppercase tracking-widest text-muted/60 mb-1">Song</p>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500/60 mb-1">Song</p>
             <h1 className="font-display text-3xl sm:text-4xl mb-2">{song.title}</h1>
             <p className="text-xl text-muted mb-1">{song.artist_name}</p>
             {song.album_name && (
@@ -187,7 +187,7 @@ export default async function SongPage({ params }: Props) {
 
         {/* Community Reactions */}
         <div>
-          <h2 className="text-xs uppercase tracking-widest text-muted mb-6">Community Reactions</h2>
+          <h2 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-6">Community Reactions</h2>
           {(!ratings || ratings.length === 0) ? (
             <p className="text-muted/60 text-sm">No one has rated this song yet. Be the first.</p>
           ) : (

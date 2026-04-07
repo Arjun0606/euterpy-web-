@@ -56,10 +56,10 @@ export default function GetToKnowMe({ items, username }: Props) {
   if (items.length === 0) return null;
 
   return (
-    <div className="mb-10">
-      <h2 className="text-[10px] uppercase tracking-[0.15em] text-zinc-600 font-medium mb-4">
-        Get to Know {username}
-      </h2>
+    <div className="mb-14">
+      <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-5">
+        Get to know {username}
+      </p>
 
       {/* Carousel */}
       <div className="relative">
@@ -102,17 +102,17 @@ export default function GetToKnowMe({ items, username }: Props) {
 
                     {/* Text */}
                     <div className="flex-1 text-center sm:text-left">
-                      <p className="text-[10px] sm:text-xs uppercase tracking-widest text-accent mb-2 sm:mb-3 font-medium">
+                      <p className="text-[11px] uppercase tracking-[0.18em] text-accent mb-3">
                         {SLIDE_LABELS[index] || ""}
                       </p>
-                      <h3 className="text-xl sm:text-3xl font-semibold mb-1 font-display">
+                      <h3 className="font-display text-2xl sm:text-4xl tracking-tight leading-none mb-2">
                         {album.title}
                       </h3>
-                      <p className="text-muted mb-5">
+                      <p className="text-zinc-400 mb-5 text-sm">
                         {album.artist_name}
                       </p>
                       {item.story && (
-                        <p className="text-sm text-foreground/70 leading-relaxed italic max-w-md">
+                        <p className="editorial text-base text-zinc-300 leading-relaxed max-w-md">
                           &ldquo;{item.story}&rdquo;
                         </p>
                       )}

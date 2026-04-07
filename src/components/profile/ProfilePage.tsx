@@ -69,28 +69,28 @@ export default function ProfilePage({ data }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      <div className="max-w-3xl mx-auto px-4 sm:px-8 py-10">
+    <div className="min-h-screen bg-background">
+      <div className="max-w-3xl mx-auto px-5 sm:px-8 py-12 sm:py-16">
 
         {/* ====== Profile Header ====== */}
-        <div className="flex items-start gap-5 sm:gap-6 mb-10">
-          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-zinc-900 border border-border flex items-center justify-center shrink-0 overflow-hidden">
+        <div className="flex items-start gap-5 sm:gap-7 mb-12">
+          <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-card border border-border flex items-center justify-center shrink-0 overflow-hidden">
             {profile.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" />
             ) : (
-              <span className="font-display text-3xl sm:text-4xl text-zinc-600">{profile.username[0].toUpperCase()}</span>
+              <span className="font-display text-4xl sm:text-5xl text-zinc-600">{profile.username[0].toUpperCase()}</span>
             )}
           </div>
 
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight truncate">
+            <h1 className="font-display text-3xl sm:text-5xl tracking-tight truncate leading-none mb-1">
               {profile.display_name || profile.username}
             </h1>
-            <p className="text-accent text-sm font-medium">@{profile.username}</p>
+            <p className="text-accent text-sm">@{profile.username}</p>
 
             {profile.bio && (
-              <p className="text-zinc-400 mt-2 text-sm leading-relaxed">
+              <p className="editorial text-base text-zinc-300 mt-4 leading-relaxed">
                 {profile.bio}
               </p>
             )}

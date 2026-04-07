@@ -25,7 +25,7 @@ export default function ListeningStats({
 
   return (
     <div>
-      <h2 className="text-xs uppercase tracking-widest text-muted mb-6">
+      <h2 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-6">
         All Time
       </h2>
 
@@ -50,7 +50,7 @@ export default function ListeningStats({
       {/* 6. Minutes by genre */}
       {topGenreMinutes.length > 0 && (
         <div>
-          <h3 className="text-xs uppercase tracking-widest text-muted mb-4">
+          <h3 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-4">
             Minutes by Genre
           </h3>
           <div className="space-y-3">

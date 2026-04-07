@@ -47,7 +47,7 @@ export default function RatingDistribution({
   return (
     <div>
       <div className="flex items-baseline justify-between mb-6">
-        <h2 className="text-xs uppercase tracking-widest text-muted">
+        <h2 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">
           Rating Distribution ({viewMode === "album" ? "Albums" : "Songs"})
         </h2>
         <div className="text-right">

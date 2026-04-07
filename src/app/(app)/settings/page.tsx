@@ -177,7 +177,7 @@ export default function SettingsPage() {
 
         {/* Display Name */}
         <div>
-          <label className="block text-xs uppercase tracking-widest text-muted mb-2">Display Name</label>
+          <label className="block text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-2">Display Name</label>
           <input
             type="text"
             value={displayName}
@@ -190,7 +190,7 @@ export default function SettingsPage() {
 
         {/* Bio */}
         <div>
-          <label className="block text-xs uppercase tracking-widest text-muted mb-2">Bio</label>
+          <label className="block text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-2">Bio</label>
           <textarea
             value={bio}
             onChange={(e) => setBio(e.target.value)}
@@ -204,7 +204,7 @@ export default function SettingsPage() {
 
         {/* Social Links */}
         <div>
-          <label className="block text-xs uppercase tracking-widest text-muted mb-2">Social Links</label>
+          <label className="block text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-2">Social Links</label>
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <span className="text-sm w-6 text-center">📸</span>
@@ -266,7 +266,7 @@ export default function SettingsPage() {
       {/* Pending Follow Requests */}
       {pendingRequests.length > 0 && (
         <div className="mt-12">
-          <h3 className="text-xs uppercase tracking-widest text-muted mb-4">Follow Requests</h3>
+          <h3 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-4">Follow Requests</h3>
           <div className="space-y-2">
             {pendingRequests.map((req) => (
               <div key={req.id} className="flex items-center gap-3 p-3 bg-card border border-border rounded-xl">
@@ -304,7 +304,7 @@ export default function SettingsPage() {
 
       {/* Get to Know Me */}
       <div className="mt-12">
-        <h3 className="text-xs uppercase tracking-widest text-muted mb-4">Get to Know Me</h3>
+        <h3 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-4">Get to Know Me</h3>
         <p className="text-sm text-muted/60 mb-4">
           Choose 3 albums that define you. Search and add them from the{" "}
           <Link href="/search" className="text-accent hover:underline">search page</Link>.
@@ -337,7 +337,7 @@ export default function SettingsPage() {
 
       {/* Blocked Users */}
       <div className="mt-12">
-        <h3 className="text-xs uppercase tracking-widest text-muted mb-4">Blocked Users</h3>
+        <h3 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-4">Blocked Users</h3>
         {blockedUsers.length === 0 ? (
           <p className="text-sm text-muted/40">No blocked users.</p>
         ) : (

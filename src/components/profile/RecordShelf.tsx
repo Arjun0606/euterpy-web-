@@ -91,7 +91,7 @@ export default function RecordShelf({ items, title = "The Shelf", showSort = tru
   if (items.length === 0) {
     return (
       <div className="mb-10">
-        <h2 className="text-xs uppercase tracking-widest text-muted mb-4">{title}</h2>
+        <h2 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-4">{title}</h2>
         <p className="text-muted/60 text-sm">Nothing logged yet. Start rating to build your shelf.</p>
       </div>
     );
@@ -111,9 +111,9 @@ export default function RecordShelf({ items, title = "The Shelf", showSort = tru
   return (
     <div className="mb-10">
       {/* Header */}
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-[10px] uppercase tracking-[0.15em] text-zinc-600 font-medium">{title}</h2>
-        <span className="text-[11px] text-zinc-700">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">{title}</p>
+        <span className="text-[11px] text-zinc-600">
           {albumCount} {albumCount === 1 ? "album" : "albums"}
           {songCount > 0 && ` · ${songCount} ${songCount === 1 ? "song" : "songs"}`}
         </span>

@@ -81,7 +81,7 @@ export default async function HomePage() {
       {/* Latest Reviews */}
       {latestReviews && latestReviews.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-xs uppercase tracking-widest text-muted mb-4">Latest Reviews</h2>
+          <h2 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-4">Latest Reviews</h2>
           <div className="space-y-3">
             {latestReviews.slice(0, 3).map((review: any) => {
               const item = review.albums || review.songs;
@@ -122,7 +122,7 @@ export default async function HomePage() {
       )}
 
       {/* Combined Feed */}
-      <h2 className="text-xs uppercase tracking-widest text-muted mb-4">
+      <h2 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-4">
         {allFeedEntries.length > 0 ? "Your Feed" : ""}
       </h2>
 

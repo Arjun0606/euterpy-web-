@@ -125,12 +125,12 @@ export default async function AlbumPage({ params }: Props) {
 
           {/* Album Info */}
           <div className="text-center sm:text-left flex-1">
-            <h1 className="font-display text-3xl sm:text-4xl mb-2">
+            <h1 className="font-display text-4xl sm:text-6xl tracking-tight leading-none mb-3">
               {album.title}
             </h1>
-            <p className="text-xl text-muted mb-2">{album.artist_name}</p>
+            <p className="text-xl text-zinc-300 mb-3">{album.artist_name}</p>
             {album.release_date && (
-              <p className="text-sm text-muted/60 mb-1">
+              <p className="text-sm text-zinc-500 mb-1">
                 {new Date(album.release_date).getFullYear()}
               </p>
             )}
@@ -191,9 +191,9 @@ export default async function AlbumPage({ params }: Props) {
 
         {/* Editorial Notes (from Apple Music) */}
         {album.editorial_notes && (
-          <div className="mb-10">
-            <h2 className="text-xs uppercase tracking-widest text-muted mb-3">About This Album</h2>
-            <p className="text-sm text-muted/80 leading-relaxed">{album.editorial_notes}</p>
+          <div className="mb-12">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-4">About this album</p>
+            <p className="editorial text-base text-zinc-300 leading-relaxed">{album.editorial_notes}</p>
           </div>
         )}
 
@@ -206,7 +206,7 @@ export default async function AlbumPage({ params }: Props) {
 
         {/* Community Reactions */}
         <div>
-          <h2 className="text-xs uppercase tracking-widest text-muted mb-6">
+          <h2 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-6">
             Community Reactions
           </h2>
           {ratings.length === 0 ? (

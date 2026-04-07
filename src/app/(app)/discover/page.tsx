@@ -79,7 +79,7 @@ export default async function DiscoverPage() {
       {/* People You Might Like */}
       {suggestedUsers.length > 0 && (
         <section className="mb-10">
-          <h2 className="text-xs uppercase tracking-widest text-muted mb-4">
+          <h2 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-4">
             People With Similar Taste
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -109,7 +109,7 @@ export default async function DiscoverPage() {
       {/* Active Users */}
       {activeUsers && activeUsers.length > 0 && (
         <section className="mb-10">
-          <h2 className="text-xs uppercase tracking-widest text-muted mb-4">
+          <h2 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-4">
             Active Curators
           </h2>
           <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-4 sm:gap-3 sm:overflow-visible">
@@ -133,7 +133,7 @@ export default async function DiscoverPage() {
       {/* Top Rated Albums */}
       {topAlbums && topAlbums.length > 0 && (
         <section className="mb-10">
-          <h2 className="text-xs uppercase tracking-widest text-muted mb-4">
+          <h2 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-4">
             Top Rated Albums
           </h2>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
@@ -170,7 +170,7 @@ export default async function DiscoverPage() {
       {/* Latest Reviews */}
       {latestReviews && latestReviews.length > 0 && (
         <section className="mb-10">
-          <h2 className="text-xs uppercase tracking-widest text-muted mb-4">
+          <h2 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-4">
             Latest Reviews
           </h2>
           <div className="grid sm:grid-cols-2 gap-3">

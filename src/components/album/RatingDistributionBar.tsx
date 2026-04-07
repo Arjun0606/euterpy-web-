@@ -15,7 +15,7 @@ export default function RatingDistributionBar({ ratings }: Props) {
 
   return (
     <div className="mb-10">
-      <h2 className="text-xs uppercase tracking-widest text-muted mb-4">Rating Distribution</h2>
+      <h2 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-4">Rating Distribution</h2>
       <div className="space-y-1.5">
         {[5, 4, 3, 2, 1].map((star) => {
           const count = dist[star - 1];
