@@ -52,28 +52,41 @@ export default async function Home() {
             </div>
           </div>
 
-          {/* Right: real album collage from Apple Music */}
+          {/* Right: floating album collage from Apple Music */}
           {charts.length > 0 && (
-            <div className="relative">
+            <div className="relative h-[600px] sm:h-[640px] lg:h-[700px]">
               {/* Multiple ambient glows for depth */}
-              <div className="absolute top-1/3 left-1/4 w-[400px] h-[400px] bg-accent/[0.12] rounded-full blur-[100px] -z-10 pointer-events-none" />
-              <div className="absolute bottom-1/3 right-1/4 w-[300px] h-[300px] bg-purple-500/[0.08] rounded-full blur-[100px] -z-10 pointer-events-none" />
+              <div className="absolute top-1/3 left-1/4 w-[400px] h-[400px] bg-accent/[0.12] rounded-full blur-[100px] pointer-events-none" />
+              <div className="absolute bottom-1/3 right-1/4 w-[300px] h-[300px] bg-purple-500/[0.08] rounded-full blur-[100px] pointer-events-none" />
 
-              {/* 3x3 staggered album grid with depth */}
-              <div className="grid grid-cols-3 gap-3 sm:gap-4 relative">
-                {charts.slice(0, 9).map((album, i) => {
-                  const offsets = [0, 32, 8, 40, 8, 48, 16, 56, 24];
-                  const rotations = [-3, 2, -1, 2, -2, 3, -2, 1, -3];
-                  const scales = [0.95, 1.0, 0.9, 1.05, 1.0, 0.95, 0.9, 1.0, 0.95];
+              {/* Asymmetric floating album positions — fills the column top to bottom */}
+              {(() => {
+                // Each album gets a hand-tuned position. Coordinates as % of container.
+                const positions = [
+                  { top: "0%",   left: "12%", size: "w-36 sm:w-40", rotate: -4 },
+                  { top: "4%",   left: "58%", size: "w-32 sm:w-36", rotate: 3 },
+                  { top: "20%",  left: "78%", size: "w-24 sm:w-28", rotate: -2 },
+                  { top: "26%",  left: "32%", size: "w-40 sm:w-44", rotate: 2 },
+                  { top: "44%",  left: "68%", size: "w-28 sm:w-32", rotate: -3 },
+                  { top: "48%",  left: "0%",  size: "w-32 sm:w-36", rotate: 4 },
+                  { top: "62%",  left: "38%", size: "w-32 sm:w-36", rotate: -2 },
+                  { top: "70%",  left: "76%", size: "w-28 sm:w-32", rotate: 3 },
+                  { top: "82%",  left: "8%",  size: "w-24 sm:w-28", rotate: -3 },
+                ];
+
+                return charts.slice(0, 9).map((album, i) => {
+                  const pos = positions[i];
                   const url = art(album.attributes.artwork?.url, 400);
                   if (!url) return null;
                   return (
                     <div
                       key={album.id}
-                      className="aspect-square relative"
+                      className={`absolute ${pos.size} aspect-square`}
                       style={{
-                        transform: `translateY(${offsets[i]}px) rotate(${rotations[i]}deg) scale(${scales[i]})`,
-                        animation: `float ${5 + (i % 3)}s ease-in-out ${i * 0.3}s infinite`,
+                        top: pos.top,
+                        left: pos.left,
+                        transform: `rotate(${pos.rotate}deg)`,
+                        animation: `float ${5 + (i % 3)}s ease-in-out ${i * 0.4}s infinite`,
                       }}
                     >
                       <Link
@@ -93,8 +106,8 @@ export default async function Home() {
                       </Link>
                     </div>
                   );
-                })}
-              </div>
+                });
+              })()}
             </div>
           )}
         </div>
