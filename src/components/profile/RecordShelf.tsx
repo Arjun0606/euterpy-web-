@@ -32,35 +32,40 @@ interface Props {
 const SHELF_STYLES: Record<ShelfStyle, { ledge: React.CSSProperties; shadow: React.CSSProperties }> = {
   minimal: {
     ledge: {
-      background: "linear-gradient(to bottom, #2a2a2a 0%, #1a1a1a 50%, #111 100%)",
-      boxShadow: "0 2px 8px rgba(0,0,0,0.4), 0 1px 2px rgba(255,255,255,0.03) inset",
+      background: "linear-gradient(to bottom, #2a2a2a 0%, #1a1a1a 50%, #0a0a0a 100%)",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.5), 0 1px 2px rgba(255,255,255,0.04) inset",
+      height: "4px",
     },
-    shadow: { background: "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 100%)" },
+    shadow: { background: "linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 100%)", height: "16px" },
   },
   wood: {
     ledge: {
-      background: "linear-gradient(to bottom, #5c3d2e 0%, #3e2723 40%, #2c1a12 100%)",
-      boxShadow: "0 2px 10px rgba(0,0,0,0.5), 0 1px 2px rgba(255,200,150,0.08) inset",
-      height: "5px",
+      background: "linear-gradient(to bottom, #a0633d 0%, #7a4a2c 30%, #5c3517 70%, #3e1f0b 100%)",
+      boxShadow: "0 4px 16px rgba(0,0,0,0.7), 0 2px 4px rgba(255,180,120,0.15) inset, 0 -1px 1px rgba(0,0,0,0.5) inset",
+      height: "10px",
+      borderRadius: "1px",
     },
-    shadow: { background: "linear-gradient(to bottom, rgba(30,15,5,0.5) 0%, transparent 100%)" },
+    shadow: { background: "linear-gradient(to bottom, rgba(50,25,5,0.7) 0%, transparent 100%)", height: "20px" },
   },
   ornate: {
     ledge: {
-      background: "linear-gradient(to bottom, #6d4c41 0%, #4e342e 30%, #3e2723 100%)",
-      boxShadow: "0 3px 12px rgba(0,0,0,0.6), 0 1px 3px rgba(255,215,0,0.1) inset, 0 -1px 0 rgba(255,215,0,0.05)",
-      height: "6px",
+      background: "linear-gradient(to bottom, #d4a574 0%, #b8865a 25%, #8b5a2b 60%, #5a3a1a 100%)",
+      boxShadow: "0 5px 20px rgba(0,0,0,0.7), 0 2px 4px rgba(255,215,120,0.25) inset, 0 -1px 0 rgba(0,0,0,0.4) inset, 0 0 0 1px rgba(212,165,116,0.3)",
+      height: "12px",
       borderRadius: "2px",
     },
-    shadow: { background: "linear-gradient(to bottom, rgba(20,10,0,0.5) 0%, transparent 100%)" },
+    shadow: { background: "linear-gradient(to bottom, rgba(40,20,5,0.7) 0%, transparent 100%)", height: "22px" },
   },
   glass: {
     ledge: {
-      background: "linear-gradient(to bottom, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)",
-      boxShadow: "0 2px 8px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.06) inset",
-      backdropFilter: "blur(8px)",
+      background: "linear-gradient(to bottom, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.02) 100%)",
+      boxShadow: "0 4px 16px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.18) inset, 0 -1px 0 rgba(255,255,255,0.05) inset",
+      backdropFilter: "blur(12px)",
+      height: "8px",
+      borderRadius: "1px",
+      border: "1px solid rgba(255,255,255,0.08)",
     },
-    shadow: { background: "linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, transparent 100%)" },
+    shadow: { background: "linear-gradient(to bottom, rgba(255,255,255,0.04) 0%, transparent 100%)", height: "18px" },
   },
 };
 
@@ -193,8 +198,8 @@ export default function RecordShelf({ items, title = "The Shelf", showSort = tru
             </div>
 
             {/* Shelf ledge */}
-            <div className="h-[3px] rounded-full relative z-0" style={style.ledge} />
-            <div className="h-4 -mt-1" style={style.shadow} />
+            <div className="rounded-full relative z-0" style={style.ledge} />
+            <div className="-mt-1" style={style.shadow} />
           </div>
         ))}
       </div>

@@ -36,28 +36,64 @@ const SLIDE_LABELS = [
 export default function GetToKnowMe({ items, username }: Props) {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const isScrollingRef = useRef(false);
+
+  // Triple the items for infinite loop illusion: [items][items][items]
+  // We start in the middle set, and snap back when reaching ends
+  const tripledItems = items.length > 1 ? [...items, ...items, ...items] : items;
+  const middleStart = items.length;
+
+  const getCardWidth = useCallback(() => {
+    if (!scrollRef.current) return 0;
+    return scrollRef.current.offsetWidth * 0.7;
+  }, []);
 
   const handleScroll = useCallback(() => {
-    if (!scrollRef.current) return;
+    if (!scrollRef.current || isScrollingRef.current) return;
     const container = scrollRef.current;
-    const cardWidth = container.offsetWidth * 0.7; // each card is ~70% of container
+    const cardWidth = getCardWidth();
     const scrollLeft = container.scrollLeft;
-    const newIndex = Math.round(scrollLeft / cardWidth);
-    setActiveIndex(Math.min(Math.max(newIndex, 0), items.length - 1));
-  }, [items.length]);
+    const rawIndex = Math.round(scrollLeft / cardWidth);
+
+    // Map raw index in tripled array back to original 0..items.length-1
+    if (items.length > 1) {
+      const normalized = ((rawIndex - middleStart) % items.length + items.length) % items.length;
+      setActiveIndex(normalized);
+
+      // If we've drifted into the first or last set, jump back to middle silently
+      if (rawIndex < items.length - 1 || rawIndex >= items.length * 2 + 1) {
+        isScrollingRef.current = true;
+        const targetIndex = middleStart + normalized;
+        container.scrollTo({ left: targetIndex * cardWidth, behavior: "instant" as ScrollBehavior });
+        setTimeout(() => { isScrollingRef.current = false; }, 50);
+      }
+    } else {
+      setActiveIndex(rawIndex);
+    }
+  }, [items.length, middleStart, getCardWidth]);
 
   useEffect(() => {
     const container = scrollRef.current;
     if (!container) return;
+
+    // Position to the middle set on mount
+    if (items.length > 1) {
+      requestAnimationFrame(() => {
+        const cardWidth = getCardWidth();
+        container.scrollLeft = middleStart * cardWidth;
+      });
+    }
+
     container.addEventListener("scroll", handleScroll, { passive: true });
     return () => container.removeEventListener("scroll", handleScroll);
-  }, [handleScroll]);
+  }, [handleScroll, items.length, middleStart, getCardWidth]);
 
   function scrollToIndex(index: number) {
     if (!scrollRef.current) return;
     const container = scrollRef.current;
-    const cardWidth = container.offsetWidth * 0.7;
-    container.scrollTo({ left: index * cardWidth, behavior: "smooth" });
+    const cardWidth = getCardWidth();
+    const targetIndex = items.length > 1 ? middleStart + index : index;
+    container.scrollTo({ left: targetIndex * cardWidth, behavior: "smooth" });
     setActiveIndex(index);
   }
 
@@ -69,28 +105,28 @@ export default function GetToKnowMe({ items, username }: Props) {
         Get to know {username}
       </p>
 
-      {/* Carousel — peek-style */}
+      {/* Carousel — peek-style with infinite loop */}
       <div className="relative -mx-5 sm:-mx-8">
         <div
           ref={scrollRef}
           className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar scroll-smooth"
-          style={{ scrollPaddingLeft: "15%", scrollPaddingRight: "15%" }}
         >
           {/* Leading spacer */}
           <div className="shrink-0 w-[15%]" aria-hidden="true" />
 
-          {items.map((item, index) => {
+          {tripledItems.map((item, index) => {
             const album = item.albums;
             const bgUrl = artwork(album.artwork_url, 1200);
-            const isActive = index === activeIndex;
+            const originalIndex = items.length > 1 ? ((index - middleStart) % items.length + items.length) % items.length : index;
+            const isActive = originalIndex === activeIndex;
 
             return (
               <div
-                key={item.id}
+                key={`${item.id}-${index}`}
                 className="snap-center shrink-0 w-[70%] px-2 sm:px-3"
               >
                 <button
-                  onClick={() => scrollToIndex(index)}
+                  onClick={() => scrollToIndex(originalIndex)}
                   className={`w-full text-left transition-all duration-500 ${
                     isActive
                       ? "opacity-100 scale-100"
@@ -122,7 +158,7 @@ export default function GetToKnowMe({ items, username }: Props) {
 
                       <div className="flex-1 text-center sm:text-left">
                         <p className="text-[11px] uppercase tracking-[0.18em] text-accent mb-3">
-                          {SLIDE_LABELS[index] || ""}
+                          {SLIDE_LABELS[item.position - 1] || ""}
                         </p>
                         <h3 className="font-display text-2xl sm:text-4xl tracking-tight leading-none mb-2">
                           {album.title}
