@@ -112,45 +112,47 @@ const SHELF_STYLES: Record<ShelfStyle, ShelfStyleConfig> = {
     innerPadding: "16px 16px 0 16px",
   },
 
-  // Ornate — polished brass display case with engraved trim
+  // Marble — polished black marble with subtle veining, museum gallery aesthetic
   ornate: {
     frame: {
-      background: "linear-gradient(180deg, #1a1108 0%, #2e1f06 100%)",
-      borderLeft: "8px solid #966828",
-      borderRight: "8px solid #966828",
-      borderTop: "6px solid #c89548",
-      boxShadow: `
-        inset 0 6px 20px rgba(0,0,0,0.7),
-        inset 0 -2px 8px rgba(0,0,0,0.5),
-        inset 8px 0 20px rgba(0,0,0,0.5),
-        inset -8px 0 20px rgba(0,0,0,0.5),
-        0 0 0 1px rgba(245,217,154,0.4),
-        0 0 32px rgba(232,184,112,0.2)
+      backgroundImage: `
+        radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.04) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 80%, rgba(255,255,255,0.03) 0%, transparent 50%),
+        linear-gradient(135deg, #1a1a1c 0%, #0f0f11 50%, #1a1a1c 100%)
       `,
-      borderRadius: "6px 6px 0 0",
-      paddingTop: "24px",
+      borderLeft: "1px solid rgba(255,255,255,0.08)",
+      borderRight: "1px solid rgba(255,255,255,0.08)",
+      borderTop: "1px solid rgba(255,255,255,0.12)",
+      boxShadow: `
+        inset 0 4px 24px rgba(0,0,0,0.8),
+        inset 0 -2px 8px rgba(0,0,0,0.5),
+        inset 8px 0 24px rgba(0,0,0,0.5),
+        inset -8px 0 24px rgba(0,0,0,0.5),
+        0 0 0 1px rgba(0,0,0,0.6),
+        0 0 48px rgba(0,0,0,0.4)
+      `,
+      borderRadius: "2px 2px 0 0",
+      paddingTop: "20px",
     },
     ledge: {
-      backgroundImage: `linear-gradient(to bottom,
-        #f5d99a 0%,
-        #e8b870 15%,
-        #c89548 35%,
-        #966828 65%,
-        #5a3c0e 95%,
-        #2e1f06 100%
-      )`,
-      boxShadow: `
-        0 14px 36px rgba(0,0,0,0.9),
-        0 6px 0 rgba(245,217,154,0.6) inset,
-        0 -3px 0 rgba(0,0,0,0.6) inset,
-        0 0 0 1px rgba(245,217,154,0.7),
-        0 0 32px rgba(232,184,112,0.4)
+      backgroundImage: `
+        radial-gradient(ellipse at 25% 50%, rgba(255,255,255,0.06) 0%, transparent 40%),
+        radial-gradient(ellipse at 75% 50%, rgba(255,255,255,0.04) 0%, transparent 40%),
+        linear-gradient(to bottom, #2a2a2e 0%, #1a1a1c 30%, #0f0f11 100%)
       `,
-      height: "26px",
-      borderRadius: "0 0 6px 6px",
+      boxShadow: `
+        0 16px 40px rgba(0,0,0,0.9),
+        0 2px 0 rgba(255,255,255,0.1) inset,
+        0 -3px 6px rgba(0,0,0,0.6) inset,
+        0 0 0 1px rgba(255,255,255,0.06)
+      `,
+      height: "20px",
+      borderRadius: "0 0 2px 2px",
+      borderLeft: "1px solid rgba(255,255,255,0.06)",
+      borderRight: "1px solid rgba(255,255,255,0.06)",
     },
-    shadow: { background: "linear-gradient(to bottom, rgba(40,25,5,0.85) 0%, rgba(40,25,5,0.2) 50%, transparent 100%)", height: "40px" },
-    innerPadding: "20px 20px 0 20px",
+    shadow: { background: "linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 50%, transparent 100%)", height: "32px" },
+    innerPadding: "16px 16px 0 16px",
   },
 
   // Glass — illuminated display case with frosted edges

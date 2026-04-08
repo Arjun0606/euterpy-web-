@@ -259,7 +259,7 @@ export default function SettingsPage() {
             {([
               { id: "minimal", label: "Minimal" },
               { id: "wood", label: "Wood" },
-              { id: "ornate", label: "Ornate" },
+              { id: "ornate", label: "Marble" },
               { id: "glass", label: "Glass" },
             ] as const).map((s) => (
               <button
@@ -276,9 +276,9 @@ export default function SettingsPage() {
                     className="w-full h-[3px] rounded-full"
                     style={
                       s.id === "minimal" ? { background: "linear-gradient(to bottom, #2a2a2a, #111)" }
-                      : s.id === "wood" ? { background: "linear-gradient(to bottom, #5c3d2e, #2c1a12)", height: "5px" }
-                      : s.id === "ornate" ? { background: "linear-gradient(to bottom, #6d4c41, #3e2723)", height: "6px", borderRadius: "2px" }
-                      : { background: "linear-gradient(to bottom, rgba(255,255,255,0.08), rgba(255,255,255,0.03))", backdropFilter: "blur(8px)" }
+                      : s.id === "wood" ? { background: "linear-gradient(to bottom, #d49060, #4a2810)", height: "6px" }
+                      : s.id === "ornate" ? { background: "linear-gradient(to bottom, #2a2a2e, #0f0f11)", height: "5px", boxShadow: "0 0 0 1px rgba(255,255,255,0.06)" }
+                      : { background: "linear-gradient(to bottom, rgba(255,255,255,0.25), rgba(255,255,255,0.05))", backdropFilter: "blur(8px)", height: "5px" }
                     }
                   />
                 </div>

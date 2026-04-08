@@ -2,7 +2,6 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { getArtworkUrl } from "@/lib/apple-music/client";
-import VinylCover from "@/components/ui/VinylCover";
 
 interface GetToKnowMeItem {
   id: string;
@@ -22,7 +21,7 @@ interface Props {
   username: string;
 }
 
-function artwork(url: string | null, size = 500): string | null {
+function artwork(url: string | null, size = 800): string | null {
   if (!url) return null;
   return getArtworkUrl(url, size, size);
 }
@@ -35,10 +34,11 @@ const SLIDE_LABELS = [
 
 export default function GetToKnowMe({ items, username }: Props) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [flipped, setFlipped] = useState<Record<number, boolean>>({});
   const scrollRef = useRef<HTMLDivElement>(null);
   const isScrollingRef = useRef(false);
 
-  // Triple the items for infinite loop illusion
+  // Triple items for infinite loop
   const tripledItems = items.length > 1 ? [...items, ...items, ...items] : items;
   const middleStart = items.length;
 
@@ -72,14 +72,12 @@ export default function GetToKnowMe({ items, username }: Props) {
   useEffect(() => {
     const container = scrollRef.current;
     if (!container) return;
-
     if (items.length > 1) {
       requestAnimationFrame(() => {
         const cardWidth = getCardWidth();
         container.scrollLeft = middleStart * cardWidth;
       });
     }
-
     container.addEventListener("scroll", handleScroll, { passive: true });
     return () => container.removeEventListener("scroll", handleScroll);
   }, [handleScroll, items.length, middleStart, getCardWidth]);
@@ -93,6 +91,10 @@ export default function GetToKnowMe({ items, username }: Props) {
     setActiveIndex(index);
   }
 
+  function toggleFlip(position: number) {
+    setFlipped((prev) => ({ ...prev, [position]: !prev[position] }));
+  }
+
   if (items.length === 0) return null;
 
   return (
@@ -101,7 +103,7 @@ export default function GetToKnowMe({ items, username }: Props) {
         Get to know {username}
       </p>
 
-      {/* Carousel — full-width single card with infinite loop */}
+      {/* Carousel */}
       <div className="relative">
         <div
           ref={scrollRef}
@@ -109,49 +111,94 @@ export default function GetToKnowMe({ items, username }: Props) {
         >
           {tripledItems.map((item, index) => {
             const album = item.albums;
-            const bgUrl = artwork(album.artwork_url, 1200);
+            const coverUrl = artwork(album.artwork_url, 800);
+            const isFlipped = flipped[item.position] || false;
 
             return (
               <div
                 key={`${item.id}-${index}`}
-                className="snap-center shrink-0 w-full pr-4 last:pr-0"
+                className="snap-center shrink-0 w-full pr-4 last:pr-0 flex flex-col items-center"
+                style={{ perspective: "2000px" }}
               >
-                <div className="relative rounded-2xl overflow-hidden bg-card border border-border group">
-                  {bgUrl && (
-                    <div className="absolute inset-0">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={bgUrl}
-                        alt=""
-                        className="w-full h-full object-cover opacity-15 blur-3xl scale-125"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/70 to-black/50" />
+                {/* Position label */}
+                <p className="text-[11px] uppercase tracking-[0.18em] text-accent mb-6 text-center">
+                  {SLIDE_LABELS[item.position - 1] || ""}
+                </p>
+
+                {/* Vinyl sleeve — flippable */}
+                <div
+                  className="relative w-full max-w-sm aspect-square cursor-pointer select-none"
+                  onClick={() => toggleFlip(item.position)}
+                  style={{
+                    transformStyle: "preserve-3d",
+                    transition: "transform 800ms cubic-bezier(0.4, 0, 0.2, 1)",
+                    transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
+                  }}
+                >
+                  {/* FRONT — album cover */}
+                  <div
+                    className="absolute inset-0 rounded-sm overflow-hidden shadow-2xl"
+                    style={{
+                      backfaceVisibility: "hidden",
+                      WebkitBackfaceVisibility: "hidden",
+                      boxShadow: "0 30px 80px -20px rgba(0,0,0,0.95), 0 0 0 1px rgba(0,0,0,0.6)",
+                    }}
+                  >
+                    {coverUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={coverUrl} alt={album.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-card flex items-center justify-center text-zinc-700 text-6xl">♪</div>
+                    )}
+                    {/* Subtle inner highlight to look like a sleeve */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-black/30 pointer-events-none" />
+                    {/* Tap hint */}
+                    <div className="absolute bottom-3 right-3 text-[10px] text-white/60 bg-black/40 backdrop-blur-sm px-2 py-1 rounded-full pointer-events-none">
+                      tap to flip
                     </div>
-                  )}
+                  </div>
 
-                  <div className="relative p-5 sm:p-8 flex flex-col sm:flex-row gap-5 sm:gap-8 items-center min-h-[280px] sm:min-h-[320px]">
-                    <VinylCover
-                      artworkUrl={album.artwork_url}
-                      title={album.title}
-                      size="lg"
-                      showVinyl={true}
-                    />
+                  {/* BACK — story side */}
+                  <div
+                    className="absolute inset-0 rounded-sm overflow-hidden p-6 sm:p-8 flex flex-col"
+                    style={{
+                      backfaceVisibility: "hidden",
+                      WebkitBackfaceVisibility: "hidden",
+                      transform: "rotateY(180deg)",
+                      background: "linear-gradient(135deg, #f5f1e8 0%, #e8e0d0 100%)",
+                      boxShadow: "0 30px 80px -20px rgba(0,0,0,0.95), 0 0 0 1px rgba(0,0,0,0.6), inset 0 0 60px rgba(80,60,30,0.15)",
+                    }}
+                  >
+                    {/* Header label */}
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-600 mb-4 font-mono">
+                      Side B · {SLIDE_LABELS[item.position - 1]}
+                    </p>
 
-                    <div className="flex-1 text-center sm:text-left">
-                      <p className="text-[11px] uppercase tracking-[0.18em] text-accent mb-3">
-                        {SLIDE_LABELS[item.position - 1] || ""}
+                    {/* Title + artist */}
+                    <h3 className="font-display text-zinc-900 text-3xl sm:text-4xl tracking-tight leading-none mb-2">
+                      {album.title}
+                    </h3>
+                    <p className="text-zinc-700 text-sm mb-6">
+                      {album.artist_name}
+                    </p>
+
+                    {/* Divider */}
+                    <div className="h-px bg-zinc-400/40 mb-5" />
+
+                    {/* Story */}
+                    {item.story ? (
+                      <p className="editorial text-zinc-800 text-base leading-relaxed flex-1 overflow-y-auto">
+                        {item.story}
                       </p>
-                      <h3 className="font-display text-2xl sm:text-4xl tracking-tight leading-none mb-2">
-                        {album.title}
-                      </h3>
-                      <p className="text-zinc-400 mb-5 text-sm">
-                        {album.artist_name}
+                    ) : (
+                      <p className="editorial text-zinc-500 text-sm italic">
+                        No story written yet.
                       </p>
-                      {item.story && (
-                        <p className="editorial text-base text-zinc-300 leading-relaxed max-w-md">
-                          &ldquo;{item.story}&rdquo;
-                        </p>
-                      )}
+                    )}
+
+                    {/* Tap hint */}
+                    <div className="mt-4 text-[10px] text-zinc-600 text-right font-mono">
+                      tap to flip back
                     </div>
                   </div>
                 </div>
@@ -162,7 +209,7 @@ export default function GetToKnowMe({ items, username }: Props) {
 
         {/* Dots */}
         {items.length > 1 && (
-          <div className="flex justify-center gap-2 mt-5">
+          <div className="flex justify-center gap-2 mt-6">
             {items.map((_, index) => (
               <button
                 key={index}
