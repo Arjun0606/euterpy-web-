@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
 
 interface Profile {
   id: string;
@@ -107,7 +108,7 @@ export default function SettingsPage() {
     if (socialLinks.twitter.trim()) links.twitter = socialLinks.twitter.trim();
     if (socialLinks.spotify.trim()) links.spotify = socialLinks.spotify.trim();
 
-    await supabase
+    const { error } = await supabase
       .from("profiles")
       .update({
         display_name: displayName.trim() || null,
@@ -119,7 +120,12 @@ export default function SettingsPage() {
       .eq("id", profile.id);
 
     setSaving(false);
+    if (error) {
+      toast.error(`Save failed: ${error.message}`);
+      return;
+    }
     setSaved(true);
+    toast("Profile saved");
     setTimeout(() => setSaved(false), 2000);
   }
 
