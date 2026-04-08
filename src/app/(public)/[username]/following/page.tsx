@@ -37,7 +37,7 @@ export default async function FollowingPage({ params }: Props) {
   const following = (follows || []).map((f: any) => f.following).filter(Boolean);
 
   return (
-    <div className="max-w-3xl mx-auto px-5 sm:px-8 py-10 sm:py-14">
+    <div className="max-w-5xl mx-auto px-5 sm:px-8 py-10 sm:py-14">
       <div className="mb-8">
         <Link href={`/${profile.username}`} className="text-[11px] text-zinc-600 hover:text-zinc-300 transition-colors uppercase tracking-[0.18em]">
           ← @{profile.username}

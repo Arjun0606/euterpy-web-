@@ -1,6 +1,6 @@
 export default function DiscoverLoading() {
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-8 py-8">
+    <div className="max-w-5xl mx-auto px-4 sm:px-8 py-8">
       <div className="h-8 w-40 bg-card rounded-lg animate-pulse mb-8" />
 
       {/* Top Rated section skeleton */}

@@ -120,6 +120,44 @@ async function getFullProfile(username: string) {
     items: (shelf.items || []).sort((a: any, b: any) => a.position - b.position).slice(0, 4),
   }));
 
+  // Social counts for the stats portrait
+  const ownedContentIds = [
+    ...((stories || []).map((s: any) => s.id)),
+    ...((lists || []).map((l: any) => l.id)),
+    ...((charts || []).map((c: any) => c.id)),
+    ...((lyricPins || []).map((l: any) => l.id)),
+  ];
+
+  const [
+    { count: marksGiven },
+    { count: echoesGiven },
+  ] = await Promise.all([
+    supabase.from("stars").select("id", { count: "exact", head: true }).eq("user_id", profile.id),
+    supabase.from("reposts").select("id", { count: "exact", head: true }).eq("user_id", profile.id),
+  ]);
+
+  let marksReceived = 0;
+  let echoesReceived = 0;
+  if (ownedContentIds.length > 0) {
+    const [{ count: m }, { count: e }] = await Promise.all([
+      supabase.from("stars").select("id", { count: "exact", head: true }).in("target_id", ownedContentIds),
+      supabase.from("reposts").select("id", { count: "exact", head: true }).in("target_id", ownedContentIds),
+    ]);
+    marksReceived = m || 0;
+    echoesReceived = e || 0;
+  }
+
+  const socialCounts = {
+    stories: (stories || []).length,
+    lyricPins: (lyricPins || []).length,
+    lists: (lists || []).length,
+    charts: (charts || []).length,
+    marksGiven: marksGiven || 0,
+    marksReceived,
+    echoesGiven: echoesGiven || 0,
+    echoesReceived,
+  };
+
   // Mutuals — when viewing someone else's profile, who do you both follow?
   let mutuals: any[] = [];
   if (user && user.id !== profile.id) {
@@ -156,6 +194,7 @@ async function getFullProfile(username: string) {
     charts: charts || [],
     badges: badges || [],
     mutuals,
+    socialCounts,
   };
 }
 

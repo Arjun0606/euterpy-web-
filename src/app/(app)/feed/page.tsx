@@ -351,7 +351,7 @@ export default async function HomePage() {
   const firstName = (profile?.display_name || profile?.username || "").split(" ")[0];
 
   return (
-    <main className="max-w-3xl mx-auto px-5 sm:px-8 py-10 sm:py-14">
+    <main className="max-w-5xl mx-auto px-5 sm:px-8 py-10 sm:py-14">
 
       {/* Greeting */}
       <div className="mb-8">
@@ -369,33 +369,33 @@ export default async function HomePage() {
           Story of the Week if any story has marks; otherwise Album of the Day.
           Same slot, daily cadence, never empty. */}
       {storyOfTheWeek && storyOfTheWeek._marks > 0 ? (
-        <section className="mb-16 -mx-5 sm:-mx-8">
+        <section className="mb-20 relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen">
           <Link href={`/story/${storyOfTheWeek.id}`} className="block group relative overflow-hidden">
             {storyOfTheWeek.target_artwork_url && (
               <div className="absolute inset-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={art(storyOfTheWeek.target_artwork_url, 1200)!} alt="" className="w-full h-full object-cover opacity-30 blur-3xl scale-150" />
-                <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/85 to-background" />
+                <img src={art(storyOfTheWeek.target_artwork_url, 1600)!} alt="" className="w-full h-full object-cover opacity-30 blur-3xl scale-150" />
+                <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/85 to-background" />
               </div>
             )}
 
-            <div className="relative px-5 sm:px-8 py-12 sm:py-16">
-              <p className="text-[10px] uppercase tracking-[0.25em] text-accent font-semibold mb-6">— Story of the week</p>
+            <div className="relative max-w-6xl mx-auto px-6 sm:px-10 lg:px-16 py-16 sm:py-24 lg:py-32">
+              <p className="text-[10px] uppercase tracking-[0.25em] text-accent font-semibold mb-8">— Story of the week</p>
 
               {storyOfTheWeek.headline && (
-                <h2 className="font-display text-5xl sm:text-7xl tracking-tighter leading-[0.92] mb-8 group-hover:text-accent transition-colors max-w-3xl">
+                <h2 className="font-display text-5xl sm:text-7xl lg:text-8xl tracking-tighter leading-[0.9] mb-10 group-hover:text-accent transition-colors max-w-4xl">
                   {storyOfTheWeek.headline}
                 </h2>
               )}
 
-              <blockquote className="relative pl-6 sm:pl-10 border-l-2 border-accent mb-8 max-w-2xl">
-                <p className="font-display italic text-xl sm:text-2xl leading-[1.4] tracking-tight text-zinc-200 line-clamp-5">
+              <blockquote className="relative pl-8 sm:pl-12 border-l-2 border-accent mb-10 max-w-3xl">
+                <p className="font-display italic text-xl sm:text-2xl lg:text-3xl leading-[1.4] tracking-tight text-zinc-200 line-clamp-5">
                   &ldquo;{storyOfTheWeek.body.length > 320 ? storyOfTheWeek.body.slice(0, 320).trimEnd() + "…" : storyOfTheWeek.body}&rdquo;
                 </p>
               </blockquote>
 
-              <div className="flex items-center gap-4 max-w-2xl">
-                <div className="w-12 h-12 rounded-full bg-card border border-border flex items-center justify-center text-sm text-zinc-500 overflow-hidden shrink-0">
+              <div className="flex items-center gap-4 max-w-3xl">
+                <div className="w-14 h-14 rounded-full bg-card border border-border flex items-center justify-center text-base text-zinc-500 overflow-hidden shrink-0">
                   {storyOfTheWeek.profiles?.avatar_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={storyOfTheWeek.profiles.avatar_url} alt="" className="w-full h-full object-cover" />
@@ -404,10 +404,10 @@ export default async function HomePage() {
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-zinc-200">
+                  <p className="text-base font-medium text-zinc-200">
                     {storyOfTheWeek.profiles?.display_name || storyOfTheWeek.profiles?.username}
                   </p>
-                  <p className="text-[11px] text-zinc-600">
+                  <p className="text-xs text-zinc-600">
                     on <span className="italic text-zinc-400">{storyOfTheWeek.target_title}</span>
                     {storyOfTheWeek.target_artist && storyOfTheWeek.kind !== "artist" && (
                       <span className="text-zinc-700"> · {storyOfTheWeek.target_artist}</span>
@@ -422,63 +422,60 @@ export default async function HomePage() {
           </Link>
         </section>
       ) : albumOfTheDay ? (
-        <section className="mb-16 -mx-5 sm:-mx-8">
+        <section className="mb-20 relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen">
           <div className="relative overflow-hidden">
             {albumOfTheDay.artwork_url && (
               <div className="absolute inset-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={art(albumOfTheDay.artwork_url, 1200)!} alt="" className="w-full h-full object-cover opacity-30 blur-3xl scale-150" />
-                <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/85 to-background" />
+                <img src={art(albumOfTheDay.artwork_url, 1600)!} alt="" className="w-full h-full object-cover opacity-30 blur-3xl scale-150" />
+                <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/85 to-background" />
               </div>
             )}
 
-            <div className="relative px-5 sm:px-8 py-12 sm:py-16">
-              <p className="text-[10px] uppercase tracking-[0.25em] text-accent font-semibold mb-6">
+            <div className="relative max-w-6xl mx-auto px-6 sm:px-10 lg:px-16 py-16 sm:py-24 lg:py-32">
+              <p className="text-[10px] uppercase tracking-[0.25em] text-accent font-semibold mb-8">
                 — Album of the day · {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric" })}
               </p>
 
               <Link href={`/album/${albumOfTheDay.apple_id}`} className="group block">
-                <div className="flex flex-col sm:flex-row items-start gap-8 sm:gap-12">
-                  <div className="w-56 sm:w-64 aspect-square rounded-xl overflow-hidden shadow-[0_30px_80px_-20px_rgba(0,0,0,0.8)] shrink-0 border border-white/[0.06] group-hover:scale-[1.02] transition-transform duration-700">
+                <div className="flex flex-col lg:flex-row items-start gap-10 lg:gap-16">
+                  <div className="w-64 sm:w-80 lg:w-96 aspect-square rounded-2xl overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.85)] shrink-0 border border-white/[0.08] group-hover:scale-[1.02] transition-transform duration-700">
                     {albumOfTheDay.artwork_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={art(albumOfTheDay.artwork_url, 700)!} alt={albumOfTheDay.title} className="w-full h-full object-cover" />
+                      <img src={art(albumOfTheDay.artwork_url, 900)!} alt={albumOfTheDay.title} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-6xl text-zinc-700">♪</div>
                     )}
                   </div>
 
-                  <div className="flex-1 min-w-0 pt-2">
-                    <h2 className="font-display text-5xl sm:text-7xl tracking-tighter leading-[0.9] mb-4 group-hover:text-accent transition-colors">
+                  <div className="flex-1 min-w-0 lg:pt-4">
+                    <h2 className="font-display text-5xl sm:text-7xl lg:text-8xl tracking-tighter leading-[0.88] mb-6 group-hover:text-accent transition-colors">
                       {albumOfTheDay.title}
                     </h2>
-                    <p className="font-display italic text-2xl sm:text-3xl text-zinc-400 mb-6">{albumOfTheDay.artist_name}</p>
+                    <p className="font-display italic text-2xl sm:text-3xl lg:text-4xl text-zinc-400 mb-8">{albumOfTheDay.artist_name}</p>
 
                     {albumOfTheDay.editorial_notes && (
-                      <p className="editorial italic text-base sm:text-lg text-zinc-300 leading-relaxed line-clamp-4 max-w-xl mb-6">
+                      <p className="editorial italic text-base sm:text-lg lg:text-xl text-zinc-300 leading-relaxed line-clamp-4 max-w-2xl mb-6">
                         {albumOfTheDay.editorial_notes}
                       </p>
                     )}
 
                     {albumOfTheDay.rating_count > 0 && (
-                      <p className="text-[11px] text-zinc-600 mb-6">
+                      <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-600 mb-8">
                         In <span className="text-accent">{albumOfTheDay.rating_count}</span> {albumOfTheDay.rating_count === 1 ? "collection" : "collections"} today
                       </p>
                     )}
+
+                    {/* CTA inline with the body */}
+                    <div className="flex flex-wrap items-center gap-4 mt-2">
+                      <span className="px-6 py-3 bg-accent text-white text-xs font-medium rounded-full group-hover:bg-accent-hover transition-colors">
+                        Tell its story →
+                      </span>
+                      <p className="text-[11px] text-zinc-600 italic">First one to write becomes next week&apos;s cover.</p>
+                    </div>
                   </div>
                 </div>
               </Link>
-
-              {/* CTA underneath — invite to write */}
-              <div className="mt-8 flex flex-wrap items-center gap-3 max-w-2xl">
-                <Link
-                  href={`/album/${albumOfTheDay.apple_id}`}
-                  className="px-6 py-2.5 bg-accent text-white text-xs font-medium rounded-full hover:bg-accent-hover transition-colors"
-                >
-                  Tell its story →
-                </Link>
-                <p className="text-[11px] text-zinc-600 italic">The first one to write becomes next week&apos;s cover.</p>
-              </div>
             </div>
           </div>
         </section>
@@ -505,7 +502,7 @@ export default async function HomePage() {
                 "echoed something";
               return (
                 <Link key={act.id} href={act.href}
-                  className="shrink-0 w-32 group bg-card border border-border rounded-xl p-3 hover:border-accent/40 transition-colors text-center">
+                  className="shrink-0 w-36 lg:w-40 group bg-card border border-border rounded-xl p-4 hover:border-accent/40 transition-colors text-center">
                   <div className="w-12 h-12 rounded-full bg-background border border-border mx-auto mb-2 overflow-hidden flex items-center justify-center text-xs text-zinc-600">
                     {act.actor.avatar_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -713,9 +710,9 @@ export default async function HomePage() {
             </div>
             <Link href="/discover" className="text-[11px] text-accent hover:underline">See all →</Link>
           </div>
-          <ol className="divide-y divide-white/[0.04] border-y border-white/[0.04]">
+          <ol className="grid grid-cols-1 lg:grid-cols-2 lg:gap-x-10 border-y border-white/[0.04]">
             {(trendingAlbums && trendingAlbums.length > 0 ? trendingAlbums : appleMusicCharts).slice(0, 10).map((album: any, i: number) => (
-              <li key={album.apple_id}>
+              <li key={album.apple_id} className="border-b border-white/[0.04] lg:[&:nth-last-child(2)]:border-b-0 last:border-b-0">
                 <Link href={`/album/${album.apple_id}`} className="flex items-center gap-4 py-4 group hover:bg-white/[0.02] -mx-2 px-2 rounded transition-colors">
                   <span className="font-display text-3xl sm:text-4xl tracking-tighter text-zinc-700 group-hover:text-accent transition-colors w-10 sm:w-12 tabular-nums shrink-0">
                     {String(i + 1).padStart(2, "0")}
@@ -749,7 +746,7 @@ export default async function HomePage() {
             <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">Curators worth following</p>
             <Link href="/people" className="text-[11px] text-accent hover:underline">See all →</Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
             {activeCurators.map((c: any) => (
               <Link key={c.id} href={`/${c.username}`}
                 className="bg-card border border-border rounded-xl p-4 hover:border-accent/40 transition-colors text-center">

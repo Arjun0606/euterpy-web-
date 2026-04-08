@@ -117,7 +117,7 @@ export default async function DiscoverPage() {
   }
 
   return (
-    <main className="max-w-3xl mx-auto px-5 sm:px-8 py-10 sm:py-14">
+    <main className="max-w-5xl mx-auto px-5 sm:px-8 py-10 sm:py-14">
 
       {/* Header */}
       <div className="mb-8">
@@ -218,7 +218,7 @@ export default async function DiscoverPage() {
       {suggestedUsers.length > 0 && (
         <section className="mb-12">
           <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-5">Curators with your taste</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
             {suggestedUsers.map((u: any) => (
               <Link key={u.id} href={`/${u.username}`}
                 className="bg-card border border-border rounded-xl p-4 hover:border-zinc-700 transition-colors text-center">
@@ -241,7 +241,7 @@ export default async function DiscoverPage() {
       {topAlbums && topAlbums.length > 0 && (
         <section className="mb-12">
           <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-5">Most collected, all time</p>
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
             {topAlbums.map((album: any) => (
               <Link key={album.id} href={`/album/${album.apple_id}`} className="group">
                 <div className="aspect-square rounded-xl overflow-hidden bg-card border border-border mb-2 transition-all duration-300 group-hover:-translate-y-1 group-hover:border-zinc-700 group-hover:shadow-2xl group-hover:shadow-accent/10">
@@ -268,7 +268,7 @@ export default async function DiscoverPage() {
       {activeUsers && activeUsers.length > 0 && (
         <section className="mb-12">
           <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-5">Active curators</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
             {activeUsers.map((u: any) => (
               <Link key={u.id} href={`/${u.username}`}
                 className="bg-card border border-border rounded-xl p-4 hover:border-zinc-700 transition-colors text-center">
@@ -290,7 +290,7 @@ export default async function DiscoverPage() {
       {latestStories && latestStories.length > 0 && (
         <section className="mb-12">
           <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-5">Latest stories</p>
-          <div className="grid sm:grid-cols-2 gap-3">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {latestStories.map((story: any) => {
               const author = story.profiles;
               const cover = story.target_artwork_url ? art(story.target_artwork_url, 200) : null;

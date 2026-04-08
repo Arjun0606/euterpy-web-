@@ -160,7 +160,7 @@ export default function ShelfDetail({ shelf, items: initialItems, isOwner }: Pro
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-5 sm:px-8 py-12 sm:py-16">
+    <div className="max-w-5xl mx-auto px-5 sm:px-8 py-12 sm:py-16">
       {/* Header */}
       <div className="flex items-start justify-between mb-10">
         <div>

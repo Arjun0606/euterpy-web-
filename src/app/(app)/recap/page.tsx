@@ -78,7 +78,7 @@ export default async function RecapPage() {
   const totalCollected = validRatings.length;
 
   return (
-    <main className="max-w-3xl mx-auto px-5 sm:px-8 py-10 sm:py-14">
+    <main className="max-w-5xl mx-auto px-5 sm:px-8 py-10 sm:py-14">
       <div className="mb-8">
         <p className="text-[11px] uppercase tracking-[0.18em] text-accent mb-2">Recap · {year}</p>
         <h1 className="font-display text-5xl sm:text-6xl tracking-tight leading-none">

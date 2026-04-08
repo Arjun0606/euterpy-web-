@@ -11,7 +11,7 @@ import FollowButton from "@/components/ui/FollowButton";
 import TasteMatch from "./TasteMatch";
 import ShelfEditor from "./ShelfEditor";
 import BlockButton from "./BlockButton";
-import StatsView from "@/components/stats/StatsView";
+import IdentityStats from "@/components/stats/IdentityStats";
 import StoriesSection from "@/components/story/StoriesSection";
 import LyricPinsSection from "./LyricPinsSection";
 import ListsSection from "@/components/list/ListsSection";
@@ -38,11 +38,21 @@ interface Props {
     charts: any[];
     badges: any[];
     mutuals?: any[];
+    socialCounts?: {
+      stories: number;
+      lyricPins: number;
+      lists: number;
+      charts: number;
+      marksGiven: number;
+      marksReceived: number;
+      echoesGiven: number;
+      echoesReceived: number;
+    };
   };
 }
 
 export default function ProfilePage({ data }: Props) {
-  const { profile, currentUserId, getToKnowMe, ratings, songRatings, shelves, stories, lyricPins, lists, charts, badges, mutuals = [] } = data;
+  const { profile, currentUserId, getToKnowMe, ratings, songRatings, shelves, stories, lyricPins, lists, charts, badges, mutuals = [], socialCounts } = data;
   const [activeTab, setActiveTab] = useState<Tab>("collection");
   const [copied, setCopied] = useState(false);
   const [showNewShelf, setShowNewShelf] = useState(false);
@@ -80,7 +90,7 @@ export default function ProfilePage({ data }: Props) {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-3xl mx-auto px-5 sm:px-8 py-12 sm:py-16">
+      <div className="max-w-5xl mx-auto px-5 sm:px-8 py-12 sm:py-16">
 
         {/* ====== Profile Header ====== */}
         <div className="flex items-start gap-5 sm:gap-7 mb-12">
@@ -301,17 +311,25 @@ export default function ProfilePage({ data }: Props) {
           </div>
         )}
 
-        {/* ====== STATS ====== */}
+        {/* ====== STATS — the magazine portrait ====== */}
         {activeTab === "stats" && (
           <div>
-            {ratings.length === 0 && songRatings.length === 0 ? (
-              <div className="text-center py-20">
-                <p className="text-zinc-500">No stats yet.</p>
-                <p className="text-zinc-700 text-xs mt-2">Add albums to your collection to see your taste breakdown.</p>
-              </div>
-            ) : (
-              <StatsView ratings={ratings} songRatings={songRatings} />
-            )}
+            <IdentityStats
+              username={profile.username}
+              displayName={profile.display_name || profile.username}
+              ratings={ratings}
+              songRatings={songRatings}
+              counts={socialCounts || {
+                stories: stories.length,
+                lyricPins: lyricPins.length,
+                lists: lists.length,
+                charts: charts.length,
+                marksGiven: 0,
+                marksReceived: 0,
+                echoesGiven: 0,
+                echoesReceived: 0,
+              }}
+            />
           </div>
         )}
 

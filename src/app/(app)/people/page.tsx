@@ -126,7 +126,7 @@ export default async function PeoplePage() {
     .limit(12);
 
   return (
-    <main className="max-w-3xl mx-auto px-5 sm:px-8 py-10 sm:py-14">
+    <main className="max-w-5xl mx-auto px-5 sm:px-8 py-10 sm:py-14">
 
       {/* Header */}
       <div className="mb-8">
@@ -150,7 +150,7 @@ export default async function PeoplePage() {
             <h2 className="font-display text-3xl tracking-tight">Rising voices.</h2>
             <p className="text-sm text-zinc-500 mt-1">Writers whose stories are being marked the most right now.</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {risingVoices.map((v: any) => (
               <PersonCard
                 key={v.id}
@@ -170,7 +170,7 @@ export default async function PeoplePage() {
             <h2 className="font-display text-3xl tracking-tight">People who hear what you hear.</h2>
             <p className="text-sm text-zinc-500 mt-1">Curators with the most overlap with your collection.</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {tasteMatches.map((v: any) => (
               <PersonCard
                 key={v.id}
@@ -190,7 +190,7 @@ export default async function PeoplePage() {
             <h2 className="font-display text-3xl tracking-tight">Friends of friends.</h2>
             <p className="text-sm text-zinc-500 mt-1">People your follows already trust.</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {friendsOfFriends.map((v: any) => (
               <PersonCard
                 key={v.id}
@@ -210,7 +210,7 @@ export default async function PeoplePage() {
             <h2 className="font-display text-3xl tracking-tight">Active curators.</h2>
             <p className="text-sm text-zinc-500 mt-1">People building their pages right now.</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {activeCurators.map((v: any) => <PersonCard key={v.id} person={v} subtitle={`@${v.username}`} />)}
           </div>
         </section>
