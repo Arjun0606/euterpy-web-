@@ -2,6 +2,9 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { getArtworkUrl } from "@/lib/apple-music/client";
+import { createClient } from "@/lib/supabase/client";
+import StoryEditor from "./StoryEditor";
+import { toast } from "sonner";
 
 interface GetToKnowMeItem {
   id: string;
@@ -19,6 +22,7 @@ interface GetToKnowMeItem {
 interface Props {
   items: GetToKnowMeItem[];
   username: string;
+  isOwner?: boolean;
 }
 
 function artwork(url: string | null, size = 800): string | null {
@@ -32,9 +36,26 @@ const SLIDE_LABELS = [
   "The one that changed everything",
 ];
 
-export default function GetToKnowMe({ items, username }: Props) {
+export default function GetToKnowMe({ items: initialItems, username, isOwner = false }: Props) {
+  const [items, setItems] = useState(initialItems);
   const [activeIndex, setActiveIndex] = useState(0);
   const [flipped, setFlipped] = useState<Record<number, boolean>>({});
+
+  async function handleStorySave(itemId: string, story: string) {
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("get_to_know_me")
+      .update({ story: story.trim() || null })
+      .eq("id", itemId);
+
+    if (error) {
+      toast.error("Couldn't save story");
+      throw error;
+    }
+
+    setItems((prev) => prev.map((it) => (it.id === itemId ? { ...it, story: story.trim() || null } : it)));
+    toast("Story saved");
+  }
   const scrollRef = useRef<HTMLDivElement>(null);
   const isScrollingRef = useRef(false);
   const scrollEndTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -197,16 +218,15 @@ export default function GetToKnowMe({ items, username }: Props) {
                     {/* Divider */}
                     <div className="h-px bg-zinc-400/40 mb-5" />
 
-                    {/* Story */}
-                    {item.story ? (
-                      <p className="editorial text-zinc-800 text-base leading-relaxed flex-1 overflow-y-auto">
-                        {item.story}
-                      </p>
-                    ) : (
-                      <p className="editorial text-zinc-500 text-sm italic">
-                        No story written yet.
-                      </p>
-                    )}
+                    {/* Story — editable for owner with @ track mentions */}
+                    <div className="flex-1 overflow-y-auto">
+                      <StoryEditor
+                        initialStory={item.story}
+                        albumAppleId={album.apple_id}
+                        isOwner={isOwner}
+                        onSave={(story) => handleStorySave(item.id, story)}
+                      />
+                    </div>
 
                     {/* Tap hint */}
                     <div className="mt-4 text-[10px] text-zinc-600 text-right font-mono">

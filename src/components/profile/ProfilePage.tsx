@@ -181,7 +181,7 @@ export default function ProfilePage({ data }: Props) {
 
             {/* GTKM — only show if has items OR is owner */}
             {(getToKnowMe.length > 0 || isOwnProfile) && (
-              <GetToKnowMe items={getToKnowMe} username={profile.username} />
+              <GetToKnowMe items={getToKnowMe} username={profile.username} isOwner={isOwnProfile} />
             )}
 
             {/* The Shelf */}
