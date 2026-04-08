@@ -36,32 +36,63 @@ const SHELF_STYLES: Record<ShelfStyle, { ledge: React.CSSProperties; shadow: Rea
   },
   wood: {
     ledge: {
-      backgroundImage: `linear-gradient(to bottom, #c4895a 0%, #a0633d 15%, #8b5a32 35%, #6b3f1a 60%, #4a2810 100%)`,
-      boxShadow: "0 6px 20px rgba(0,0,0,0.8), 0 3px 6px rgba(255,200,140,0.2) inset, 0 -2px 2px rgba(0,0,0,0.5) inset",
-      height: "14px",
+      backgroundImage: `
+        repeating-linear-gradient(180deg,
+          rgba(0,0,0,0.0) 0px,
+          rgba(0,0,0,0.12) 1px,
+          rgba(255,200,140,0.08) 2px,
+          rgba(0,0,0,0.0) 4px
+        ),
+        linear-gradient(to bottom,
+          #d49060 0%,
+          #b66f3a 25%,
+          #8a4f22 60%,
+          #5a3010 100%
+        )
+      `,
+      boxShadow: `
+        0 8px 24px rgba(0,0,0,0.85),
+        0 4px 8px rgba(255,200,140,0.25) inset,
+        0 -3px 3px rgba(0,0,0,0.6) inset,
+        0 0 0 1px rgba(80,40,15,0.6)
+      `,
+      height: "18px",
       borderRadius: "2px",
     },
-    shadow: { background: "linear-gradient(to bottom, rgba(60,30,5,0.8) 0%, transparent 100%)", height: "24px" },
+    shadow: { background: "linear-gradient(to bottom, rgba(50,25,5,0.85) 0%, rgba(50,25,5,0.2) 50%, transparent 100%)", height: "32px" },
   },
   ornate: {
     ledge: {
-      backgroundImage: `linear-gradient(to bottom, #e8c39e 0%, #d4a574 20%, #b8865a 45%, #8b5a2b 75%, #5a3a1a 100%)`,
-      boxShadow: "0 6px 24px rgba(0,0,0,0.8), 0 3px 6px rgba(255,220,150,0.35) inset, 0 -2px 2px rgba(0,0,0,0.5) inset, 0 0 0 1px rgba(232,195,158,0.4), 0 0 16px rgba(212,165,116,0.2)",
-      height: "16px",
-      borderRadius: "3px",
+      backgroundImage: `linear-gradient(to bottom, #f5d99a 0%, #e8b870 12%, #c89548 30%, #966828 55%, #5a3c0e 90%, #2e1f06 100%)`,
+      boxShadow: `
+        0 10px 32px rgba(0,0,0,0.9),
+        0 5px 0 rgba(245,217,154,0.5) inset,
+        0 -3px 0 rgba(0,0,0,0.6) inset,
+        0 0 0 1px rgba(245,217,154,0.6),
+        0 0 0 3px rgba(40,25,5,0.8),
+        0 0 24px rgba(232,184,112,0.35)
+      `,
+      height: "22px",
+      borderRadius: "4px",
     },
-    shadow: { background: "linear-gradient(to bottom, rgba(50,25,8,0.8) 0%, transparent 100%)", height: "26px" },
+    shadow: { background: "linear-gradient(to bottom, rgba(40,25,5,0.85) 0%, rgba(40,25,5,0.2) 50%, transparent 100%)", height: "36px" },
   },
   glass: {
     ledge: {
-      background: "linear-gradient(to bottom, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.12) 30%, rgba(255,255,255,0.04) 100%)",
-      boxShadow: "0 4px 20px rgba(0,0,0,0.5), 0 2px 0 rgba(255,255,255,0.25) inset, 0 -1px 0 rgba(255,255,255,0.06) inset",
-      backdropFilter: "blur(16px)",
-      height: "12px",
-      borderRadius: "2px",
-      border: "1px solid rgba(255,255,255,0.12)",
+      background: "linear-gradient(to bottom, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.18) 25%, rgba(255,255,255,0.06) 70%, rgba(255,255,255,0.02) 100%)",
+      boxShadow: `
+        0 6px 24px rgba(0,0,0,0.5),
+        0 3px 0 rgba(255,255,255,0.5) inset,
+        0 -1px 0 rgba(255,255,255,0.1) inset,
+        0 0 32px rgba(255,255,255,0.08)
+      `,
+      backdropFilter: "blur(20px)",
+      WebkitBackdropFilter: "blur(20px)",
+      height: "16px",
+      borderRadius: "3px",
+      border: "1px solid rgba(255,255,255,0.18)",
     },
-    shadow: { background: "linear-gradient(to bottom, rgba(255,255,255,0.06) 0%, transparent 100%)", height: "20px" },
+    shadow: { background: "linear-gradient(to bottom, rgba(255,255,255,0.08) 0%, transparent 100%)", height: "24px" },
   },
 };
 
