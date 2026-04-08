@@ -35,6 +35,7 @@ function formatDuration(ms: number): string {
 export default function TrackList({ albumAppleId, songRatings = [] }: Props) {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     async function fetchTracks() {
@@ -83,9 +84,9 @@ export default function TrackList({ albumAppleId, songRatings = [] }: Props) {
       </h2>
 
       <div className="border border-border rounded-xl overflow-hidden">
-        {tracks.map((track, index) => {
+        {(expanded ? tracks : tracks.slice(0, 6)).map((track, index, arr) => {
           const rating = ratingsByAppleId.get(track.appleId);
-          const isLast = index === tracks.length - 1;
+          const isLast = index === arr.length - 1 && (expanded || tracks.length <= 6);
 
           return (
             <div
@@ -119,6 +120,14 @@ export default function TrackList({ albumAppleId, songRatings = [] }: Props) {
             </div>
           );
         })}
+        {tracks.length > 6 && (
+          <button
+            onClick={() => setExpanded((v) => !v)}
+            className="w-full px-4 py-2.5 text-xs text-zinc-500 hover:text-accent border-t border-border/50 transition-colors"
+          >
+            {expanded ? "Show less" : `Show all ${tracks.length} tracks`}
+          </button>
+        )}
       </div>
     </div>
   );

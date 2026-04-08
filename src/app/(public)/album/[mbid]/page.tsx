@@ -5,6 +5,7 @@ import { getArtworkUrl, getAlbum as fetchAlbumFromApple } from "@/lib/apple-musi
 import VinylCover from "@/components/ui/VinylCover";
 import AlbumActions from "@/components/album/AlbumActions";
 import TrackList from "@/components/album/TrackList";
+import EditorialNotes from "@/components/album/EditorialNotes";
 import ReviewSection from "@/components/album/ReviewSection";
 import RatingDistributionBar from "@/components/album/RatingDistributionBar";
 import Stars from "@/components/ui/Stars";
@@ -254,12 +255,7 @@ export default async function AlbumPage({ params }: Props) {
         <TrackList albumAppleId={appleId} songRatings={songRatings} />
 
         {/* Editorial Notes (from Apple Music) */}
-        {album.editorial_notes && (
-          <div className="mb-12">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-4">About this album</p>
-            <p className="editorial text-base text-zinc-300 leading-relaxed">{album.editorial_notes}</p>
-          </div>
-        )}
+        {album.editorial_notes && <EditorialNotes text={album.editorial_notes} />}
 
         {/* Reviews */}
         <ReviewSection
