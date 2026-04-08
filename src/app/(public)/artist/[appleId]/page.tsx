@@ -38,11 +38,23 @@ export default async function ArtistPage({ params }: Props) {
   const supabase = await createClient();
   const { data: stories } = await supabase
     .from("stories")
-    .select("id, headline, body, created_at, profiles(username, display_name, avatar_url)")
+    .select("id, headline, body, created_at, user_id, profiles(username, display_name, avatar_url, is_verified, verified_label)")
     .eq("kind", "artist")
     .eq("target_apple_id", appleId)
     .order("created_at", { ascending: false })
-    .limit(10);
+    .limit(20);
+
+  // Friends wrote about this artist
+  const { data: { user } } = await supabase.auth.getUser();
+  let friendStories: any[] = [];
+  if (user && stories && stories.length > 0) {
+    const { data: follows } = await supabase
+      .from("follows")
+      .select("following_id")
+      .eq("follower_id", user.id);
+    const followingSet = new Set((follows || []).map((f) => f.following_id));
+    friendStories = stories.filter((s: any) => followingSet.has(s.user_id));
+  }
 
   // Group by type
   const fullAlbums = albums.filter((a) => !a.attributes.isSingle && !a.attributes.isCompilation);
@@ -105,6 +117,14 @@ export default async function ArtistPage({ params }: Props) {
       </section>
 
       <main className="max-w-3xl mx-auto px-5 sm:px-8 py-8">
+        {/* Friends wrote about this artist */}
+        {friendStories.length > 0 && (
+          <StoriesSection
+            stories={JSON.parse(JSON.stringify(friendStories))}
+            title="Friends wrote about them"
+          />
+        )}
+
         {/* Stories about this artist */}
         <StoriesSection
           stories={JSON.parse(JSON.stringify(stories || []))}

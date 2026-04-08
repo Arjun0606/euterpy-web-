@@ -5,6 +5,10 @@ import { createClient } from "@/lib/supabase/server";
 import { getArtworkUrl } from "@/lib/apple-music/client";
 import StoryEditButton from "./StoryEditButton";
 import StoryShareCard from "./StoryShareCard";
+import StarButton from "@/components/social/StarButton";
+import StoryCommentsThread from "@/components/social/StoryCommentsThread";
+import VerifiedMark from "@/components/ui/VerifiedMark";
+import StoryBody from "@/components/story/StoryBody";
 
 export const dynamic = "force-dynamic";
 
@@ -48,7 +52,7 @@ export default async function StoryPage({ params }: Props) {
 
   const { data: story } = await supabase
     .from("stories")
-    .select("*, profiles(id, username, display_name, avatar_url, bio)")
+    .select("*, profiles(id, username, display_name, avatar_url, bio, is_verified, verified_label)")
     .eq("id", id)
     .single();
 
@@ -56,6 +60,33 @@ export default async function StoryPage({ params }: Props) {
 
   const author = (story.profiles as any) || {};
   const cover = art(story.target_artwork_url);
+
+  // Star count + my star state
+  const { count: starCount } = await supabase
+    .from("stars")
+    .select("id", { count: "exact", head: true })
+    .eq("kind", "story")
+    .eq("target_id", id);
+
+  const { data: { user: maybeUser } } = await supabase.auth.getUser();
+  let myStar = false;
+  if (maybeUser) {
+    const { data: starRow } = await supabase
+      .from("stars")
+      .select("id")
+      .eq("user_id", maybeUser.id)
+      .eq("kind", "story")
+      .eq("target_id", id)
+      .maybeSingle();
+    myStar = !!starRow;
+  }
+
+  // Comments
+  const { data: comments } = await supabase
+    .from("story_comments")
+    .select("id, body, created_at, user_id, profiles(username, display_name, avatar_url, is_verified, verified_label)")
+    .eq("story_id", id)
+    .order("created_at", { ascending: true });
   const isAlbum = story.kind === "album";
   const isSong = story.kind === "song";
   const isArtist = story.kind === "artist";
@@ -85,7 +116,7 @@ export default async function StoryPage({ params }: Props) {
     .order("created_at", { ascending: false })
     .limit(4);
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = maybeUser;
   const isOwnStory = user?.id === author.id;
 
   const date = new Date(story.created_at).toLocaleDateString("en-US", {
@@ -144,11 +175,13 @@ export default async function StoryPage({ params }: Props) {
               )}
             </Link>
             <div className="flex-1 min-w-0">
-              <Link href={`/${author.username}`} className="text-sm font-medium hover:text-accent transition-colors">
+              <Link href={`/${author.username}`} className="text-sm font-medium hover:text-accent transition-colors inline-flex items-center gap-1">
                 {author.display_name || author.username}
+                {author.is_verified && <VerifiedMark label={author.verified_label} size="sm" />}
               </Link>
               <p className="text-[11px] text-zinc-600">@{author.username} · {date}</p>
             </div>
+            <StarButton kind="story" targetId={story.id} initialCount={starCount || 0} initialStarred={myStar} />
             {isOwnStory && (
               <StoryEditButton
                 story={{
@@ -167,8 +200,16 @@ export default async function StoryPage({ params }: Props) {
 
           {/* Body */}
           <article className="editorial text-lg sm:text-xl text-zinc-200 leading-[1.75] whitespace-pre-wrap">
-            {story.body}
+            <StoryBody body={story.body} />
           </article>
+
+          {/* Comments */}
+          <StoryCommentsThread
+            storyId={story.id}
+            initial={JSON.parse(JSON.stringify(comments || []))}
+            currentUserId={user?.id || null}
+            storyOwnerId={author.id}
+          />
 
           {/* Share */}
           <StoryShareCard storyId={story.id} username={author.username} />

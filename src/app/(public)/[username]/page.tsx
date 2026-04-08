@@ -115,6 +115,28 @@ async function getFullProfile(username: string) {
     items: (shelf.items || []).sort((a: any, b: any) => a.position - b.position).slice(0, 4),
   }));
 
+  // Mutuals — when viewing someone else's profile, who do you both follow?
+  let mutuals: any[] = [];
+  if (user && user.id !== profile.id) {
+    // Get who the viewer follows
+    const { data: viewerFollows } = await supabase
+      .from("follows")
+      .select("following_id")
+      .eq("follower_id", user.id);
+    const viewerFollowingIds = (viewerFollows || []).map((f) => f.following_id);
+
+    if (viewerFollowingIds.length > 0) {
+      // Find which of those people also follow the profile
+      const { data: theyFollow } = await supabase
+        .from("follows")
+        .select("follower_id, profiles!follows_follower_id_fkey(id, username, display_name, avatar_url, is_verified, verified_label)")
+        .eq("following_id", profile.id)
+        .in("follower_id", viewerFollowingIds)
+        .limit(8);
+      mutuals = (theyFollow || []).map((row: any) => row.profiles).filter(Boolean);
+    }
+  }
+
   return {
     gated: false as const,
     profile,
@@ -128,6 +150,7 @@ async function getFullProfile(username: string) {
     lists: lists || [],
     charts: charts || [],
     badges: badges || [],
+    mutuals,
   };
 }
 

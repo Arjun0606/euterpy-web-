@@ -50,6 +50,14 @@ export default async function DiscoverPage() {
     .order("updated_at", { ascending: false })
     .limit(8);
 
+  // Notable voices — verified accounts
+  const { data: notableVoices } = await supabase
+    .from("profiles")
+    .select("id, username, display_name, avatar_url, album_count, bio, is_verified, verified_label")
+    .eq("is_verified", true)
+    .order("updated_at", { ascending: false })
+    .limit(12);
+
   // Latest stories
   const { data: latestStories } = await supabase
     .from("stories")
@@ -123,6 +131,40 @@ export default async function DiscoverPage() {
                 </div>
                 <p className="text-xs font-medium truncate">{album.title}</p>
                 <p className="text-[11px] text-zinc-500 truncate">{album.artist_name}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Notable Voices — verified accounts */}
+      {notableVoices && notableVoices.length > 0 && (
+        <section className="mb-12">
+          <div className="mb-5">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-accent mb-1">— The room</p>
+            <h2 className="font-display text-3xl tracking-tight">Notable voices.</h2>
+            <p className="text-sm text-zinc-500 mt-1">Critics, artists, producers, editors. People who are paid to listen.</p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {notableVoices.map((v: any) => (
+              <Link key={v.id} href={`/${v.username}`}
+                className="bg-card border border-border rounded-2xl p-5 hover:border-accent/40 transition-colors">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-12 h-12 rounded-full bg-background border border-border flex items-center justify-center text-sm text-zinc-600 overflow-hidden shrink-0">
+                    {v.avatar_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={v.avatar_url} alt="" className="w-full h-full object-cover" />
+                    ) : v.username[0].toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm truncate inline-flex items-center gap-1">
+                      {v.display_name || v.username}
+                      <svg viewBox="0 0 24 24" className="w-3 h-3 text-accent inline shrink-0" fill="currentColor"><path d="M12 2L14.39 5.42L18.5 4.83L17.91 8.94L21.33 11.33L17.91 13.72L18.5 17.83L14.39 17.24L12 20.66L9.61 17.24L5.5 17.83L6.09 13.72L2.67 11.33L6.09 8.94L5.5 4.83L9.61 5.42L12 2Z"/></svg>
+                    </p>
+                    <p className="text-[11px] text-accent truncate">{v.verified_label || "Verified"}</p>
+                  </div>
+                </div>
+                {v.bio && <p className="text-xs text-zinc-500 line-clamp-2 italic editorial">{v.bio}</p>}
               </Link>
             ))}
           </div>

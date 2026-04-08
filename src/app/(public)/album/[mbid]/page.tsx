@@ -131,17 +131,29 @@ async function getAlbumData(appleId: string) {
   // Stories about this album
   const { data: stories } = await supabase
     .from("stories")
-    .select("id, headline, body, created_at, profiles(username, display_name, avatar_url)")
+    .select("id, headline, body, created_at, user_id, profiles(username, display_name, avatar_url, is_verified, verified_label)")
     .eq("kind", "album")
     .eq("target_apple_id", appleId)
     .order("created_at", { ascending: false })
-    .limit(10);
+    .limit(20);
+
+  // Friends-wrote-about-this: stories whose author the current user follows
+  let friendStories: any[] = [];
+  if (user && stories && stories.length > 0) {
+    const { data: follows } = await supabase
+      .from("follows")
+      .select("following_id")
+      .eq("follower_id", user.id);
+    const followingSet = new Set((follows || []).map((f) => f.following_id));
+    friendStories = stories.filter((s: any) => followingSet.has(s.user_id));
+  }
 
   return {
     album,
     ratings: ratings || [],
     songRatings: songRatings || [],
     stories: stories || [],
+    friendStories,
     userId: user?.id || null,
   };
 }
@@ -151,7 +163,7 @@ export default async function AlbumPage({ params }: Props) {
   const data = await getAlbumData(appleId);
   if (!data) notFound();
 
-  const { album, ratings, songRatings, stories, userId } = data;
+  const { album, ratings, songRatings, stories, friendStories, userId } = data;
 
   return (
     <div className="min-h-screen bg-background">
@@ -280,6 +292,14 @@ export default async function AlbumPage({ params }: Props) {
 
         {/* Editorial Notes (from Apple Music) */}
         {album.editorial_notes && <EditorialNotes text={album.editorial_notes} />}
+
+        {/* Friends wrote about this — social proof, prioritized */}
+        {friendStories.length > 0 && (
+          <StoriesSection
+            stories={JSON.parse(JSON.stringify(friendStories))}
+            title="Friends wrote about this"
+          />
+        )}
 
         {/* Stories about this album — the heart of the page */}
         <StoriesSection

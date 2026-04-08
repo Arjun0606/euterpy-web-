@@ -88,11 +88,22 @@ export default async function SongPage({ params }: Props) {
   // Stories about this song
   const { data: stories } = await supabase
     .from("stories")
-    .select("id, headline, body, created_at, profiles(username, display_name, avatar_url)")
+    .select("id, headline, body, created_at, user_id, profiles(username, display_name, avatar_url, is_verified, verified_label)")
     .eq("kind", "song")
     .eq("target_apple_id", appleId)
     .order("created_at", { ascending: false })
-    .limit(10);
+    .limit(20);
+
+  // Friends wrote about this song
+  let friendStories: any[] = [];
+  if (user && stories && stories.length > 0) {
+    const { data: follows } = await supabase
+      .from("follows")
+      .select("following_id")
+      .eq("follower_id", user.id);
+    const followingSet = new Set((follows || []).map((f) => f.following_id));
+    friendStories = stories.filter((s: any) => followingSet.has(s.user_id));
+  }
 
   const durationMin = song.duration_ms ? Math.floor(song.duration_ms / 60000) : null;
   const durationSec = song.duration_ms ? Math.floor((song.duration_ms % 60000) / 1000) : null;
@@ -201,6 +212,14 @@ export default async function SongPage({ params }: Props) {
             />
           </div>
         </div>
+
+        {/* Friends wrote about this — social proof first */}
+        {friendStories.length > 0 && (
+          <StoriesSection
+            stories={JSON.parse(JSON.stringify(friendStories))}
+            title="Friends wrote about this"
+          />
+        )}
 
         {/* Stories about this song */}
         <StoriesSection

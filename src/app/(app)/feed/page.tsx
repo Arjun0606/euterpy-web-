@@ -83,20 +83,44 @@ export default async function HomePage() {
     .order("average_rating", { ascending: false })
     .limit(10);
 
-  // 4. Activity from people you follow (ratings + reviews)
-  const { data: feedItems } = await supabase
-    .from("feed_items")
-    .select(`
-      id, created_at,
-      actor:profiles!feed_items_actor_id_fkey(username, display_name, avatar_url),
-      rating:ratings!feed_items_rating_id_fkey(
-        id, score, reaction, created_at, ownership, like_count,
-        album:albums(id, apple_id, title, artist_name, artwork_url, album_type)
-      )
-    `)
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(20);
+  // 4. Friends doing intentional things — stories, lists, charts, lyric pins
+  // Only pulls if you follow people, otherwise empty
+  let friendStories: any[] = [];
+  let friendLists: any[] = [];
+  let friendCharts: any[] = [];
+  let friendLyrics: any[] = [];
+  if (followingIds.length > 0) {
+    const [s, l, c, ly] = await Promise.all([
+      supabase
+        .from("stories")
+        .select("id, created_at, kind, target_apple_id, target_title, target_artist, target_artwork_url, headline, body, profiles(username, display_name, avatar_url, is_verified, verified_label)")
+        .in("user_id", followingIds)
+        .order("created_at", { ascending: false })
+        .limit(8),
+      supabase
+        .from("lists")
+        .select("id, created_at, title, subtitle, profiles(username, display_name, avatar_url, is_verified, verified_label), items:list_items(target_artwork_url, position)")
+        .in("user_id", followingIds)
+        .order("created_at", { ascending: false })
+        .limit(6),
+      supabase
+        .from("charts")
+        .select("id, created_at, period_label, profiles(username, display_name, avatar_url, is_verified, verified_label), items:chart_items(position, target_title, target_artwork_url)")
+        .in("user_id", followingIds)
+        .order("created_at", { ascending: false })
+        .limit(4),
+      supabase
+        .from("lyric_pins")
+        .select("id, created_at, lyric, song_apple_id, song_title, song_artist, song_artwork_url, profiles(username, display_name, avatar_url, is_verified, verified_label)")
+        .in("user_id", followingIds)
+        .order("created_at", { ascending: false })
+        .limit(6),
+    ]);
+    friendStories = s.data || [];
+    friendLists = l.data || [];
+    friendCharts = c.data || [];
+    friendLyrics = ly.data || [];
+  }
 
 
   // 5. Hidden gems — high rating, low count
@@ -112,11 +136,20 @@ export default async function HomePage() {
   // 7. Curators worth following
   const { data: activeCurators } = await supabase
     .from("profiles")
-    .select("id, username, display_name, avatar_url, album_count")
+    .select("id, username, display_name, avatar_url, album_count, is_verified, verified_label")
     .gt("album_count", 0)
     .neq("id", user.id)
     .order("album_count", { ascending: false })
     .limit(8);
+
+  // Notable voices — verified accounts (legends, critics, artists)
+  const { data: notableVoices } = await supabase
+    .from("profiles")
+    .select("id, username, display_name, avatar_url, album_count, bio, is_verified, verified_label")
+    .eq("is_verified", true)
+    .neq("id", user.id)
+    .order("updated_at", { ascending: false })
+    .limit(6);
 
   // 8. Apple Music charts fallback (for cold start)
   let appleMusicCharts: any[] = [];
@@ -130,13 +163,18 @@ export default async function HomePage() {
     }));
   }
 
-  // Merge personal feed
-  const allFeedEntries: { type: "rating"; data: any; date: string }[] = [];
-  for (const item of (feedItems || []) as any[]) {
-    if (!item.actor || !item.rating || !item.rating.album) continue;
-    allFeedEntries.push({ type: "rating", data: item, date: item.created_at });
-  }
-  allFeedEntries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  // Merge friend feed — intentional content only
+  type FriendItem =
+    | { type: "story"; data: any; date: string }
+    | { type: "list"; data: any; date: string }
+    | { type: "chart"; data: any; date: string }
+    | { type: "lyric"; data: any; date: string };
+  const friendFeed: FriendItem[] = [];
+  for (const s of friendStories) friendFeed.push({ type: "story", data: s, date: s.created_at });
+  for (const l of friendLists) friendFeed.push({ type: "list", data: l, date: l.created_at });
+  for (const c of friendCharts) friendFeed.push({ type: "chart", data: c, date: c.created_at });
+  for (const ly of friendLyrics) friendFeed.push({ type: "lyric", data: ly, date: ly.created_at });
+  friendFeed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const firstName = (profile?.display_name || profile?.username || "").split(" ")[0];
 
@@ -303,47 +341,171 @@ export default async function HomePage() {
         </Section>
       )}
 
-      {/* === FROM PEOPLE YOU FOLLOW === */}
-      {allFeedEntries.length > 0 && (
+      {/* === NOTABLE VOICES — verified accounts === */}
+      {notableVoices && notableVoices.length > 0 && (
         <section className="mb-14">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-5">From people you follow</p>
-          <div className="space-y-3">
-            {allFeedEntries.slice(0, 10).map((entry) => {
-              if (entry.type === "rating") {
-                const item = entry.data;
-                const actor = item.actor;
-                const rating = item.rating;
-                const album = rating?.album;
-                return (
-                  <div key={`r-${item.id}`} className="flex items-start gap-4 p-5 rounded-xl bg-card border border-border hover:border-zinc-700 transition-colors">
-                    <Link href={`/${actor.username}`} className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center text-sm text-zinc-600 shrink-0 overflow-hidden">
-                      {actor.avatar_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={actor.avatar_url} alt="" className="w-full h-full object-cover" />
-                      ) : actor.username[0].toUpperCase()}
+          <div className="flex items-baseline justify-between mb-5">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-accent">Notable voices</p>
+            <Link href="/discover" className="text-[11px] text-zinc-500 hover:text-accent transition-colors">See all →</Link>
+          </div>
+          <div className="flex gap-3 overflow-x-auto -mx-5 sm:-mx-8 px-5 sm:px-8 no-scrollbar pb-2">
+            {notableVoices.map((v: any) => (
+              <Link key={v.id} href={`/${v.username}`} className="shrink-0 w-44 bg-card border border-border rounded-2xl p-4 hover:border-accent/40 transition-colors text-center group">
+                <div className="w-16 h-16 rounded-full bg-background border border-border flex items-center justify-center text-lg text-zinc-600 mx-auto mb-3 overflow-hidden">
+                  {v.avatar_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={v.avatar_url} alt="" className="w-full h-full object-cover" />
+                  ) : v.username[0].toUpperCase()}
+                </div>
+                <p className="font-medium text-sm truncate inline-flex items-center gap-1 justify-center">
+                  {v.display_name || v.username}
+                  <svg viewBox="0 0 24 24" className="w-3 h-3 text-accent inline" fill="currentColor"><path d="M12 2L14.39 5.42L18.5 4.83L17.91 8.94L21.33 11.33L17.91 13.72L18.5 17.83L14.39 17.24L12 20.66L9.61 17.24L5.5 17.83L6.09 13.72L2.67 11.33L6.09 8.94L5.5 4.83L9.61 5.42L12 2Z"/></svg>
+                </p>
+                <p className="text-[11px] text-accent truncate">{v.verified_label || "Verified"}</p>
+                <p className="text-[10px] text-zinc-600 truncate mt-1">@{v.username}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* === FROM YOUR FRIENDS — intentional content only === */}
+      {friendFeed.length > 0 && (
+        <section className="mb-20">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-5">From your friends</p>
+          <div className="space-y-6">
+            {friendFeed.slice(0, 12).map((entry) => {
+              const author = entry.data.profiles;
+              const headerLine = (
+                <div className="flex items-center gap-2.5 mb-3">
+                  <Link href={`/${author?.username}`} className="w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center text-xs text-zinc-600 shrink-0 overflow-hidden">
+                    {author?.avatar_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={author.avatar_url} alt="" className="w-full h-full object-cover" />
+                    ) : (author?.username?.[0]?.toUpperCase() || "?")}
+                  </Link>
+                  <div className="min-w-0 flex-1">
+                    <Link href={`/${author?.username}`} className="text-sm font-medium hover:text-accent transition-colors inline-flex items-center gap-1">
+                      {author?.display_name || author?.username}
+                      {author?.is_verified && (
+                        <svg viewBox="0 0 24 24" className="w-3 h-3 text-accent inline" fill="currentColor"><path d="M12 2L14.39 5.42L18.5 4.83L17.91 8.94L21.33 11.33L17.91 13.72L18.5 17.83L14.39 17.24L12 20.66L9.61 17.24L5.5 17.83L6.09 13.72L2.67 11.33L6.09 8.94L5.5 4.83L9.61 5.42L12 2Z"/></svg>
+                      )}
                     </Link>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm">
-                        <Link href={`/${actor.username}`} className="font-medium hover:text-accent transition-colors">{actor.display_name || actor.username}</Link>
-                        <span className="text-zinc-600"> {rating.score >= 4 ? "loved" : "added"} </span>
-                        <Link href={`/album/${album.apple_id}`} className="font-medium hover:text-accent transition-colors">{album.title}</Link>
-                        {rating.score >= 4 && <span className="text-accent ml-1">❤</span>}
-                      </p>
-                      <p className="text-xs text-zinc-600 mt-0.5">{album.artist_name}</p>
-                      {rating.reaction && <p className="editorial text-sm text-zinc-300 mt-2">&ldquo;{rating.reaction}&rdquo;</p>}
-                      <div className="mt-2"><LikeButton ratingId={rating.id} initialCount={rating.like_count || 0} /></div>
-                    </div>
-                    <Link href={`/album/${album.apple_id}`} className="w-14 h-14 rounded-lg bg-card border border-border overflow-hidden shrink-0">
-                      {album.artwork_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={art(album.artwork_url, 112)!} alt="" className="w-full h-full object-cover" />
-                      ) : <div className="w-full h-full flex items-center justify-center text-xs text-border">♪</div>}
-                    </Link>
+                    <span className="text-[10px] text-zinc-700"> · {entry.type === "story" ? "wrote a story" : entry.type === "list" ? "made a list" : entry.type === "chart" ? "published a chart" : "pinned a lyric"}</span>
                   </div>
+                </div>
+              );
+
+              if (entry.type === "story") {
+                const s = entry.data;
+                const cover = s.target_artwork_url ? art(s.target_artwork_url, 200) : null;
+                const preview = s.body.length > 200 ? s.body.slice(0, 200).trimEnd() + "…" : s.body;
+                return (
+                  <Link key={`story-${s.id}`} href={`/story/${s.id}`} className="block group bg-card border border-border rounded-2xl p-5 hover:border-accent/40 transition-colors">
+                    {headerLine}
+                    <div className="flex gap-4">
+                      {cover && (
+                        <div className={`${s.kind === "artist" ? "rounded-full" : "rounded-md"} w-14 h-14 overflow-hidden border border-white/[0.06] shrink-0`}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={cover} alt="" className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        {s.headline && <p className="font-display text-xl tracking-tight leading-tight line-clamp-2 group-hover:text-accent transition-colors mb-1">{s.headline}</p>}
+                        <p className="text-[10px] text-zinc-700 mb-2">on <span className="italic">{s.target_title}</span>{s.target_artist && s.kind !== "artist" && ` · ${s.target_artist}`}</p>
+                        <p className="editorial text-xs text-zinc-400 leading-relaxed line-clamp-3">{preview}</p>
+                      </div>
+                    </div>
+                  </Link>
                 );
               }
+
+              if (entry.type === "list") {
+                const l = entry.data;
+                const previewItems = ((l.items || []) as any[]).sort((a, b) => a.position - b.position).slice(0, 4);
+                return (
+                  <Link key={`list-${l.id}`} href={`/list/${l.id}`} className="block group bg-card border border-border rounded-2xl p-5 hover:border-accent/40 transition-colors">
+                    {headerLine}
+                    {previewItems.length > 0 && (
+                      <div className="grid grid-cols-4 gap-1 mb-3 max-w-xs">
+                        {previewItems.map((it: any, i: number) => {
+                          const cv = it.target_artwork_url ? art(it.target_artwork_url, 200) : null;
+                          return (
+                            <div key={i} className="aspect-square rounded-md overflow-hidden bg-background border border-white/[0.04]">
+                              {cv && (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={cv} alt="" className="w-full h-full object-cover" />
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    <p className="font-display text-xl tracking-tight leading-tight group-hover:text-accent transition-colors line-clamp-2">{l.title}</p>
+                    {l.subtitle && <p className="text-xs text-zinc-500 italic editorial line-clamp-1 mt-1">{l.subtitle}</p>}
+                  </Link>
+                );
+              }
+
+              if (entry.type === "chart") {
+                const ch = entry.data;
+                const sortedItems = [...((ch.items || []) as any[])].sort((a, b) => a.position - b.position).slice(0, 5);
+                return (
+                  <Link key={`chart-${ch.id}`} href={`/${author?.username}/charts`} className="block group bg-card border border-border rounded-2xl p-5 hover:border-accent/40 transition-colors">
+                    {headerLine}
+                    <p className="text-[10px] uppercase tracking-[0.18em] text-accent mb-1">— Ten right now</p>
+                    <p className="font-display text-xl tracking-tight italic mb-3 group-hover:text-accent transition-colors">{ch.period_label || new Date(ch.created_at).toLocaleString("en-US", { month: "long", year: "numeric" })}</p>
+                    <div className="space-y-1.5">
+                      {sortedItems.map((it: any) => (
+                        <div key={it.position} className="flex items-center gap-2 text-xs">
+                          <span className="font-display tracking-tight text-zinc-700 w-5 text-right tabular-nums">{String(it.position).padStart(2, "0")}</span>
+                          <span className="text-zinc-300 truncate">{it.target_title}</span>
+                        </div>
+                      ))}
+                      {((ch.items || []) as any[]).length > 5 && (
+                        <p className="text-[10px] text-zinc-700 mt-2 pl-7">...and {((ch.items || []) as any[]).length - 5} more</p>
+                      )}
+                    </div>
+                  </Link>
+                );
+              }
+
+              if (entry.type === "lyric") {
+                const ly = entry.data;
+                return (
+                  <Link key={`lyric-${ly.id}`} href={`/song/${ly.song_apple_id}`} className="block group bg-card border border-border rounded-2xl p-5 hover:border-accent/40 transition-colors">
+                    {headerLine}
+                    <p className="font-display italic text-xl sm:text-2xl tracking-tight leading-[1.25] text-zinc-100 mb-4 line-clamp-3 group-hover:text-white transition-colors">
+                      &ldquo;{ly.lyric}&rdquo;
+                    </p>
+                    <div className="flex items-center gap-2 text-[11px] text-zinc-600">
+                      {ly.song_artwork_url && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={ly.song_artwork_url.replace("{w}", "120").replace("{h}", "120")} alt="" className="w-6 h-6 rounded object-cover" />
+                      )}
+                      <span className="truncate"><span className="text-zinc-400">{ly.song_title}</span> · {ly.song_artist}</span>
+                    </div>
+                  </Link>
+                );
+              }
+
               return null;
             })}
+          </div>
+        </section>
+      )}
+
+      {/* Empty state if no follows */}
+      {friendFeed.length === 0 && followingIds.length === 0 && (
+        <section className="mb-20">
+          <div className="bg-card border border-dashed border-border rounded-2xl p-10 text-center">
+            <p className="font-display text-3xl mb-2">Your friend feed is empty.</p>
+            <p className="text-zinc-500 text-sm max-w-sm mx-auto mb-5">
+              Follow people whose taste you trust. Their stories, lists, charts, and lyrics will live here.
+            </p>
+            <Link href="/discover" className="inline-block px-6 py-2.5 bg-accent text-white rounded-full text-xs font-medium hover:bg-accent-hover transition-colors">
+              Find people to follow →
+            </Link>
           </div>
         </section>
       )}

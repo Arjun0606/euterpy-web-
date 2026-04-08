@@ -16,6 +16,7 @@ import StoriesSection from "@/components/story/StoriesSection";
 import LyricPinsSection from "./LyricPinsSection";
 import ListsSection from "@/components/list/ListsSection";
 import ChartSection from "@/components/chart/ChartSection";
+import VerifiedMark from "@/components/ui/VerifiedMark";
 
 type Tab = "collection" | "stats" | "stories";
 
@@ -37,11 +38,12 @@ interface Props {
     lists: any[];
     charts: any[];
     badges: any[];
+    mutuals?: any[];
   };
 }
 
 export default function ProfilePage({ data }: Props) {
-  const { profile, currentUserId, getToKnowMe, ratings, songRatings, shelves, stories, lyricPins, lists, charts, badges } = data;
+  const { profile, currentUserId, getToKnowMe, ratings, songRatings, shelves, stories, lyricPins, lists, charts, badges, mutuals = [] } = data;
   const [activeTab, setActiveTab] = useState<Tab>("collection");
   const [copied, setCopied] = useState(false);
   const [showNewShelf, setShowNewShelf] = useState(false);
@@ -94,8 +96,9 @@ export default function ProfilePage({ data }: Props) {
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3">
-              <h1 className="font-display text-3xl sm:text-5xl tracking-tight truncate leading-none mb-1">
+              <h1 className="font-display text-3xl sm:text-5xl tracking-tight truncate leading-none mb-1 flex items-center gap-2">
                 {profile.display_name || profile.username}
+                {profile.is_verified && <VerifiedMark label={profile.verified_label} size="lg" />}
               </h1>
               {isOwnProfile && (
                 <a href="/settings" aria-label="Edit profile"
@@ -178,6 +181,36 @@ export default function ProfilePage({ data }: Props) {
             </div>
           </div>
         </div>
+
+        {/* ====== Mutuals — only when viewing someone else === */}
+        {!isOwnProfile && mutuals.length > 0 && (
+          <div className="mb-10 p-4 bg-card border border-border rounded-2xl">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-zinc-600 mb-3">— {mutuals.length} mutual{mutuals.length === 1 ? "" : "s"}</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex -space-x-2">
+                {mutuals.slice(0, 5).map((m: any) => (
+                  <a key={m.id} href={`/${m.username}`} title={m.display_name || m.username}
+                    className="w-8 h-8 rounded-full bg-background border-2 border-card overflow-hidden hover:scale-110 transition-transform flex items-center justify-center text-[10px] text-zinc-600">
+                    {m.avatar_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={m.avatar_url} alt="" className="w-full h-full object-cover" />
+                    ) : (m.username[0].toUpperCase())}
+                  </a>
+                ))}
+              </div>
+              <p className="text-xs text-zinc-500 ml-2">
+                Followed by{" "}
+                {mutuals.slice(0, 2).map((m: any, i: number) => (
+                  <span key={m.id}>
+                    {i > 0 && ", "}
+                    <a href={`/${m.username}`} className="text-zinc-300 hover:text-accent transition-colors font-medium">{m.display_name || m.username}</a>
+                  </span>
+                ))}
+                {mutuals.length > 2 && <span className="text-zinc-600"> and {mutuals.length - 2} other{mutuals.length - 2 === 1 ? "" : "s"} you follow</span>}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* ====== Tabs ====== */}
         <div className="flex gap-1 border-b border-border mb-8">
