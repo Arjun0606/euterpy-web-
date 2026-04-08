@@ -66,15 +66,25 @@ export default async function HomePage() {
     .order("created_at", { ascending: false })
     .limit(10);
 
-  // 3. Trending albums this week
+  // 3. The Charts — top 10 this week (numbered)
   const { data: trendingAlbums } = await supabase
     .from("albums")
     .select("apple_id, title, artist_name, artwork_url, average_rating, rating_count, album_type")
-    .eq("album_type", "album")
     .gt("rating_count", 0)
     .gte("updated_at", weekAgo)
     .order("rating_count", { ascending: false })
+    .order("average_rating", { ascending: false })
     .limit(10);
+
+  // Featured review — most-loved review this month with substantial body
+  const { data: featuredReviews } = await supabase
+    .from("reviews")
+    .select("id, title, body, score, created_at, profiles(username, display_name, avatar_url), albums(apple_id, title, artist_name, artwork_url)")
+    .gte("created_at", monthAgo)
+    .not("body", "is", null)
+    .order("upvotes", { ascending: false })
+    .limit(5);
+  const featuredReview = (featuredReviews || []).find((r: any) => r.body && r.body.length > 80 && r.albums) || null;
 
   // 4. Activity from people you follow (ratings + reviews)
   const { data: feedItems } = await supabase
@@ -102,16 +112,7 @@ export default async function HomePage() {
     followedReviews = data || [];
   }
 
-  // 5. Editor's picks — top rated of all time
-  const { data: editorsPicks } = await supabase
-    .from("albums")
-    .select("apple_id, title, artist_name, artwork_url, average_rating, rating_count, album_type")
-    .gt("rating_count", 2)
-    .order("average_rating", { ascending: false })
-    .order("rating_count", { ascending: false })
-    .limit(10);
-
-  // 6. Hidden gems — high rating, low count
+  // 5. Hidden gems — high rating, low count
   const { data: hiddenGems } = await supabase
     .from("albums")
     .select("apple_id, title, artist_name, artwork_url, average_rating, rating_count, album_type")
@@ -169,43 +170,43 @@ export default async function HomePage() {
       {/* Search */}
       <HomeSearch />
 
-      {/* === HERO ALBUM OF THE WEEK === */}
+      {/* === HERO ALBUM OF THE WEEK — magazine cover === */}
       {heroAlbum && (
-        <section className="mb-14">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-accent mb-4">Album of the week</p>
-          <Link href={`/album/${heroAlbum.apple_id}`} className="block group">
-            <div className="relative rounded-2xl overflow-hidden bg-card border border-border">
-              {/* Blurred background */}
-              {heroAlbum.artwork_url && (
-                <div className="absolute inset-0">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={art(heroAlbum.artwork_url, 800)!} alt="" className="w-full h-full object-cover opacity-20 blur-3xl scale-125" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/80 to-black/40" />
-                </div>
-              )}
+        <section className="mb-20 -mx-5 sm:-mx-8">
+          <Link href={`/album/${heroAlbum.apple_id}`} className="block group relative overflow-hidden">
+            {/* Full-bleed blurred background */}
+            {heroAlbum.artwork_url && (
+              <div className="absolute inset-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={art(heroAlbum.artwork_url, 1200)!} alt="" className="w-full h-full object-cover opacity-30 blur-3xl scale-150" />
+                <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/85 to-background" />
+              </div>
+            )}
 
-              <div className="relative p-6 sm:p-10 flex flex-col sm:flex-row items-center gap-6 sm:gap-10">
-                <div className="w-44 h-44 sm:w-52 sm:h-52 rounded-xl overflow-hidden shadow-2xl shrink-0 border border-white/5 group-hover:scale-105 transition-transform duration-500">
+            <div className="relative px-5 sm:px-8 py-12 sm:py-16">
+              <p className="text-[10px] uppercase tracking-[0.25em] text-accent font-semibold mb-6">— Album of the week</p>
+
+              <div className="flex flex-col sm:flex-row items-start gap-8 sm:gap-12">
+                <div className="w-56 sm:w-64 aspect-square rounded-xl overflow-hidden shadow-[0_30px_80px_-20px_rgba(0,0,0,0.8)] shrink-0 border border-white/[0.06] group-hover:scale-[1.02] transition-transform duration-700">
                   {heroAlbum.artwork_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={art(heroAlbum.artwork_url, 600)!} alt={heroAlbum.title} className="w-full h-full object-cover" />
+                    <img src={art(heroAlbum.artwork_url, 700)!} alt={heroAlbum.title} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-6xl text-zinc-700">♪</div>
                   )}
                 </div>
 
-                <div className="flex-1 text-center sm:text-left min-w-0">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-accent font-semibold mb-2">
-                    {heroAlbum.album_type === "ep" ? "EP" : heroAlbum.album_type === "single" ? "Single" : "Album"}
-                  </p>
-                  <h2 className="font-display text-3xl sm:text-4xl tracking-tight leading-none mb-2">{heroAlbum.title}</h2>
-                  <p className="text-zinc-400 text-base mb-4">{heroAlbum.artist_name}</p>
-                  <div className="flex items-center gap-2 mb-4 justify-center sm:justify-start">
+                <div className="flex-1 min-w-0 pt-2">
+                  <h2 className="font-display text-5xl sm:text-7xl tracking-tighter leading-[0.9] mb-4 group-hover:text-accent transition-colors">
+                    {heroAlbum.title}
+                  </h2>
+                  <p className="font-display italic text-2xl sm:text-3xl text-zinc-400 mb-6">{heroAlbum.artist_name}</p>
+                  <div className="flex items-center gap-3 mb-6">
                     <Stars score={Number(heroAlbum.average_rating)} />
-                    <span className="text-xs text-zinc-500">· {heroAlbum.rating_count} {heroAlbum.rating_count === 1 ? "rating" : "ratings"}</span>
+                    <span className="text-xs text-zinc-500">{Number(heroAlbum.average_rating).toFixed(1)} · {heroAlbum.rating_count} {heroAlbum.rating_count === 1 ? "rating" : "ratings"}</span>
                   </div>
                   {heroAlbum.editorial_notes && (
-                    <p className="editorial text-sm text-zinc-300 leading-relaxed line-clamp-3 max-w-md">
+                    <p className="editorial text-base sm:text-lg text-zinc-300 leading-relaxed line-clamp-4 max-w-xl">
                       {heroAlbum.editorial_notes}
                     </p>
                   )}
@@ -216,26 +217,82 @@ export default async function HomePage() {
         </section>
       )}
 
+      {/* === THE CHARTS — numbered top 10 === */}
+      {((trendingAlbums && trendingAlbums.length > 0) || appleMusicCharts.length > 0) && (
+        <section className="mb-20">
+          <div className="flex items-baseline justify-between mb-6">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-1">Issue №{Math.floor((Date.now() / (1000 * 60 * 60 * 24 * 7))) % 100}</p>
+              <h2 className="font-display text-3xl sm:text-4xl tracking-tight">The Charts.</h2>
+            </div>
+            <Link href="/discover" className="text-[11px] text-accent hover:underline">See all →</Link>
+          </div>
+          <ol className="divide-y divide-white/[0.04] border-y border-white/[0.04]">
+            {(trendingAlbums && trendingAlbums.length > 0 ? trendingAlbums : appleMusicCharts).slice(0, 10).map((album: any, i: number) => (
+              <li key={album.apple_id}>
+                <Link href={`/album/${album.apple_id}`} className="flex items-center gap-4 py-4 group hover:bg-white/[0.02] -mx-2 px-2 rounded transition-colors">
+                  <span className="font-display text-3xl sm:text-4xl tracking-tighter text-zinc-700 group-hover:text-accent transition-colors w-10 sm:w-12 tabular-nums shrink-0">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-md overflow-hidden bg-card border border-border shrink-0">
+                    {album.artwork_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={art(album.artwork_url, 120)!} alt="" className="w-full h-full object-cover" />
+                    ) : <div className="w-full h-full flex items-center justify-center text-zinc-700">♪</div>}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm sm:text-base font-medium truncate group-hover:text-accent transition-colors">{album.title}</p>
+                    <p className="text-xs text-zinc-500 truncate">{album.artist_name}</p>
+                  </div>
+                  {album.average_rating && (
+                    <div className="hidden sm:flex items-center gap-2 shrink-0">
+                      <Stars score={Number(album.average_rating)} size="sm" />
+                      <span className="text-[11px] text-zinc-600 tabular-nums">{Number(album.average_rating).toFixed(1)}</span>
+                    </div>
+                  )}
+                </Link>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
+      {/* === FEATURED REVIEW — magazine pull-quote === */}
+      {featuredReview && featuredReview.albums && (
+        <section className="mb-20">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-6">— Critic's voice</p>
+          <Link href={`/album/${(featuredReview.albums as any).apple_id}`} className="block group">
+            <blockquote className="relative pl-8 sm:pl-12 border-l-2 border-accent">
+              <p className="font-display italic text-2xl sm:text-4xl leading-[1.2] tracking-tight text-zinc-100 line-clamp-5 group-hover:text-white transition-colors">
+                &ldquo;{featuredReview.body}&rdquo;
+              </p>
+              <div className="flex items-center gap-3 mt-6">
+                <div className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center text-xs text-zinc-500 overflow-hidden shrink-0">
+                  {(featuredReview.profiles as any)?.avatar_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={(featuredReview.profiles as any).avatar_url} alt="" className="w-full h-full object-cover" />
+                  ) : ((featuredReview.profiles as any)?.username?.[0]?.toUpperCase() || "?")}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-zinc-300">
+                    {(featuredReview.profiles as any)?.display_name || (featuredReview.profiles as any)?.username}
+                  </p>
+                  <p className="text-[11px] text-zinc-600 truncate">
+                    on <span className="italic">{(featuredReview.albums as any).title}</span> by {(featuredReview.albums as any).artist_name}
+                  </p>
+                </div>
+                <Stars score={featuredReview.score} size="sm" />
+              </div>
+            </blockquote>
+          </Link>
+        </section>
+      )}
+
       {/* === NEW SINGLES === */}
       {newSingles && newSingles.length > 0 && (
         <Section title="New singles" linkHref="/discover">
           <Scroller>
             {newSingles.map((album: any) => <AlbumCard key={album.apple_id} album={album} />)}
-          </Scroller>
-        </Section>
-      )}
-
-      {/* === TRENDING THIS WEEK === */}
-      {trendingAlbums && trendingAlbums.length > 0 ? (
-        <Section title="Trending this week" linkHref="/discover">
-          <Scroller>
-            {trendingAlbums.map((album: any) => <AlbumCard key={album.apple_id} album={album} />)}
-          </Scroller>
-        </Section>
-      ) : appleMusicCharts.length > 0 && (
-        <Section title="Trending now">
-          <Scroller>
-            {appleMusicCharts.map((album: any) => <AlbumCard key={album.apple_id} album={album} />)}
           </Scroller>
         </Section>
       )}
@@ -320,22 +377,33 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* === EDITOR'S PICKS === */}
-      {editorsPicks && editorsPicks.length > 0 && (
-        <Section title="Editor's picks" linkHref="/discover">
-          <Scroller>
-            {editorsPicks.map((album: any) => <AlbumCard key={album.apple_id} album={album} showRating />)}
-          </Scroller>
-        </Section>
-      )}
-
-      {/* === HIDDEN GEMS === */}
+      {/* === HIDDEN GEMS — magazine grid === */}
       {hiddenGems && hiddenGems.length > 0 && (
-        <Section title="Hidden gems">
-          <Scroller>
-            {hiddenGems.map((album: any) => <AlbumCard key={album.apple_id} album={album} showRating />)}
-          </Scroller>
-        </Section>
+        <section className="mb-20">
+          <div className="mb-6">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-1">— Underrated</p>
+            <h2 className="font-display text-3xl sm:text-4xl tracking-tight">Hidden gems.</h2>
+            <p className="text-sm text-zinc-500 mt-1">High praise, few listeners. Be the one who found it first.</p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-5">
+            {hiddenGems.slice(0, 6).map((album: any) => (
+              <Link key={album.apple_id} href={`/album/${album.apple_id}`} className="group">
+                <div className="aspect-square rounded-xl overflow-hidden bg-card border border-border mb-3 group-hover:border-accent/40 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl group-hover:shadow-accent/10">
+                  {album.artwork_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={art(album.artwork_url, 400)!} alt={album.title} className="w-full h-full object-cover" />
+                  ) : <div className="w-full h-full flex items-center justify-center text-zinc-700">♪</div>}
+                </div>
+                <p className="text-sm font-medium truncate">{album.title}</p>
+                <p className="text-xs text-zinc-500 truncate">{album.artist_name}</p>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <Stars score={Number(album.average_rating)} size="sm" />
+                  <span className="text-[10px] text-zinc-600">({album.rating_count})</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
       )}
 
       {/* === CURATORS === */}
