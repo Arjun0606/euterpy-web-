@@ -37,6 +37,7 @@ export default function GetToKnowMe({ items, username }: Props) {
   const [flipped, setFlipped] = useState<Record<number, boolean>>({});
   const scrollRef = useRef<HTMLDivElement>(null);
   const isScrollingRef = useRef(false);
+  const scrollEndTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Triple items for infinite loop
   const tripledItems = items.length > 1 ? [...items, ...items, ...items] : items;
@@ -58,12 +59,20 @@ export default function GetToKnowMe({ items, username }: Props) {
       const normalized = ((rawIndex - middleStart) % items.length + items.length) % items.length;
       setActiveIndex(normalized);
 
-      if (rawIndex < items.length - 1 || rawIndex >= items.length * 2 + 1) {
-        isScrollingRef.current = true;
-        const targetIndex = middleStart + normalized;
-        container.scrollTo({ left: targetIndex * cardWidth, behavior: "instant" as ScrollBehavior });
-        setTimeout(() => { isScrollingRef.current = false; }, 50);
-      }
+      // Debounce the snap-back: only jump after the user has stopped scrolling
+      if (scrollEndTimer.current) clearTimeout(scrollEndTimer.current);
+      scrollEndTimer.current = setTimeout(() => {
+        if (!scrollRef.current || isScrollingRef.current) return;
+        const currentRaw = Math.round(scrollRef.current.scrollLeft / cardWidth);
+        const currentNormalized = ((currentRaw - middleStart) % items.length + items.length) % items.length;
+        // Only snap back if we've actually drifted out of the middle set
+        if (currentRaw < middleStart || currentRaw >= middleStart + items.length) {
+          isScrollingRef.current = true;
+          const targetIndex = middleStart + currentNormalized;
+          scrollRef.current.scrollTo({ left: targetIndex * cardWidth, behavior: "instant" as ScrollBehavior });
+          setTimeout(() => { isScrollingRef.current = false; }, 100);
+        }
+      }, 200);
     } else {
       setActiveIndex(rawIndex);
     }
@@ -79,7 +88,10 @@ export default function GetToKnowMe({ items, username }: Props) {
       });
     }
     container.addEventListener("scroll", handleScroll, { passive: true });
-    return () => container.removeEventListener("scroll", handleScroll);
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+      if (scrollEndTimer.current) clearTimeout(scrollEndTimer.current);
+    };
   }, [handleScroll, items.length, middleStart, getCardWidth]);
 
   function scrollToIndex(index: number) {
