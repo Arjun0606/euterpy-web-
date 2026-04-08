@@ -1,7 +1,8 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { getArtworkUrl, getAlbum as fetchAlbumFromApple } from "@/lib/apple-music/client";
+import { getArtworkUrl, getAlbum as fetchAlbumFromApple, getRelatedAlbums } from "@/lib/apple-music/client";
 import VinylCover from "@/components/ui/VinylCover";
 import AlbumActions from "@/components/album/AlbumActions";
 import TrackList from "@/components/album/TrackList";
@@ -149,12 +150,16 @@ async function getAlbumData(appleId: string) {
     friendStories = stories.filter((s: any) => followingSet.has(s.user_id));
   }
 
+  // Related albums via MusicKit — Apple's "if you like this..." signal
+  const relatedAlbums = await getRelatedAlbums(appleId, 6);
+
   return {
     album,
     ratings: ratings || [],
     songRatings: songRatings || [],
     stories: stories || [],
     friendStories,
+    relatedAlbums,
     userId: user?.id || null,
   };
 }
@@ -164,7 +169,7 @@ export default async function AlbumPage({ params }: Props) {
   const data = await getAlbumData(appleId);
   if (!data) notFound();
 
-  const { album, ratings, songRatings, stories, friendStories, userId } = data;
+  const { album, ratings, songRatings, stories, friendStories, relatedAlbums, userId } = data;
 
   return (
     <div className="min-h-screen bg-background">
@@ -316,6 +321,34 @@ export default async function AlbumPage({ params }: Props) {
             </div>
           }
         />
+
+        {/* Related albums — Apple's "if you like this" signal */}
+        {relatedAlbums.length > 0 && (
+          <div className="mb-14">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-5">— If you write about this, write about</p>
+            <div className="flex gap-3 overflow-x-auto -mx-5 sm:-mx-8 px-5 sm:px-8 no-scrollbar pb-2">
+              {relatedAlbums.map((rel: any) => {
+                const cover = rel.attributes.artwork?.url
+                  ? rel.attributes.artwork.url.replace("{w}", "400").replace("{h}", "400")
+                  : null;
+                return (
+                  <Link key={rel.id} href={`/album/${rel.id}`} className="shrink-0 w-32 sm:w-36 group">
+                    <div className="aspect-square rounded-xl overflow-hidden bg-card border border-border mb-2 group-hover:border-accent/40 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl group-hover:shadow-accent/10">
+                      {cover ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={cover} alt={rel.attributes.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-zinc-700">♪</div>
+                      )}
+                    </div>
+                    <p className="text-xs font-medium truncate">{rel.attributes.name}</p>
+                    <p className="text-[11px] text-zinc-600 truncate italic">{rel.attributes.artistName}</p>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* In their collections — collectors with notes */}
         {ratings.length > 0 && (

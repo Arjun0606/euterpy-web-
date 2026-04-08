@@ -14,6 +14,7 @@ export default function NavBar({ username, avatarUrl }: Props) {
 
   const links = [
     { href: "/feed", label: "Home", icon: "🏠" },
+    { href: "/people", label: "People", icon: "◐" },
     { href: "/discover", label: "Discover", icon: "🧭" },
     { href: `/${username}`, label: "Profile", icon: "👤" },
     { href: "/settings", label: "Settings", icon: "⚙️" },
@@ -29,7 +30,7 @@ export default function NavBar({ username, avatarUrl }: Props) {
           </Link>
 
           <nav className="flex-1 flex items-center gap-1">
-            {links.slice(0, 2).map((link) => (
+            {links.slice(0, 3).map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -71,7 +72,7 @@ export default function NavBar({ username, avatarUrl }: Props) {
       {/* Mobile: bottom tab bar */}
       <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-20 bg-background/90 backdrop-blur-xl border-t border-border">
         <div className="flex items-center justify-around py-2 px-4 pb-[env(safe-area-inset-bottom,8px)]">
-          {links.slice(0, 2).map((link) => {
+          {links.slice(0, 3).map((link) => {
             const isActive = pathname === link.href || (link.href !== "/feed" && link.href.length > 1 && pathname.startsWith(link.href));
             return (
               <Link

@@ -44,6 +44,130 @@ export default async function HomePage() {
   // === DATA FETCHING ===
 
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
+
+  // ALBUM OF THE DAY — the daily fallback for the hero.
+  // Picked deterministically: the album that's been collected most in the past 24h,
+  // ties broken by overall popularity. Falls back to the top Apple Music chart album.
+  let albumOfTheDay: any = null;
+  {
+    const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { data: hotAlbums } = await supabase
+      .from("albums")
+      .select("apple_id, title, artist_name, artwork_url, editorial_notes, album_type, genre_names, rating_count, average_rating, record_label")
+      .gt("rating_count", 0)
+      .gte("updated_at", dayAgo)
+      .order("rating_count", { ascending: false })
+      .limit(1);
+    if (hotAlbums && hotAlbums.length > 0) {
+      albumOfTheDay = hotAlbums[0];
+    } else {
+      // Fall back to Apple Music's top chart album
+      const charts = await getAppleMusicCharts(1);
+      if (charts.length > 0) {
+        const a = charts[0];
+        albumOfTheDay = {
+          apple_id: a.id,
+          title: a.attributes.name,
+          artist_name: a.attributes.artistName,
+          artwork_url: a.attributes.artwork?.url || null,
+          editorial_notes: a.attributes.editorialNotes?.standard || a.attributes.editorialNotes?.short || null,
+          genre_names: a.attributes.genreNames || [],
+          rating_count: 0,
+          record_label: a.attributes.recordLabel || null,
+        };
+        // Strip HTML from editorial notes if present
+        if (albumOfTheDay.editorial_notes) {
+          albumOfTheDay.editorial_notes = String(albumOfTheDay.editorial_notes).replace(/<[^>]*>/g, "").trim();
+        }
+      }
+    }
+  }
+
+  // THE PULSE — most recent intentional acts platform-wide, last 6 hours.
+  // The heartbeat. Six bubbles. Refreshes on page load.
+  type PulseAct = {
+    id: string;
+    kind: "story" | "list" | "chart" | "lyric" | "mark" | "echo";
+    created_at: string;
+    actor: { username: string; display_name: string | null; avatar_url: string | null; is_verified?: boolean };
+    href: string;
+  };
+  const pulse: PulseAct[] = [];
+  {
+    const [pStories, pLists, pCharts, pLyrics, pMarks, pEchoes] = await Promise.all([
+      supabase
+        .from("stories")
+        .select("id, created_at, profiles(username, display_name, avatar_url, is_verified)")
+        .gte("created_at", sixHoursAgo)
+        .order("created_at", { ascending: false })
+        .limit(4),
+      supabase
+        .from("lists")
+        .select("id, created_at, profiles(username, display_name, avatar_url, is_verified)")
+        .gte("created_at", sixHoursAgo)
+        .order("created_at", { ascending: false })
+        .limit(2),
+      supabase
+        .from("charts")
+        .select("id, created_at, profiles(username, display_name, avatar_url, is_verified)")
+        .gte("created_at", sixHoursAgo)
+        .order("created_at", { ascending: false })
+        .limit(2),
+      supabase
+        .from("lyric_pins")
+        .select("id, created_at, song_apple_id, profiles(username, display_name, avatar_url, is_verified)")
+        .gte("created_at", sixHoursAgo)
+        .order("created_at", { ascending: false })
+        .limit(3),
+      supabase
+        .from("stars")
+        .select("id, created_at, kind, target_id, profiles(username, display_name, avatar_url, is_verified)")
+        .gte("created_at", sixHoursAgo)
+        .order("created_at", { ascending: false })
+        .limit(3),
+      supabase
+        .from("reposts")
+        .select("id, created_at, kind, target_id, profiles(username, display_name, avatar_url, is_verified)")
+        .gte("created_at", sixHoursAgo)
+        .order("created_at", { ascending: false })
+        .limit(2),
+    ]);
+
+    for (const s of (pStories.data || []) as any[]) {
+      if (!s.profiles) continue;
+      pulse.push({ id: `s-${s.id}`, kind: "story", created_at: s.created_at, actor: s.profiles, href: `/story/${s.id}` });
+    }
+    for (const l of (pLists.data || []) as any[]) {
+      if (!l.profiles) continue;
+      pulse.push({ id: `l-${l.id}`, kind: "list", created_at: l.created_at, actor: l.profiles, href: `/list/${l.id}` });
+    }
+    for (const c of (pCharts.data || []) as any[]) {
+      if (!c.profiles) continue;
+      pulse.push({ id: `c-${c.id}`, kind: "chart", created_at: c.created_at, actor: c.profiles, href: `/${c.profiles.username}/charts` });
+    }
+    for (const ly of (pLyrics.data || []) as any[]) {
+      if (!ly.profiles) continue;
+      pulse.push({ id: `ly-${ly.id}`, kind: "lyric", created_at: ly.created_at, actor: ly.profiles, href: `/song/${ly.song_apple_id}` });
+    }
+    for (const m of (pMarks.data || []) as any[]) {
+      if (!m.profiles) continue;
+      const href =
+        m.kind === "story" ? `/story/${m.target_id}` :
+        m.kind === "list" ? `/list/${m.target_id}` :
+        `/${m.profiles.username}`;
+      pulse.push({ id: `m-${m.id}`, kind: "mark", created_at: m.created_at, actor: m.profiles, href });
+    }
+    for (const e of (pEchoes.data || []) as any[]) {
+      if (!e.profiles) continue;
+      const href =
+        e.kind === "story" ? `/story/${e.target_id}` :
+        e.kind === "list" ? `/list/${e.target_id}` :
+        `/${e.profiles.username}`;
+      pulse.push({ id: `e-${e.id}`, kind: "echo", created_at: e.created_at, actor: e.profiles, href });
+    }
+    pulse.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }
 
   // STORY OF THE WEEK — the magazine cover.
   // Take the most-marked story from the past 7 days.
@@ -248,8 +372,11 @@ export default async function HomePage() {
       <HomeSearch />
 
       {/* === STORY OF THE WEEK — the magazine cover === */}
-      {storyOfTheWeek ? (
-        <section className="mb-20 -mx-5 sm:-mx-8">
+      {/* === DAILY HERO ===
+          Story of the Week if any story has marks; otherwise Album of the Day.
+          Same slot, daily cadence, never empty. */}
+      {storyOfTheWeek && storyOfTheWeek._marks > 0 ? (
+        <section className="mb-16 -mx-5 sm:-mx-8">
           <Link href={`/story/${storyOfTheWeek.id}`} className="block group relative overflow-hidden">
             {storyOfTheWeek.target_artwork_url && (
               <div className="absolute inset-0">
@@ -268,14 +395,12 @@ export default async function HomePage() {
                 </h2>
               )}
 
-              {/* Pull-quote */}
               <blockquote className="relative pl-6 sm:pl-10 border-l-2 border-accent mb-8 max-w-2xl">
                 <p className="font-display italic text-xl sm:text-2xl leading-[1.4] tracking-tight text-zinc-200 line-clamp-5">
                   &ldquo;{storyOfTheWeek.body.length > 320 ? storyOfTheWeek.body.slice(0, 320).trimEnd() + "…" : storyOfTheWeek.body}&rdquo;
                 </p>
               </blockquote>
 
-              {/* Author + subject */}
               <div className="flex items-center gap-4 max-w-2xl">
                 <div className="w-12 h-12 rounded-full bg-card border border-border flex items-center justify-center text-sm text-zinc-500 overflow-hidden shrink-0">
                   {storyOfTheWeek.profiles?.avatar_url ? (
@@ -299,31 +424,114 @@ export default async function HomePage() {
                     )}
                   </p>
                 </div>
-                {storyOfTheWeek._marks > 0 && (
-                  <span className="text-[10px] uppercase tracking-[0.18em] text-accent font-semibold whitespace-nowrap">
-                    Marked {storyOfTheWeek._marks}
-                  </span>
-                )}
+                <span className="text-[10px] uppercase tracking-[0.18em] text-accent font-semibold whitespace-nowrap">
+                  Marked {storyOfTheWeek._marks}
+                </span>
               </div>
             </div>
           </Link>
         </section>
-      ) : (
-        <section className="mb-20 -mx-5 sm:-mx-8">
-          <div className="relative px-5 sm:px-8 py-16 sm:py-24 text-center border-y border-white/[0.04]">
-            <p className="text-[10px] uppercase tracking-[0.25em] text-accent font-semibold mb-6">— Story of the week</p>
-            <h2 className="font-display text-4xl sm:text-6xl tracking-tighter leading-[0.95] mb-5 max-w-2xl mx-auto">
-              The first great story <span className="italic text-accent">lives here.</span>
-            </h2>
-            <p className="editorial italic text-base sm:text-lg text-zinc-400 max-w-md mx-auto mb-8">
-              Every week, the most-read story on Euterpy takes the cover. Be the first to write one and earn the spot.
-            </p>
-            <Link
-              href="/discover"
-              className="inline-block px-8 py-3 bg-accent text-white text-sm font-medium rounded-full hover:bg-accent-hover transition-colors"
-            >
-              Find an album to write about →
-            </Link>
+      ) : albumOfTheDay ? (
+        <section className="mb-16 -mx-5 sm:-mx-8">
+          <div className="relative overflow-hidden">
+            {albumOfTheDay.artwork_url && (
+              <div className="absolute inset-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={art(albumOfTheDay.artwork_url, 1200)!} alt="" className="w-full h-full object-cover opacity-30 blur-3xl scale-150" />
+                <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/85 to-background" />
+              </div>
+            )}
+
+            <div className="relative px-5 sm:px-8 py-12 sm:py-16">
+              <p className="text-[10px] uppercase tracking-[0.25em] text-accent font-semibold mb-6">
+                — Album of the day · {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric" })}
+              </p>
+
+              <Link href={`/album/${albumOfTheDay.apple_id}`} className="group block">
+                <div className="flex flex-col sm:flex-row items-start gap-8 sm:gap-12">
+                  <div className="w-56 sm:w-64 aspect-square rounded-xl overflow-hidden shadow-[0_30px_80px_-20px_rgba(0,0,0,0.8)] shrink-0 border border-white/[0.06] group-hover:scale-[1.02] transition-transform duration-700">
+                    {albumOfTheDay.artwork_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={art(albumOfTheDay.artwork_url, 700)!} alt={albumOfTheDay.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-6xl text-zinc-700">♪</div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0 pt-2">
+                    <h2 className="font-display text-5xl sm:text-7xl tracking-tighter leading-[0.9] mb-4 group-hover:text-accent transition-colors">
+                      {albumOfTheDay.title}
+                    </h2>
+                    <p className="font-display italic text-2xl sm:text-3xl text-zinc-400 mb-6">{albumOfTheDay.artist_name}</p>
+
+                    {albumOfTheDay.editorial_notes && (
+                      <p className="editorial italic text-base sm:text-lg text-zinc-300 leading-relaxed line-clamp-4 max-w-xl mb-6">
+                        {albumOfTheDay.editorial_notes}
+                      </p>
+                    )}
+
+                    {albumOfTheDay.rating_count > 0 && (
+                      <p className="text-[11px] text-zinc-600 mb-6">
+                        In <span className="text-accent">{albumOfTheDay.rating_count}</span> {albumOfTheDay.rating_count === 1 ? "collection" : "collections"} today
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </Link>
+
+              {/* CTA underneath — invite to write */}
+              <div className="mt-8 flex flex-wrap items-center gap-3 max-w-2xl">
+                <Link
+                  href={`/album/${albumOfTheDay.apple_id}`}
+                  className="px-6 py-2.5 bg-accent text-white text-xs font-medium rounded-full hover:bg-accent-hover transition-colors"
+                >
+                  Tell its story →
+                </Link>
+                <p className="text-[11px] text-zinc-600 italic">The first one to write becomes next week&apos;s cover.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {/* === THE PULSE — six fresh acts from the whole platform === */}
+      {pulse.length > 0 && (
+        <section className="mb-12">
+          <div className="flex items-baseline gap-2 mb-4">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-60" />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-accent" />
+            </span>
+            <p className="text-[10px] uppercase tracking-[0.22em] text-accent font-semibold">The pulse · right now</p>
+          </div>
+          <div className="flex gap-3 overflow-x-auto -mx-5 sm:-mx-8 px-5 sm:px-8 no-scrollbar pb-2">
+            {pulse.slice(0, 12).map((act) => {
+              const verb =
+                act.kind === "story" ? "wrote a story" :
+                act.kind === "list" ? "made a list" :
+                act.kind === "chart" ? "published a chart" :
+                act.kind === "lyric" ? "pinned a lyric" :
+                act.kind === "mark" ? "marked something" :
+                "echoed something";
+              return (
+                <Link key={act.id} href={act.href}
+                  className="shrink-0 w-32 group bg-card border border-border rounded-xl p-3 hover:border-accent/40 transition-colors text-center">
+                  <div className="w-12 h-12 rounded-full bg-background border border-border mx-auto mb-2 overflow-hidden flex items-center justify-center text-xs text-zinc-600">
+                    {act.actor.avatar_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={act.actor.avatar_url} alt="" className="w-full h-full object-cover" />
+                    ) : act.actor.username[0].toUpperCase()}
+                  </div>
+                  <p className="text-[10px] font-medium truncate inline-flex items-center gap-0.5 justify-center">
+                    {act.actor.display_name || act.actor.username}
+                    {act.actor.is_verified && (
+                      <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 text-accent inline shrink-0" fill="currentColor"><path d="M12 2L14.39 5.42L18.5 4.83L17.91 8.94L21.33 11.33L17.91 13.72L18.5 17.83L14.39 17.24L12 20.66L9.61 17.24L5.5 17.83L6.09 13.72L2.67 11.33L6.09 8.94L5.5 4.83L9.61 5.42L12 2Z"/></svg>
+                    )}
+                  </p>
+                  <p className="text-[9px] text-zinc-700 truncate italic mt-0.5">{verb}</p>
+                </Link>
+              );
+            })}
           </div>
         </section>
       )}
