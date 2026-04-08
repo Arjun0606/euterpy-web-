@@ -38,14 +38,13 @@ export default function GetToKnowMe({ items, username }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const isScrollingRef = useRef(false);
 
-  // Triple the items for infinite loop illusion: [items][items][items]
-  // We start in the middle set, and snap back when reaching ends
+  // Triple the items for infinite loop illusion
   const tripledItems = items.length > 1 ? [...items, ...items, ...items] : items;
   const middleStart = items.length;
 
   const getCardWidth = useCallback(() => {
     if (!scrollRef.current) return 0;
-    return scrollRef.current.offsetWidth * 0.7;
+    return scrollRef.current.offsetWidth;
   }, []);
 
   const handleScroll = useCallback(() => {
@@ -55,12 +54,10 @@ export default function GetToKnowMe({ items, username }: Props) {
     const scrollLeft = container.scrollLeft;
     const rawIndex = Math.round(scrollLeft / cardWidth);
 
-    // Map raw index in tripled array back to original 0..items.length-1
     if (items.length > 1) {
       const normalized = ((rawIndex - middleStart) % items.length + items.length) % items.length;
       setActiveIndex(normalized);
 
-      // If we've drifted into the first or last set, jump back to middle silently
       if (rawIndex < items.length - 1 || rawIndex >= items.length * 2 + 1) {
         isScrollingRef.current = true;
         const targetIndex = middleStart + normalized;
@@ -76,7 +73,6 @@ export default function GetToKnowMe({ items, username }: Props) {
     const container = scrollRef.current;
     if (!container) return;
 
-    // Position to the middle set on mount
     if (items.length > 1) {
       requestAnimationFrame(() => {
         const cardWidth = getCardWidth();
@@ -105,82 +101,63 @@ export default function GetToKnowMe({ items, username }: Props) {
         Get to know {username}
       </p>
 
-      {/* Carousel — peek-style with infinite loop */}
-      <div className="relative -mx-5 sm:-mx-8">
+      {/* Carousel — full-width single card with infinite loop */}
+      <div className="relative">
         <div
           ref={scrollRef}
-          className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar scroll-smooth"
+          className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar scroll-smooth -mx-4 px-4"
         >
-          {/* Leading spacer */}
-          <div className="shrink-0 w-[15%]" aria-hidden="true" />
-
           {tripledItems.map((item, index) => {
             const album = item.albums;
             const bgUrl = artwork(album.artwork_url, 1200);
-            const originalIndex = items.length > 1 ? ((index - middleStart) % items.length + items.length) % items.length : index;
-            const isActive = originalIndex === activeIndex;
 
             return (
               <div
                 key={`${item.id}-${index}`}
-                className="snap-center shrink-0 w-[70%] px-2 sm:px-3"
+                className="snap-center shrink-0 w-full pr-4 last:pr-0"
               >
-                <button
-                  onClick={() => scrollToIndex(originalIndex)}
-                  className={`w-full text-left transition-all duration-500 ${
-                    isActive
-                      ? "opacity-100 scale-100"
-                      : "opacity-30 scale-95 blur-[2px] hover:opacity-50 hover:blur-[1px]"
-                  }`}
-                >
-                  <div className="relative rounded-2xl overflow-hidden bg-card border border-border">
-                    {/* Blurred album art background */}
-                    {bgUrl && (
-                      <div className="absolute inset-0">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={bgUrl}
-                          alt=""
-                          className="w-full h-full object-cover opacity-20 blur-3xl scale-125"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/75 to-black/40" />
-                      </div>
-                    )}
-
-                    {/* Content */}
-                    <div className="relative p-5 sm:p-8 flex flex-col sm:flex-row gap-5 sm:gap-8 items-center min-h-[280px] sm:min-h-[340px]">
-                      <VinylCover
-                        artworkUrl={album.artwork_url}
-                        title={album.title}
-                        size="md"
-                        showVinyl={true}
+                <div className="relative rounded-2xl overflow-hidden bg-card border border-border group">
+                  {bgUrl && (
+                    <div className="absolute inset-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={bgUrl}
+                        alt=""
+                        className="w-full h-full object-cover opacity-15 blur-3xl scale-125"
                       />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/70 to-black/50" />
+                    </div>
+                  )}
 
-                      <div className="flex-1 text-center sm:text-left">
-                        <p className="text-[11px] uppercase tracking-[0.18em] text-accent mb-3">
-                          {SLIDE_LABELS[item.position - 1] || ""}
+                  <div className="relative p-5 sm:p-8 flex flex-col sm:flex-row gap-5 sm:gap-8 items-center min-h-[280px] sm:min-h-[320px]">
+                    <VinylCover
+                      artworkUrl={album.artwork_url}
+                      title={album.title}
+                      size="lg"
+                      showVinyl={true}
+                    />
+
+                    <div className="flex-1 text-center sm:text-left">
+                      <p className="text-[11px] uppercase tracking-[0.18em] text-accent mb-3">
+                        {SLIDE_LABELS[item.position - 1] || ""}
+                      </p>
+                      <h3 className="font-display text-2xl sm:text-4xl tracking-tight leading-none mb-2">
+                        {album.title}
+                      </h3>
+                      <p className="text-zinc-400 mb-5 text-sm">
+                        {album.artist_name}
+                      </p>
+                      {item.story && (
+                        <p className="editorial text-base text-zinc-300 leading-relaxed max-w-md">
+                          &ldquo;{item.story}&rdquo;
                         </p>
-                        <h3 className="font-display text-2xl sm:text-4xl tracking-tight leading-none mb-2">
-                          {album.title}
-                        </h3>
-                        <p className="text-zinc-400 mb-5 text-sm">
-                          {album.artist_name}
-                        </p>
-                        {item.story && (
-                          <p className="editorial text-base text-zinc-300 leading-relaxed max-w-md">
-                            &ldquo;{item.story}&rdquo;
-                          </p>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </div>
-                </button>
+                </div>
               </div>
             );
           })}
-
-          {/* Trailing spacer */}
-          <div className="shrink-0 w-[15%]" aria-hidden="true" />
         </div>
 
         {/* Dots */}
