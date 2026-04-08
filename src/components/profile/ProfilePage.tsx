@@ -186,7 +186,12 @@ export default function ProfilePage({ data }: Props) {
 
             {/* The Shelf */}
             {shelfItems.length > 0 && (
-              <RecordShelf items={shelfItems} title="The Shelf" showSort={isOwnProfile || shelfItems.length > 5} />
+              <RecordShelf
+                items={shelfItems}
+                title="The Shelf"
+                showSort={isOwnProfile || shelfItems.length > 5}
+                shelfStyle={profile.shelf_style || "minimal"}
+              />
             )}
             {shelfItems.length === 0 && isOwnProfile && (
               <div className="mb-10 text-center py-12 border border-dashed border-border rounded-2xl">

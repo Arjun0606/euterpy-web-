@@ -39,6 +39,7 @@ export default function SettingsPage() {
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
+  const [shelfStyle, setShelfStyle] = useState<"minimal" | "wood" | "ornate" | "glass">("minimal");
   const [socialLinks, setSocialLinks] = useState({ instagram: "", twitter: "", spotify: "" });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -63,6 +64,7 @@ export default function SettingsPage() {
         setDisplayName(data.display_name || "");
         setBio(data.bio || "");
         setIsPrivate(data.is_private || false);
+        setShelfStyle(data.shelf_style || "minimal");
         setSocialLinks({
           instagram: data.social_links?.instagram || "",
           twitter: data.social_links?.twitter || "",
@@ -111,6 +113,7 @@ export default function SettingsPage() {
         display_name: displayName.trim() || null,
         bio: bio.trim() || null,
         is_private: isPrivate,
+        shelf_style: shelfStyle,
         social_links: Object.keys(links).length > 0 ? links : null,
       })
       .eq("id", profile.id);
@@ -236,6 +239,43 @@ export default function SettingsPage() {
                 className="flex-1 px-3 py-2 bg-input border border-border rounded-lg text-sm placeholder:text-muted/50 focus:outline-none focus:border-zinc-700"
               />
             </div>
+          </div>
+        </div>
+
+        {/* Shelf Style */}
+        <div>
+          <label className="block text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-3">Shelf Style</label>
+          <p className="text-xs text-zinc-600 mb-3">How your record shelf looks on your profile.</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {([
+              { id: "minimal", label: "Minimal" },
+              { id: "wood", label: "Wood" },
+              { id: "ornate", label: "Ornate" },
+              { id: "glass", label: "Glass" },
+            ] as const).map((s) => (
+              <button
+                key={s.id}
+                onClick={() => setShelfStyle(s.id)}
+                className={`p-3 rounded-xl border transition-all text-left ${
+                  shelfStyle === s.id
+                    ? "border-accent bg-accent/5"
+                    : "border-border bg-card hover:border-zinc-700"
+                }`}
+              >
+                <div className="h-6 mb-2 flex items-end">
+                  <div
+                    className="w-full h-[3px] rounded-full"
+                    style={
+                      s.id === "minimal" ? { background: "linear-gradient(to bottom, #2a2a2a, #111)" }
+                      : s.id === "wood" ? { background: "linear-gradient(to bottom, #5c3d2e, #2c1a12)", height: "5px" }
+                      : s.id === "ornate" ? { background: "linear-gradient(to bottom, #6d4c41, #3e2723)", height: "6px", borderRadius: "2px" }
+                      : { background: "linear-gradient(to bottom, rgba(255,255,255,0.08), rgba(255,255,255,0.03))", backdropFilter: "blur(8px)" }
+                    }
+                  />
+                </div>
+                <p className={`text-xs font-medium ${shelfStyle === s.id ? "text-accent" : "text-zinc-400"}`}>{s.label}</p>
+              </button>
+            ))}
           </div>
         </div>
 
