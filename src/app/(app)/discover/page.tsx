@@ -316,10 +316,10 @@ export default async function DiscoverPage() {
         </section>
       )}
 
-      {/* Top Rated of All Time */}
+      {/* Most-collected of all time */}
       {topAlbums && topAlbums.length > 0 && (
         <section className="mb-12">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-5">Top rated all time</p>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-5">Most collected, all time</p>
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 sm:gap-4">
             {topAlbums.map((album: any) => (
               <Link key={album.id} href={`/album/${album.apple_id}`} className="group">

@@ -223,7 +223,7 @@ export default function RecordShelf({ items, title = "The Shelf", showSort = tru
     return (
       <div className="mb-10">
         <h2 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-4">{title}</h2>
-        <p className="text-muted/60 text-sm">Nothing logged yet. Start rating to build your shelf.</p>
+        <p className="text-muted/60 text-sm italic">Nothing here yet.</p>
       </div>
     );
   }

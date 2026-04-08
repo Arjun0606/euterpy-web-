@@ -192,7 +192,7 @@ export default function StatsView({ ratings, songRatings }: Props) {
     return (
       <div className="text-center py-20">
         <p className="text-muted text-lg">No stats yet.</p>
-        <p className="text-muted/60 text-sm mt-2">Rate some albums and songs to see your taste breakdown.</p>
+        <p className="text-muted/60 text-sm mt-2">Add albums to your collection to see your taste breakdown.</p>
       </div>
     );
   }

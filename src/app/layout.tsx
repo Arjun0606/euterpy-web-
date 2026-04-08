@@ -18,11 +18,11 @@ const fraunces = Fraunces({
 
 export const metadata: Metadata = {
   title: {
-    default: "Euterpy — Your music taste, curated",
+    default: "Euterpy — A music identity",
     template: "%s — Euterpy",
   },
   description:
-    "Rate albums. Build your shelf. Tell your story in three records. The home for music curators.",
+    "Your taste in music says more about you than anything else. The page where music becomes who you are — at one link you can put in your bio.",
   metadataBase: new URL("https://euterpy.app"),
   openGraph: {
     siteName: "Euterpy",

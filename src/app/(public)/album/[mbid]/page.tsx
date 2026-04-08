@@ -384,14 +384,14 @@ export default async function AlbumPage({ params }: Props) {
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[300px] bg-accent/[0.08] rounded-full blur-[100px] -z-0 pointer-events-none" />
             <div className="relative z-10">
               <h3 className="font-display text-3xl sm:text-4xl tracking-tight mb-3 leading-tight">
-                Got an opinion on <span className="italic text-accent">{album.title}</span>?
+                What does <span className="italic text-accent">{album.title}</span> mean to you?
               </h3>
-              <p className="editorial text-base text-zinc-400 mb-6 max-w-md mx-auto">
-                Join Euterpy. Rate it, review it, add it to your shelf, and find people who hear what you hear.
+              <p className="editorial italic text-base text-zinc-400 mb-6 max-w-md mx-auto">
+                Make a Euterpy page. Tell its story. Pin a lyric you carry. Share the link in your bio.
               </p>
               <a href="/signup"
                 className="inline-block px-10 py-3.5 bg-accent text-white text-sm font-medium rounded-full hover:bg-accent-hover transition-all hover:shadow-2xl hover:shadow-accent/30">
-                Start your shelf
+                Make your page
               </a>
             </div>
           </div>

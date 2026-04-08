@@ -264,16 +264,18 @@ export default function ProfilePage({ data }: Props) {
             )}
             {shelfItems.length === 0 && isOwnProfile && (
               <div className="mb-10 text-center py-14 border border-dashed border-border rounded-2xl">
-                <p className="font-display text-2xl mb-2">Your shelf awaits.</p>
-                <p className="text-zinc-500 text-sm mb-5">Rate albums to start building your collection.</p>
+                <p className="font-display text-3xl mb-2">The shelf is yours.</p>
+                <p className="text-zinc-500 text-sm mb-5 max-w-sm mx-auto">
+                  Every album you collect lives here. Find one and add it to make this page yours.
+                </p>
                 <a href="/search" className="inline-block px-6 py-2.5 bg-accent text-white rounded-full text-xs font-medium hover:bg-accent-hover transition-colors">
-                  Rate your first album →
+                  Find an album →
                 </a>
               </div>
             )}
 
-            {/* Curated Shelves */}
-            {(shelves.length > 0 || isOwnProfile) && (
+            {/* Curated Shelves — only show if there are any, or if owner explicitly wants to add one */}
+            {shelves.length > 0 && (
               <div className="mb-10">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-[10px] uppercase tracking-[0.15em] text-zinc-600 font-medium">Shelves</h2>
@@ -281,15 +283,19 @@ export default function ProfilePage({ data }: Props) {
                     <button onClick={() => setShowNewShelf(true)} className="text-xs text-accent hover:underline">+ New</button>
                   )}
                 </div>
-                {shelves.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {shelves.map((shelf: any) => <ShelfCard key={shelf.id} shelf={shelf} />)}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 border border-dashed border-border rounded-2xl">
-                    <p className="text-zinc-600 text-sm">No shelves yet.</p>
-                  </div>
-                )}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {shelves.map((shelf: any) => <ShelfCard key={shelf.id} shelf={shelf} />)}
+                </div>
+              </div>
+            )}
+            {shelves.length === 0 && isOwnProfile && shelfItems.length > 0 && (
+              <div className="mb-10">
+                <button
+                  onClick={() => setShowNewShelf(true)}
+                  className="w-full py-4 border border-dashed border-border rounded-2xl text-xs text-zinc-600 hover:text-accent hover:border-accent/30 transition-colors"
+                >
+                  + Make a shelf
+                </button>
               </div>
             )}
 
@@ -303,7 +309,7 @@ export default function ProfilePage({ data }: Props) {
             {ratings.length === 0 && songRatings.length === 0 ? (
               <div className="text-center py-20">
                 <p className="text-zinc-500">No stats yet.</p>
-                <p className="text-zinc-700 text-xs mt-2">Rate some albums to see your taste breakdown.</p>
+                <p className="text-zinc-700 text-xs mt-2">Add albums to your collection to see your taste breakdown.</p>
               </div>
             ) : (
               <StatsView ratings={ratings} songRatings={songRatings} />

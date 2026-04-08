@@ -30,21 +30,20 @@ export default async function Home() {
         <div className="grid lg:grid-cols-[1.1fr,1fr] gap-12 lg:gap-20 items-center">
           {/* Left: editorial copy */}
           <div>
-            <p className="font-display text-accent text-lg italic mb-6">— for music curators</p>
+            <p className="font-display text-accent text-lg italic mb-6">— a music identity</p>
             <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl tracking-tight leading-[0.95] mb-8">
-              The album-first<br />
-              social network<br />
-              for people who<br />
-              <span className="italic text-accent">live for music.</span>
+              Your taste in<br />
+              music says more<br />
+              about you than<br />
+              <span className="italic text-accent">anything else.</span>
             </h1>
-            <p className="text-lg text-zinc-400 leading-relaxed mb-10 max-w-md">
-              Rate albums. Build a shelf. Tell your story in three records.
-              No streaming, no algorithms. Just taste.
+            <p className="editorial italic text-lg text-zinc-400 leading-relaxed mb-10 max-w-md">
+              Euterpy is the page where music becomes who you are. Stories, lists, lyrics, the records that shaped you — at one link you can put in your bio.
             </p>
             <div className="flex items-center gap-5">
               <Link href="/signup"
                 className="px-8 py-3.5 bg-accent text-white text-base font-medium rounded-full hover:bg-accent-hover transition-all hover:shadow-2xl hover:shadow-accent/30">
-                Start your shelf
+                Make your page
               </Link>
               <Link href="/login" className="text-sm text-zinc-500 hover:text-foreground transition-colors">
                 I have an account →
@@ -119,26 +118,23 @@ export default async function Home() {
           <div className="grid lg:grid-cols-3 gap-16 lg:gap-20">
             <div>
               <p className="font-display text-5xl text-accent mb-4">01</p>
-              <h3 className="font-display text-2xl tracking-tight mb-4">Your shelf, your record store</h3>
+              <h3 className="font-display text-2xl tracking-tight mb-4">Three albums that explain you</h3>
               <p className="editorial text-base text-zinc-400 leading-relaxed">
-                Every album, single, and song you rate lives on your shelf.
-                Mark it as vinyl, CD, cassette, or digital. Track what you actually own.
+                The records that shaped you, the one you keep coming back to, the one that changed everything. They sit at the top of your page — the first thing anyone sees.
               </p>
             </div>
             <div>
               <p className="font-display text-5xl text-accent mb-4">02</p>
-              <h3 className="font-display text-2xl tracking-tight mb-4">Three albums that define you</h3>
+              <h3 className="font-display text-2xl tracking-tight mb-4">Tell their story</h3>
               <p className="editorial text-base text-zinc-400 leading-relaxed">
-                Pick three records. Write why they matter. This sits at the top of your profile —
-                the first thing anyone sees when they tap your link.
+                Write about an album the way you&apos;d talk about it to someone you love. Pin a lyric you carry. Make a list. Publish a chart of what&apos;s in your head right now. Every piece is a piece of you.
               </p>
             </div>
             <div>
               <p className="font-display text-5xl text-accent mb-4">03</p>
-              <h3 className="font-display text-2xl tracking-tight mb-4">Find your people</h3>
+              <h3 className="font-display text-2xl tracking-tight mb-4">A link you put in your bio</h3>
               <p className="editorial text-base text-zinc-400 leading-relaxed">
-                See your taste-match score with other curators. Discover albums through people,
-                not algorithms. Follow ears you trust.
+                <span className="font-mono text-accent">euterpy.app/yourname</span> — the page where strangers fall in love with your taste at a glance, and friends find what you found before everyone else.
               </p>
             </div>
           </div>
@@ -186,13 +182,12 @@ export default async function Home() {
             What does your taste<br />
             <span className="italic text-accent">say about you?</span>
           </h2>
-          <p className="editorial text-lg text-zinc-400 mb-12 max-w-md mx-auto">
-            Your music says more about you than your bio ever could.
-            Give it a home. Make it a portrait.
+          <p className="editorial italic text-lg text-zinc-400 mb-12 max-w-md mx-auto leading-relaxed">
+            Three records. A lyric you carry. A story you wrote. A link you put in your bio. Ninety seconds.
           </p>
           <Link href="/signup"
             className="inline-block px-12 py-4 bg-accent text-white text-base font-medium rounded-full hover:bg-accent-hover transition-all hover:shadow-2xl hover:shadow-accent/30">
-            Start your shelf
+            Make your page
           </Link>
         </div>
       </section>
@@ -201,7 +196,7 @@ export default async function Home() {
       <footer className="border-t border-border py-10">
         <div className="max-w-7xl mx-auto px-6 sm:px-10 flex items-center justify-between">
           <p className="font-display text-xl text-accent">Euterpy</p>
-          <p className="text-xs text-zinc-600">A home for music curators.</p>
+          <p className="editorial italic text-xs text-zinc-600">A music identity.</p>
         </div>
       </footer>
     </div>

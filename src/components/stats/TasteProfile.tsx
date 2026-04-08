@@ -68,7 +68,7 @@ export default function TasteProfile({
             <p className="text-[10px] uppercase tracking-widest text-muted/40 mb-2">Most Curated Artist</p>
             <p className="text-sm font-medium truncate">{topArtist}</p>
             <p className="text-xs text-muted mt-1">
-              {superfanArtists.find((a) => a.name === topArtist)?.count || 0} albums rated
+              {superfanArtists.find((a) => a.name === topArtist)?.count || 0} albums collected
             </p>
           </div>
         )}

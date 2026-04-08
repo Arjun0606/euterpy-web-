@@ -236,7 +236,7 @@ export default async function HomePage() {
       <div className="mb-8">
         <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-2">{greeting()}</p>
         <h1 className="font-display text-4xl sm:text-5xl tracking-tight leading-none">
-          {firstName ? <>Hello, <span className="italic text-accent">{firstName}.</span></> : <>What are you <span className="italic text-accent">listening to?</span></>}
+          {firstName ? <>Hello, <span className="italic text-accent">{firstName}.</span></> : <>What does your taste <span className="italic text-accent">say about you?</span></>}
         </h1>
       </div>
 
@@ -621,15 +621,20 @@ export default async function HomePage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {activeCurators.map((c: any) => (
               <Link key={c.id} href={`/${c.username}`}
-                className="bg-card border border-border rounded-xl p-4 hover:border-zinc-700 transition-colors text-center">
+                className="bg-card border border-border rounded-xl p-4 hover:border-accent/40 transition-colors text-center">
                 <div className="w-14 h-14 rounded-full bg-background border border-border flex items-center justify-center text-lg text-zinc-600 mx-auto mb-2 overflow-hidden">
                   {c.avatar_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={c.avatar_url} alt="" className="w-full h-full object-cover" />
                   ) : c.username[0].toUpperCase()}
                 </div>
-                <p className="font-medium text-sm truncate">{c.display_name || c.username}</p>
-                <p className="text-[11px] text-zinc-600">{c.album_count} albums</p>
+                <p className="font-medium text-sm truncate inline-flex items-center gap-1 justify-center">
+                  {c.display_name || c.username}
+                  {c.is_verified && (
+                    <svg viewBox="0 0 24 24" className="w-3 h-3 text-accent inline shrink-0" fill="currentColor"><path d="M12 2L14.39 5.42L18.5 4.83L17.91 8.94L21.33 11.33L17.91 13.72L18.5 17.83L14.39 17.24L12 20.66L9.61 17.24L5.5 17.83L6.09 13.72L2.67 11.33L6.09 8.94L5.5 4.83L9.61 5.42L12 2Z"/></svg>
+                  )}
+                </p>
+                <p className="text-[11px] text-accent truncate italic">@{c.username}</p>
               </Link>
             ))}
           </div>
