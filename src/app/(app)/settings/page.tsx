@@ -108,7 +108,7 @@ export default function SettingsPage() {
     if (socialLinks.twitter.trim()) links.twitter = socialLinks.twitter.trim();
     if (socialLinks.spotify.trim()) links.spotify = socialLinks.spotify.trim();
 
-    const { error } = await supabase
+    const { data: saved, error } = await supabase
       .from("profiles")
       .update({
         display_name: displayName.trim() || null,
@@ -117,16 +117,19 @@ export default function SettingsPage() {
         shelf_style: shelfStyle,
         social_links: Object.keys(links).length > 0 ? links : null,
       })
-      .eq("id", profile.id);
+      .eq("id", profile.id)
+      .select()
+      .single();
 
     setSaving(false);
     if (error) {
       toast.error(`Save failed: ${error.message}`);
       return;
     }
+    const persistedStyle = (saved as any)?.shelf_style;
     setSaved(true);
-    toast("Profile saved");
-    setTimeout(() => setSaved(false), 2000);
+    toast(`Saved · shelf_style = ${persistedStyle ?? "NULL"}`);
+    setTimeout(() => setSaved(false), 3000);
   }
 
   async function handleSignOut() {
