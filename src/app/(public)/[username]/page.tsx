@@ -4,6 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 import ProfilePage from "@/components/profile/ProfilePage";
 import PrivateProfileGate from "@/components/profile/PrivateProfileGate";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 interface Props {
   params: Promise<{ username: string }>;
 }
