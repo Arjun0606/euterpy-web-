@@ -5,10 +5,11 @@ const publicPaths = ["/", "/login", "/signup"];
 
 function isPublicPath(pathname: string): boolean {
   if (publicPaths.includes(pathname)) return true;
-  // Album, song, and artist pages are public
+  // Album, song, artist, and story pages are public
   if (pathname.startsWith("/album/")) return true;
   if (pathname.startsWith("/song/")) return true;
   if (pathname.startsWith("/artist/")) return true;
+  if (pathname.startsWith("/story/")) return true;
   // API routes handle their own auth
   if (pathname.startsWith("/api/")) return true;
   // User profiles are public (single-segment paths like /@username)

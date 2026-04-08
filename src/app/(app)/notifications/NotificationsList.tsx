@@ -33,7 +33,7 @@ export default function NotificationsList({ initial }: { initial: Notification[]
     return (
       <div className="text-center py-16">
         <p className="text-muted">No notifications yet.</p>
-        <p className="text-sm text-muted/60 mt-2">When people follow you, vote on your reviews, or interact with your profile, you&apos;ll see it here.</p>
+        <p className="text-sm text-muted/60 mt-2">When people follow you or interact with your profile, you&apos;ll see it here.</p>
       </div>
     );
   }

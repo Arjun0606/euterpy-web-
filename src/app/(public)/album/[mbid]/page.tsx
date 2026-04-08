@@ -7,6 +7,8 @@ import AlbumActions from "@/components/album/AlbumActions";
 import TrackList from "@/components/album/TrackList";
 import EditorialNotes from "@/components/album/EditorialNotes";
 import SetNowPlayingButton from "@/components/profile/NowPlaying";
+import TellStoryButton from "@/components/story/TellStoryButton";
+import StoriesSection from "@/components/story/StoriesSection";
 
 interface Props {
   params: Promise<{ mbid: string }>;
@@ -127,10 +129,20 @@ async function getAlbumData(appleId: string) {
     .select("*, songs!inner(apple_id, album_apple_id)")
     .eq("songs.album_apple_id", appleId);
 
+  // Stories about this album
+  const { data: stories } = await supabase
+    .from("stories")
+    .select("id, headline, body, created_at, profiles(username, display_name, avatar_url)")
+    .eq("kind", "album")
+    .eq("target_apple_id", appleId)
+    .order("created_at", { ascending: false })
+    .limit(10);
+
   return {
     album,
     ratings: ratings || [],
     songRatings: songRatings || [],
+    stories: stories || [],
     userId: user?.id || null,
   };
 }
@@ -140,7 +152,7 @@ export default async function AlbumPage({ params }: Props) {
   const data = await getAlbumData(appleId);
   if (!data) notFound();
 
-  const { album, ratings, songRatings, userId } = data;
+  const { album, ratings, songRatings, stories, userId } = data;
 
   return (
     <div className="min-h-screen bg-background">
@@ -243,10 +255,17 @@ export default async function AlbumPage({ params }: Props) {
               <span>🎵</span> Listen
             </a>
 
-            <div className="mt-3">
+            <div className="mt-3 flex flex-wrap gap-2">
               <SetNowPlayingButton
                 appleId={appleId}
                 kind="album"
+                title={album.title}
+                artist={album.artist_name}
+                artworkUrl={album.artwork_url}
+              />
+              <TellStoryButton
+                kind="album"
+                appleId={appleId}
                 title={album.title}
                 artist={album.artist_name}
                 artworkUrl={album.artwork_url}
@@ -269,6 +288,28 @@ export default async function AlbumPage({ params }: Props) {
 
         {/* Editorial Notes (from Apple Music) */}
         {album.editorial_notes && <EditorialNotes text={album.editorial_notes} />}
+
+        {/* Stories about this album — the heart of the page */}
+        <StoriesSection
+          stories={JSON.parse(JSON.stringify(stories))}
+          title="Stories about this album"
+          emptyState={
+            <div className="bg-card border border-dashed border-border rounded-2xl p-8 text-center">
+              <p className="font-display text-2xl mb-2">No one has written about this yet.</p>
+              <p className="text-sm text-zinc-500 mb-5 max-w-sm mx-auto">
+                What does it mean to you? Be the first to tell its story.
+              </p>
+              <TellStoryButton
+                kind="album"
+                appleId={appleId}
+                title={album.title}
+                artist={album.artist_name}
+                artworkUrl={album.artwork_url}
+                variant="primary"
+              />
+            </div>
+          }
+        />
 
         {/* In their collections — collectors with notes */}
         {ratings.length > 0 && (

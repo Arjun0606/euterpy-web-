@@ -23,14 +23,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!profile) return { title: "Profile Not Found" };
   const name = profile.display_name || profile.username;
+  const description = profile.bio || `${name}'s music identity on Euterpy.`;
 
   return {
-    title: `${name} (@${profile.username})`,
-    description: `${profile.album_count} albums rated${profile.bio ? `. ${profile.bio}` : ""} — on Euterpy.`,
+    title: `${name} — a music identity on Euterpy`,
+    description,
     openGraph: {
-      title: `${name} (@${profile.username}) — Euterpy`,
-      description: `${profile.album_count} albums rated${profile.bio ? `. ${profile.bio}` : ""}`,
+      title: `${name} — a music identity on Euterpy`,
+      description,
       images: [{ url: `/api/og/profile/${profile.username}`, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${name} — a music identity on Euterpy`,
+      description,
+      images: [`/api/og/profile/${profile.username}`],
     },
   };
 }
@@ -86,14 +93,16 @@ async function getFullProfile(username: string) {
     { data: ratings },
     { data: songRatings },
     { data: shelves },
-    { data: reviews },
+    { data: stories },
+    { data: lyricPins },
     { data: badges },
   ] = await Promise.all([
     supabase.from("get_to_know_me").select("*, albums(*)").eq("user_id", profile.id).order("position"),
     supabase.from("ratings").select("*, albums(*)").eq("user_id", profile.id).order("created_at", { ascending: false }),
     supabase.from("song_ratings").select("*, songs(*)").eq("user_id", profile.id).order("created_at", { ascending: false }),
     supabase.from("shelves").select(`*, items:shelf_items(id, item_type, position, note, albums(apple_id, title, artist_name, artwork_url), songs(apple_id, title, artist_name, artwork_url))`).eq("user_id", profile.id).order("is_favorites", { ascending: false }).order("created_at", { ascending: false }),
-    supabase.from("reviews").select("*, albums(apple_id, title, artist_name, artwork_url), songs(apple_id, title, artist_name, artwork_url)").eq("user_id", profile.id).order("created_at", { ascending: false }),
+    supabase.from("stories").select("id, kind, target_apple_id, target_title, target_artist, target_artwork_url, headline, body, is_pinned, created_at").eq("user_id", profile.id).order("is_pinned", { ascending: false }).order("created_at", { ascending: false }),
+    supabase.from("lyric_pins").select("*").eq("user_id", profile.id).order("position"),
     supabase.from("user_badges").select("*, badges(*)").eq("user_id", profile.id).order("is_displayed", { ascending: false }),
   ]);
 
@@ -110,7 +119,8 @@ async function getFullProfile(username: string) {
     ratings: ratings || [],
     songRatings: songRatings || [],
     shelves: shelvesWithItems,
-    reviews: reviews || [],
+    stories: stories || [],
+    lyricPins: lyricPins || [],
     badges: badges || [],
   };
 }

@@ -55,7 +55,7 @@ export default function PrivateProfileGate({ profile, requestPending }: Props) {
           <div className="mt-8 p-6 border border-border rounded-xl bg-card/50 max-w-sm">
             <div className="text-2xl mb-3">🔒</div>
             <p className="text-sm font-medium mb-1">This account is private</p>
-            <p className="text-xs text-muted/60 mb-4">Follow this account to see their collection, stats, and reviews.</p>
+            <p className="text-xs text-muted/60 mb-4">Follow this account to see their collection, stories, and lyrics.</p>
             {requestPending ? (
               <div className="px-5 py-2 border border-border rounded-full text-sm text-muted">
                 Requested

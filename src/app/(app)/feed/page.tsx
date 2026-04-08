@@ -66,6 +66,24 @@ export default async function HomePage() {
     .order("created_at", { ascending: false })
     .limit(10);
 
+  // Now Playing — heartbeat of the home feed
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { data: nowPlayingProfiles } = await supabase
+    .from("profiles")
+    .select("id, username, display_name, avatar_url, now_playing_apple_id, now_playing_kind, now_playing_title, now_playing_artist, now_playing_artwork_url, now_playing_set_at")
+    .not("now_playing_apple_id", "is", null)
+    .gte("now_playing_set_at", oneDayAgo)
+    .neq("id", user.id)
+    .order("now_playing_set_at", { ascending: false })
+    .limit(20);
+
+  // Latest stories — to give the home feed a writing pulse
+  const { data: latestStories } = await supabase
+    .from("stories")
+    .select("id, kind, target_apple_id, target_title, target_artist, target_artwork_url, headline, body, created_at, profiles(username, display_name, avatar_url)")
+    .order("created_at", { ascending: false })
+    .limit(6);
+
   // 3. The Charts — top 10 this week (numbered)
   const { data: trendingAlbums } = await supabase
     .from("albums")
@@ -75,16 +93,6 @@ export default async function HomePage() {
     .order("rating_count", { ascending: false })
     .order("average_rating", { ascending: false })
     .limit(10);
-
-  // Featured note — a substantial collector's note from the past month
-  const { data: featuredNotes } = await supabase
-    .from("ratings")
-    .select("id, reaction, ownership, created_at, profiles(username, display_name, avatar_url), albums(apple_id, title, artist_name, artwork_url)")
-    .gte("created_at", monthAgo)
-    .not("reaction", "is", null)
-    .order("created_at", { ascending: false })
-    .limit(20);
-  const featuredNote = (featuredNotes || []).find((r: any) => r.reaction && r.reaction.length > 80 && r.albums) || null;
 
   // 4. Activity from people you follow (ratings + reviews)
   const { data: feedItems } = await supabase
@@ -156,6 +164,50 @@ export default async function HomePage() {
 
       {/* Search */}
       <HomeSearch />
+
+      {/* === NOW PLAYING SCROLLER — heartbeat === */}
+      {nowPlayingProfiles && nowPlayingProfiles.length > 0 && (
+        <section className="mb-14">
+          <div className="flex items-baseline gap-2 mb-5">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-60" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
+            </span>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-accent">Right now</p>
+          </div>
+          <div className="flex gap-3 overflow-x-auto -mx-5 sm:-mx-8 px-5 sm:px-8 no-scrollbar pb-2">
+            {nowPlayingProfiles.map((p: any) => {
+              const href = p.now_playing_kind === "song" ? `/song/${p.now_playing_apple_id}` : `/album/${p.now_playing_apple_id}`;
+              const cover = p.now_playing_artwork_url ? art(p.now_playing_artwork_url, 200) : null;
+              return (
+                <Link key={p.id} href={href} className="shrink-0 w-44 group bg-card border border-border rounded-2xl p-4 hover:border-accent/40 transition-colors">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Link href={`/${p.username}`} className="w-6 h-6 rounded-full bg-background border border-border overflow-hidden flex items-center justify-center text-[10px] text-zinc-600 shrink-0">
+                      {p.avatar_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={p.avatar_url} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        p.username[0].toUpperCase()
+                      )}
+                    </Link>
+                    <p className="text-[10px] text-zinc-500 truncate">@{p.username}</p>
+                  </div>
+                  <div className="aspect-square rounded-md overflow-hidden bg-background border border-border mb-2">
+                    {cover ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={cover} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-zinc-700">♪</div>
+                    )}
+                  </div>
+                  <p className="text-xs font-medium truncate">{p.now_playing_title}</p>
+                  <p className="text-[10px] text-zinc-600 truncate">{p.now_playing_artist}</p>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* === HERO ALBUM OF THE WEEK — magazine cover === */}
       {heroAlbum && (
@@ -242,33 +294,58 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* === COLLECTOR'S VOICE — pull-quote from a real note === */}
-      {featuredNote && featuredNote.albums && (
+      {/* === LATEST STORIES — the writing pulse === */}
+      {latestStories && latestStories.length > 0 && (
         <section className="mb-20">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-6">— A collector&apos;s voice</p>
-          <Link href={`/album/${(featuredNote.albums as any).apple_id}`} className="block group">
-            <blockquote className="relative pl-8 sm:pl-12 border-l-2 border-accent">
-              <p className="font-display italic text-2xl sm:text-4xl leading-[1.2] tracking-tight text-zinc-100 line-clamp-5 group-hover:text-white transition-colors">
-                &ldquo;{featuredNote.reaction}&rdquo;
-              </p>
-              <div className="flex items-center gap-3 mt-6">
-                <div className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center text-xs text-zinc-500 overflow-hidden shrink-0">
-                  {(featuredNote.profiles as any)?.avatar_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={(featuredNote.profiles as any).avatar_url} alt="" className="w-full h-full object-cover" />
-                  ) : ((featuredNote.profiles as any)?.username?.[0]?.toUpperCase() || "?")}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-zinc-300">
-                    {(featuredNote.profiles as any)?.display_name || (featuredNote.profiles as any)?.username}
-                  </p>
-                  <p className="text-[11px] text-zinc-600 truncate">
-                    on <span className="italic">{(featuredNote.albums as any).title}</span> by {(featuredNote.albums as any).artist_name}
-                  </p>
-                </div>
-              </div>
-            </blockquote>
-          </Link>
+          <div className="mb-6">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-1">— The writing room</p>
+            <h2 className="font-display text-3xl sm:text-4xl tracking-tight">Stories from today.</h2>
+          </div>
+          <div className="space-y-8">
+            {latestStories.slice(0, 4).map((story: any) => {
+              const author = story.profiles;
+              const cover = story.target_artwork_url ? art(story.target_artwork_url, 200) : null;
+              const preview = story.body.length > 220 ? story.body.slice(0, 220).trimEnd() + "…" : story.body;
+              return (
+                <Link key={story.id} href={`/story/${story.id}`} className="block group border-b border-white/[0.04] pb-8">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-xs text-zinc-500 overflow-hidden shrink-0">
+                      {author?.avatar_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={author.avatar_url} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        author?.username?.[0]?.toUpperCase() || "?"
+                      )}
+                    </div>
+                    <p className="text-xs text-zinc-500">
+                      <span className="font-medium text-zinc-300">{author?.display_name || author?.username}</span>
+                      <span className="text-zinc-700"> on {story.kind}</span>
+                    </p>
+                  </div>
+                  <div className="flex gap-4">
+                    {cover && (
+                      <div className={`${story.kind === "artist" ? "rounded-full" : "rounded-md"} w-14 h-14 overflow-hidden border border-white/[0.06] shrink-0`}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={cover} alt="" className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      {story.headline && (
+                        <h3 className="font-display text-xl sm:text-2xl tracking-tight leading-tight mb-2 group-hover:text-accent transition-colors">
+                          {story.headline}
+                        </h3>
+                      )}
+                      <p className="text-[11px] text-zinc-600 mb-2">
+                        {story.target_title}
+                        {story.target_artist && story.kind !== "artist" && <span> · {story.target_artist}</span>}
+                      </p>
+                      <p className="editorial text-sm text-zinc-400 leading-relaxed line-clamp-3">{preview}</p>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
         </section>
       )}
 

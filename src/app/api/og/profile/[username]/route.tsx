@@ -15,7 +15,8 @@ export async function GET(
 ) {
   const { username } = await params;
   const format = request.nextUrl.searchParams.get("format");
-  const [width, height] = format === "square" ? [1080, 1080] : [1200, 630];
+  const isSquare = format === "square";
+  const [width, height] = isSquare ? [1080, 1080] : [1200, 630];
 
   const supabase = createServiceClient();
 
@@ -29,23 +30,40 @@ export async function GET(
     return new Response("Not found", { status: 404 });
   }
 
-  // Get to Know Me albums for the card
+  // Get to Know Me — the 3 hero albums
   const { data: gtkmItems } = await supabase
     .from("get_to_know_me")
-    .select("position, albums(artwork_url, title)")
+    .select("position, albums(artwork_url, title, artist_name)")
     .eq("user_id", profile.id)
     .order("position")
     .limit(3);
 
-  const covers = [null, null, null] as (string | null)[];
+  const covers: { url: string | null; title: string | null; artist: string | null }[] = [
+    { url: null, title: null, artist: null },
+    { url: null, title: null, artist: null },
+    { url: null, title: null, artist: null },
+  ];
   if (gtkmItems) {
     for (const item of gtkmItems as any[]) {
       const idx = item.position - 1;
-      if (idx >= 0 && idx < 3) {
-        covers[idx] = artworkUrl(item.albums?.artwork_url, 500);
+      if (idx >= 0 && idx < 3 && item.albums) {
+        covers[idx] = {
+          url: artworkUrl(item.albums.artwork_url, 600),
+          title: item.albums.title,
+          artist: item.albums.artist_name,
+        };
       }
     }
   }
+
+  // Story count + lyric count
+  const [{ count: storyCount }, { count: lyricCount }] = await Promise.all([
+    supabase.from("stories").select("id", { count: "exact", head: true }).eq("user_id", profile.id),
+    supabase.from("lyric_pins").select("id", { count: "exact", head: true }).eq("user_id", profile.id),
+  ]);
+
+  const displayName = profile.display_name || profile.username;
+  const coverSize = isSquare ? 280 : 200;
 
   return new ImageResponse(
     (
@@ -54,129 +72,182 @@ export async function GET(
           width: "100%",
           height: "100%",
           display: "flex",
+          flexDirection: "column",
           backgroundColor: "#000000",
-          padding: "48px",
+          padding: isSquare ? "60px" : "50px 60px",
           fontFamily: "sans-serif",
+          backgroundImage: "radial-gradient(circle at 50% 0%, rgba(255, 20, 147, 0.18) 0%, rgba(0, 0, 0, 0) 60%)",
+          position: "relative",
         }}
       >
-        {/* Get to Know Me — 3 album covers */}
-        <div
-          style={{
-            display: "flex",
-            gap: "12px",
-            alignItems: "center",
-            flexShrink: 0,
-          }}
-        >
-          {covers.map((url, i) => (
-            <div
-              key={i}
-              style={{
-                width: format === "square" ? "280px" : "180px",
-                height: format === "square" ? "280px" : "180px",
-                borderRadius: "12px",
-                overflow: "hidden",
-                display: "flex",
-                backgroundColor: url ? "transparent" : "#18181b",
-              }}
-            >
-              {url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={url}
-                  alt=""
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                  }}
-                />
-              ) : (
-                <div
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#3f3f46",
-                    fontSize: "32px",
-                  }}
-                >
-                  ♪
-                </div>
-              )}
-            </div>
-          ))}
+        {/* Top: brand bar */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isSquare ? 50 : 30 }}>
+          <div style={{ fontSize: 18, color: "#52525b", letterSpacing: "0.22em", fontWeight: 700, display: "flex" }}>EUTERPY</div>
+          <div style={{ fontSize: 16, color: "#52525b", letterSpacing: "0.16em", display: "flex" }}>euterpy.app/{profile.username}</div>
         </div>
 
-        {/* Profile info */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            marginLeft: "48px",
-            flex: 1,
-          }}
-        >
+        {/* Identity row: name + handle */}
+        <div style={{ display: "flex", flexDirection: "column", marginBottom: isSquare ? 40 : 28 }}>
           <div
             style={{
-              fontSize: format === "square" ? "48px" : "36px",
-              fontWeight: 700,
+              fontSize: isSquare ? 88 : 64,
+              fontWeight: 800,
               color: "#ffffff",
-              marginBottom: "8px",
+              letterSpacing: "-0.04em",
+              lineHeight: 0.95,
+              display: "flex",
+              maxWidth: "100%",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
             }}
           >
-            {profile.display_name || profile.username}
+            {displayName}
           </div>
           <div
             style={{
-              fontSize: format === "square" ? "28px" : "22px",
+              fontSize: isSquare ? 28 : 22,
               color: "#FF1493",
-              marginBottom: "24px",
+              marginTop: 12,
+              display: "flex",
             }}
           >
             @{profile.username}
           </div>
-          {profile.bio && (
-            <div
-              style={{
-                fontSize: format === "square" ? "24px" : "18px",
-                color: "#a1a1aa",
-                marginBottom: "24px",
-                lineHeight: 1.4,
-              }}
-            >
-              {profile.bio}
-            </div>
-          )}
-          <div
-            style={{
-              fontSize: format === "square" ? "22px" : "16px",
-              color: "#52525b",
-            }}
-          >
-            {profile.album_count} albums · euterpy.app/{profile.username}
-          </div>
         </div>
 
-        {/* Branding */}
+        {/* Bio (if present) */}
+        {profile.bio && (
+          <div
+            style={{
+              fontSize: isSquare ? 22 : 18,
+              color: "#a1a1aa",
+              marginBottom: isSquare ? 36 : 24,
+              lineHeight: 1.45,
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+              maxWidth: "85%",
+              fontStyle: "italic",
+            }}
+          >
+            {profile.bio}
+          </div>
+        )}
+
+        {/* Get to Know Me — 3 covers */}
+        <div style={{ display: "flex", gap: 14, marginBottom: isSquare ? 44 : 28 }}>
+          {covers.map((cover, i) => (
+            <div
+              key={i}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                width: coverSize,
+              }}
+            >
+              <div
+                style={{
+                  width: coverSize,
+                  height: coverSize,
+                  borderRadius: 16,
+                  overflow: "hidden",
+                  display: "flex",
+                  backgroundColor: "#0a0a0a",
+                  border: "1px solid #18181b",
+                  boxShadow: "0 20px 60px -10px rgba(0, 0, 0, 0.6)",
+                }}
+              >
+                {cover.url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={cover.url}
+                    alt=""
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#27272a",
+                      fontSize: 60,
+                    }}
+                  >
+                    ♪
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Spacer */}
+        <div style={{ flex: 1, display: "flex" }} />
+
+        {/* Bottom: identity stats + tagline */}
         <div
           style={{
-            position: "absolute",
-            bottom: "24px",
-            right: "48px",
-            fontSize: "18px",
-            color: "#27272a",
-            fontWeight: 600,
-            letterSpacing: "0.05em",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-end",
+            borderTop: "1px solid #18181b",
+            paddingTop: isSquare ? 24 : 18,
           }}
         >
-          EUTERPY
+          <div style={{ display: "flex", gap: isSquare ? 36 : 24 }}>
+            <Stat label="ALBUMS" value={String(profile.album_count || 0)} big={isSquare} />
+            <Stat label="STORIES" value={String(storyCount || 0)} big={isSquare} />
+            <Stat label="LYRICS" value={String(lyricCount || 0)} big={isSquare} />
+          </div>
+          <div
+            style={{
+              fontSize: isSquare ? 14 : 12,
+              color: "#52525b",
+              fontStyle: "italic",
+              display: "flex",
+              maxWidth: 260,
+              textAlign: "right",
+            }}
+          >
+            A music identity.
+          </div>
         </div>
       </div>
     ),
     { width, height }
+  );
+}
+
+function Stat({ label, value, big }: { label: string; value: string; big: boolean }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      <div
+        style={{
+          fontSize: big ? 40 : 30,
+          color: "#ffffff",
+          fontWeight: 800,
+          letterSpacing: "-0.02em",
+          lineHeight: 1,
+          display: "flex",
+        }}
+      >
+        {value}
+      </div>
+      <div
+        style={{
+          fontSize: big ? 13 : 11,
+          color: "#52525b",
+          marginTop: 6,
+          letterSpacing: "0.16em",
+          display: "flex",
+        }}
+      >
+        {label}
+      </div>
+    </div>
   );
 }

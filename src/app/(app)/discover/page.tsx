@@ -50,10 +50,10 @@ export default async function DiscoverPage() {
     .order("updated_at", { ascending: false })
     .limit(8);
 
-  // Latest reviews
-  const { data: latestReviews } = await supabase
-    .from("reviews")
-    .select("*, profiles(username, display_name, avatar_url), albums(apple_id, title, artist_name, artwork_url)")
+  // Latest stories
+  const { data: latestStories } = await supabase
+    .from("stories")
+    .select("id, kind, target_apple_id, target_title, target_artist, target_artwork_url, headline, body, created_at, profiles(username, display_name, avatar_url)")
     .order("created_at", { ascending: false })
     .limit(6);
 
@@ -230,16 +230,17 @@ export default async function DiscoverPage() {
         </section>
       )}
 
-      {/* Latest Reviews */}
-      {latestReviews && latestReviews.length > 0 && (
+      {/* Latest Stories */}
+      {latestStories && latestStories.length > 0 && (
         <section className="mb-12">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-5">Latest reviews</p>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-5">Latest stories</p>
           <div className="grid sm:grid-cols-2 gap-3">
-            {latestReviews.map((review: any) => {
-              const album = review.albums;
-              const author = review.profiles;
+            {latestStories.map((story: any) => {
+              const author = story.profiles;
+              const cover = story.target_artwork_url ? art(story.target_artwork_url, 200) : null;
+              const preview = story.body.length > 200 ? story.body.slice(0, 200).trimEnd() + "…" : story.body;
               return (
-                <Link key={review.id} href={album ? `/album/${album.apple_id}` : "#"}
+                <Link key={story.id} href={`/story/${story.id}`}
                   className="block bg-card border border-border rounded-xl p-5 hover:border-zinc-700 transition-colors">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center text-xs text-muted shrink-0 overflow-hidden">
@@ -250,24 +251,25 @@ export default async function DiscoverPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <span className="text-sm font-medium">{author?.display_name || author?.username}</span>
+                      <p className="text-[10px] text-zinc-700">on {story.kind}</p>
                     </div>
-                    <Stars score={review.score} />
                   </div>
-                  {album && (
+                  {cover && (
                     <div className="flex items-center gap-3 mb-3">
-                      {album.artwork_url && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={art(album.artwork_url, 80)!} alt="" className="w-10 h-10 rounded object-cover" />
-                      )}
+                      <div className={`${story.kind === "artist" ? "rounded-full" : "rounded"} w-10 h-10 overflow-hidden`}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={cover} alt="" className="w-full h-full object-cover" />
+                      </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{album.title}</p>
-                        <p className="text-[11px] text-zinc-500">{album.artist_name}</p>
+                        <p className="text-sm font-medium truncate">{story.target_title}</p>
+                        {story.target_artist && story.kind !== "artist" && (
+                          <p className="text-[11px] text-zinc-500">{story.target_artist}</p>
+                        )}
                       </div>
                     </div>
                   )}
-                  {review.title && <p className="font-display text-lg mb-2">{review.title}</p>}
-                  <p className="editorial text-sm text-zinc-300 line-clamp-3">{review.body}</p>
-                  {review.is_loved && <p className="text-[11px] text-accent mt-3">❤ Users love this</p>}
+                  {story.headline && <p className="font-display text-lg mb-2 line-clamp-2">{story.headline}</p>}
+                  <p className="editorial text-sm text-zinc-300 line-clamp-3">{preview}</p>
                 </Link>
               );
             })}

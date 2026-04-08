@@ -2,6 +2,9 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getArtist, getArtistAlbums, getArtworkUrl } from "@/lib/apple-music/client";
+import { createClient } from "@/lib/supabase/server";
+import TellStoryButton from "@/components/story/TellStoryButton";
+import StoriesSection from "@/components/story/StoriesSection";
 
 interface Props {
   params: Promise<{ appleId: string }>;
@@ -30,6 +33,16 @@ export default async function ArtistPage({ params }: Props) {
   if (!artist) notFound();
 
   const albums = await getArtistAlbums(appleId, 30);
+
+  // Stories about this artist
+  const supabase = await createClient();
+  const { data: stories } = await supabase
+    .from("stories")
+    .select("id, headline, body, created_at, profiles(username, display_name, avatar_url)")
+    .eq("kind", "artist")
+    .eq("target_apple_id", appleId)
+    .order("created_at", { ascending: false })
+    .limit(10);
 
   // Group by type
   const fullAlbums = albums.filter((a) => !a.attributes.isSingle && !a.attributes.isCompilation);
@@ -68,22 +81,51 @@ export default async function ArtistPage({ params }: Props) {
                   {artist.attributes.genreNames.filter((g) => g !== "Music").join(" · ")}
                 </p>
               )}
-              {artist.attributes.url && (
-                <a
-                  href={artist.attributes.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-card border border-border rounded-full text-xs text-zinc-500 hover:text-zinc-200 hover:border-zinc-700 transition-colors"
-                >
-                  <span>🎵</span> Listen
-                </a>
-              )}
+              <div className="flex flex-wrap items-center gap-2">
+                {artist.attributes.url && (
+                  <a
+                    href={artist.attributes.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-card border border-border rounded-full text-xs text-zinc-500 hover:text-zinc-200 hover:border-zinc-700 transition-colors"
+                  >
+                    <span>🎵</span> Listen
+                  </a>
+                )}
+                <TellStoryButton
+                  kind="artist"
+                  appleId={appleId}
+                  title={artist.attributes.name}
+                  artworkUrl={artist.attributes.artwork?.url || null}
+                />
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       <main className="max-w-3xl mx-auto px-5 sm:px-8 py-8">
+        {/* Stories about this artist */}
+        <StoriesSection
+          stories={JSON.parse(JSON.stringify(stories || []))}
+          title={`Stories about ${artist.attributes.name}`}
+          emptyState={
+            <div className="bg-card border border-dashed border-border rounded-2xl p-8 text-center">
+              <p className="font-display text-2xl mb-2">Tell their story.</p>
+              <p className="text-sm text-zinc-500 mb-5 max-w-sm mx-auto">
+                What do they make you brave enough to feel? Be the first to write.
+              </p>
+              <TellStoryButton
+                kind="artist"
+                appleId={appleId}
+                title={artist.attributes.name}
+                artworkUrl={artist.attributes.artwork?.url || null}
+                variant="primary"
+              />
+            </div>
+          }
+        />
+
         {fullAlbums.length > 0 && (
           <Section title="Albums">
             <Grid albums={fullAlbums} />

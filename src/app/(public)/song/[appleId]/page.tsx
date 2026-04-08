@@ -5,6 +5,8 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { getArtworkUrl, getSong as fetchSongFromApple } from "@/lib/apple-music/client";
 import SongActions from "./SongActions";
 import SetNowPlayingButton from "@/components/profile/NowPlaying";
+import TellStoryButton from "@/components/story/TellStoryButton";
+import StoriesSection from "@/components/story/StoriesSection";
 
 interface Props {
   params: Promise<{ appleId: string }>;
@@ -84,12 +86,14 @@ export default async function SongPage({ params }: Props) {
     .eq("song_id", song.id)
     .order("created_at", { ascending: false });
 
-  // Reviews for this song
-  const { data: reviews } = await supabase
-    .from("reviews")
-    .select("*, profiles(username, display_name, avatar_url)")
-    .eq("song_id", song.id)
-    .order("created_at", { ascending: false });
+  // Stories about this song
+  const { data: stories } = await supabase
+    .from("stories")
+    .select("id, headline, body, created_at, profiles(username, display_name, avatar_url)")
+    .eq("kind", "song")
+    .eq("target_apple_id", appleId)
+    .order("created_at", { ascending: false })
+    .limit(10);
 
   const durationMin = song.duration_ms ? Math.floor(song.duration_ms / 60000) : null;
   const durationSec = song.duration_ms ? Math.floor((song.duration_ms % 60000) / 1000) : null;
@@ -177,6 +181,13 @@ export default async function SongPage({ params }: Props) {
                 artist={song.artist_name}
                 artworkUrl={song.artwork_url}
               />
+              <TellStoryButton
+                kind="song"
+                appleId={appleId}
+                title={song.title}
+                artist={song.artist_name}
+                artworkUrl={song.artwork_url}
+              />
             </div>
 
             {/* Collection count */}
@@ -198,6 +209,28 @@ export default async function SongPage({ params }: Props) {
             />
           </div>
         </div>
+
+        {/* Stories about this song */}
+        <StoriesSection
+          stories={JSON.parse(JSON.stringify(stories || []))}
+          title="Stories about this song"
+          emptyState={
+            <div className="bg-card border border-dashed border-border rounded-2xl p-8 text-center">
+              <p className="font-display text-2xl mb-2">No one has written about this yet.</p>
+              <p className="text-sm text-zinc-500 mb-5 max-w-sm mx-auto">
+                Where were you when you first heard it? Tell its story.
+              </p>
+              <TellStoryButton
+                kind="song"
+                appleId={appleId}
+                title={song.title}
+                artist={song.artist_name}
+                artworkUrl={song.artwork_url}
+                variant="primary"
+              />
+            </div>
+          }
+        />
 
         {/* In their collections */}
         {ratings && ratings.length > 0 && (

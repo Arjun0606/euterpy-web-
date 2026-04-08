@@ -13,8 +13,10 @@ import ShelfEditor from "./ShelfEditor";
 import BlockButton from "./BlockButton";
 import StatsView from "@/components/stats/StatsView";
 import NowPlayingPill from "./NowPlayingPill";
+import StoriesSection from "@/components/story/StoriesSection";
+import LyricPinsSection from "./LyricPinsSection";
 
-type Tab = "collection" | "stats" | "reviews";
+type Tab = "collection" | "stats" | "stories";
 
 function artwork(url: string | null, size = 500): string | null {
   if (!url) return null;
@@ -29,13 +31,14 @@ interface Props {
     ratings: any[];
     songRatings: any[];
     shelves: any[];
-    reviews: any[];
+    stories: any[];
+    lyricPins: any[];
     badges: any[];
   };
 }
 
 export default function ProfilePage({ data }: Props) {
-  const { profile, currentUserId, getToKnowMe, ratings, songRatings, shelves, reviews, badges } = data;
+  const { profile, currentUserId, getToKnowMe, ratings, songRatings, shelves, stories, lyricPins, badges } = data;
   const [activeTab, setActiveTab] = useState<Tab>("collection");
   const [copied, setCopied] = useState(false);
   const [showNewShelf, setShowNewShelf] = useState(false);
@@ -191,8 +194,8 @@ export default function ProfilePage({ data }: Props) {
         <div className="flex gap-1 border-b border-border mb-8">
           {([
             ["collection", isOwnProfile ? "My Collection" : "Collection"],
+            ["stories", isOwnProfile ? "My Stories" : "Stories"],
             ["stats", "Stats"],
-            ["reviews", isOwnProfile ? "My Reviews" : "Reviews"],
           ] as [Tab, string][]).map(([tab, label]) => (
             <button key={tab} onClick={() => setActiveTab(tab)}
               className={`px-5 py-3 text-sm font-medium transition-colors relative ${
@@ -218,6 +221,9 @@ export default function ProfilePage({ data }: Props) {
             {(getToKnowMe.length > 0 || isOwnProfile) && (
               <GetToKnowMe items={getToKnowMe} username={profile.username} isOwner={isOwnProfile} />
             )}
+
+            {/* Lyric pins */}
+            <LyricPinsSection pins={lyricPins} isOwner={isOwnProfile} />
 
             {/* The Shelf */}
             {shelfItems.length > 0 && (
@@ -277,43 +283,63 @@ export default function ProfilePage({ data }: Props) {
           </div>
         )}
 
-        {/* ====== REVIEWS ====== */}
-        {activeTab === "reviews" && (
+        {/* ====== STORIES ====== */}
+        {activeTab === "stories" && (
           <div>
-            {reviews.length === 0 ? (
-              <div className="text-center py-20">
-                <p className="text-zinc-500">No reviews yet.</p>
-                <p className="text-zinc-700 text-xs mt-2">Write a review on any album or song page.</p>
+            {stories.length === 0 ? (
+              <div className="text-center py-20 border border-dashed border-border rounded-2xl">
+                <p className="font-display text-3xl mb-2">{isOwnProfile ? "Your stories will live here." : "No stories yet."}</p>
+                <p className="text-zinc-500 text-sm max-w-sm mx-auto">
+                  {isOwnProfile
+                    ? "Open any album, song, or artist and tap \u2018Tell its story\u2019 to write."
+                    : "When they share what music means to them, you\u2019ll find it here."}
+                </p>
+                {isOwnProfile && (
+                  <a
+                    href="/search"
+                    className="inline-block mt-6 px-6 py-2.5 bg-accent text-white rounded-full text-xs font-medium hover:bg-accent-hover transition-colors"
+                  >
+                    Find something to write about
+                  </a>
+                )}
               </div>
             ) : (
-              <div className="space-y-4">
-                {reviews.map((review: any) => {
-                  const item = review.albums || review.songs;
-                  const isAlbum = !!review.albums;
+              <div className="space-y-8">
+                {stories.map((story: any) => {
+                  const cover = artwork(story.target_artwork_url, 200);
+                  const preview = story.body.length > 280 ? story.body.slice(0, 280).trimEnd() + "\u2026" : story.body;
                   return (
-                    <div key={review.id} className="bg-card border border-border rounded-xl p-5">
-                      <div className="flex items-center gap-3 mb-3">
-                        {item?.artwork_url && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={artwork(item.artwork_url, 80)!} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                    <a key={story.id} href={`/story/${story.id}`} className="block group border-b border-white/[0.04] pb-8">
+                      {/* Subject pill */}
+                      <div className="flex items-center gap-3 mb-4">
+                        {cover && (
+                          <div className={`${story.kind === "artist" ? "rounded-full" : "rounded-md"} w-10 h-10 overflow-hidden border border-white/[0.06] shrink-0`}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={cover} alt="" className="w-full h-full object-cover" />
+                          </div>
                         )}
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">{item?.title}</p>
-                          <p className="text-xs text-zinc-500">{item?.artist_name} · {isAlbum ? "Album" : "Song"}</p>
+                        <div className="min-w-0">
+                          <p className="text-[10px] uppercase tracking-[0.18em] text-accent">on a {story.kind}</p>
+                          <p className="text-sm text-zinc-400 truncate">
+                            {story.target_title}
+                            {story.target_artist && story.kind !== "artist" && <span className="text-zinc-600"> · {story.target_artist}</span>}
+                          </p>
                         </div>
-                        <Stars score={review.score} />
-                      </div>
-                      {review.title && <h3 className="font-semibold text-sm mb-1">{review.title}</h3>}
-                      <p className="text-sm text-zinc-400 leading-relaxed">{review.body}</p>
-                      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border">
-                        <span className="text-[11px] text-zinc-600">
-                          {new Date(review.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        <span className="ml-auto text-[10px] text-zinc-700">
+                          {new Date(story.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                         </span>
-                        {review.is_loved && <span className="text-[11px] text-accent font-medium">❤️ Users love this</span>}
-                        <div className="flex-1" />
-                        <span className="text-[11px] text-zinc-700">▲ {review.upvotes} · ▼ {review.downvotes}</span>
                       </div>
-                    </div>
+
+                      {story.headline && (
+                        <h3 className="font-display text-2xl sm:text-3xl tracking-tight leading-tight mb-3 group-hover:text-accent transition-colors">
+                          {story.headline}
+                        </h3>
+                      )}
+                      <p className="editorial text-base text-zinc-400 leading-relaxed line-clamp-4 group-hover:text-zinc-300 transition-colors">
+                        {preview}
+                      </p>
+                      <p className="text-[11px] text-zinc-700 mt-3 group-hover:text-accent transition-colors">Read more \u2192</p>
+                    </a>
                   );
                 })}
               </div>

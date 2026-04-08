@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import SongRatingModal from "@/components/album/SongRatingModal";
+import SongCollectionModal from "@/components/album/SongCollectionModal";
 import AddToShelfModal from "@/components/album/AddToShelfModal";
 
 interface Props {
@@ -84,13 +84,13 @@ export default function SongActions({ songAppleId, songDbId, songTitle, artistNa
       </div>
 
       {showModal && (
-        <SongRatingModal
+        <SongCollectionModal
           songAppleId={songAppleId}
           songTitle={songTitle}
           artistName={artistName}
           albumName={albumName || undefined}
           artworkUrl={artworkUrl}
-          existingRating={userRating}
+          existing={userRating ? { id: userRating.id, reaction: userRating.reaction } : null}
           onClose={() => setShowModal(false)}
           onSaved={handleSaved}
         />
