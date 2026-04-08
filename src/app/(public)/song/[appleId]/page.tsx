@@ -4,7 +4,6 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { getArtworkUrl, getSong as fetchSongFromApple } from "@/lib/apple-music/client";
 import SongActions from "./SongActions";
-import SetNowPlayingButton from "@/components/profile/NowPlaying";
 import TellStoryButton from "@/components/story/TellStoryButton";
 import StoriesSection from "@/components/story/StoriesSection";
 
@@ -174,13 +173,6 @@ export default async function SongPage({ params }: Props) {
               >
                 <span>🎵</span> Listen
               </a>
-              <SetNowPlayingButton
-                appleId={appleId}
-                kind="song"
-                title={song.title}
-                artist={song.artist_name}
-                artworkUrl={song.artwork_url}
-              />
               <TellStoryButton
                 kind="song"
                 appleId={appleId}

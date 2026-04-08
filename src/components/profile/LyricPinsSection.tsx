@@ -38,6 +38,24 @@ export default function LyricPinsSection({ pins, isOwner }: Props) {
     }
   }
 
+  async function handleDownload(id: string) {
+    try {
+      const res = await fetch(`/api/og/lyric/${id}?ts=${Date.now()}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `lyric-${id.slice(0, 8)}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast("Saved");
+    } catch {
+      toast.error("Couldn't download");
+    }
+  }
+
   if (pins.length === 0 && !isOwner) return null;
 
   return (
@@ -94,15 +112,25 @@ export default function LyricPinsSection({ pins, isOwner }: Props) {
                   <p className="text-[10px] text-zinc-600 truncate">{pin.song_artist}</p>
                 </div>
               </Link>
-              {isOwner && (
+              <div className="absolute top-3 right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
                 <button
-                  onClick={() => handleRemove(pin.id)}
-                  className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-red-400 text-xs px-2 transition-all"
-                  aria-label="Remove lyric"
+                  onClick={() => handleDownload(pin.id)}
+                  className="text-zinc-600 hover:text-accent text-[10px] px-2 py-1 border border-border rounded-full transition-colors"
+                  aria-label="Download as image"
+                  title="Save as image"
                 >
-                  ✕
+                  ↓ Save
                 </button>
-              )}
+                {isOwner && (
+                  <button
+                    onClick={() => handleRemove(pin.id)}
+                    className="text-zinc-600 hover:text-red-400 text-xs px-2 transition-colors"
+                    aria-label="Remove lyric"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>

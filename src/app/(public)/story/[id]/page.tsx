@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getArtworkUrl } from "@/lib/apple-music/client";
 import StoryEditButton from "./StoryEditButton";
+import StoryShareCard from "./StoryShareCard";
 
 export const dynamic = "force-dynamic";
 
@@ -168,6 +169,9 @@ export default async function StoryPage({ params }: Props) {
           <article className="editorial text-lg sm:text-xl text-zinc-200 leading-[1.75] whitespace-pre-wrap">
             {story.body}
           </article>
+
+          {/* Share */}
+          <StoryShareCard storyId={story.id} username={author.username} />
         </div>
       </section>
 

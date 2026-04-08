@@ -12,9 +12,10 @@ import TasteMatch from "./TasteMatch";
 import ShelfEditor from "./ShelfEditor";
 import BlockButton from "./BlockButton";
 import StatsView from "@/components/stats/StatsView";
-import NowPlayingPill from "./NowPlayingPill";
 import StoriesSection from "@/components/story/StoriesSection";
 import LyricPinsSection from "./LyricPinsSection";
+import ListsSection from "@/components/list/ListsSection";
+import ChartSection from "@/components/chart/ChartSection";
 
 type Tab = "collection" | "stats" | "stories";
 
@@ -33,12 +34,14 @@ interface Props {
     shelves: any[];
     stories: any[];
     lyricPins: any[];
+    lists: any[];
+    charts: any[];
     badges: any[];
   };
 }
 
 export default function ProfilePage({ data }: Props) {
-  const { profile, currentUserId, getToKnowMe, ratings, songRatings, shelves, stories, lyricPins, badges } = data;
+  const { profile, currentUserId, getToKnowMe, ratings, songRatings, shelves, stories, lyricPins, lists, charts, badges } = data;
   const [activeTab, setActiveTab] = useState<Tab>("collection");
   const [copied, setCopied] = useState(false);
   const [showNewShelf, setShowNewShelf] = useState(false);
@@ -111,20 +114,6 @@ export default function ProfilePage({ data }: Props) {
               </p>
             )}
 
-            {/* Now Playing — ephemeral 24h status */}
-            {profile.now_playing_apple_id && profile.now_playing_set_at && profile.now_playing_kind && (
-              <div className="mt-4">
-                <NowPlayingPill
-                  appleId={profile.now_playing_apple_id}
-                  kind={profile.now_playing_kind}
-                  title={profile.now_playing_title || ""}
-                  artist={profile.now_playing_artist || ""}
-                  artworkUrl={profile.now_playing_artwork_url}
-                  setAt={profile.now_playing_set_at}
-                  isOwner={isOwnProfile}
-                />
-              </div>
-            )}
 
             {/* Social links */}
             {profile.social_links && Object.keys(profile.social_links).length > 0 && (
@@ -222,8 +211,14 @@ export default function ProfilePage({ data }: Props) {
               <GetToKnowMe items={getToKnowMe} username={profile.username} isOwner={isOwnProfile} />
             )}
 
+            {/* Chart — my ten right now */}
+            <ChartSection charts={charts} username={profile.username} isOwner={isOwnProfile} />
+
             {/* Lyric pins */}
             <LyricPinsSection pins={lyricPins} isOwner={isOwnProfile} />
+
+            {/* Lists */}
+            <ListsSection lists={lists} isOwner={isOwnProfile} />
 
             {/* The Shelf */}
             {shelfItems.length > 0 && (

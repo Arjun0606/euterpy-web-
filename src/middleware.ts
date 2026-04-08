@@ -5,11 +5,12 @@ const publicPaths = ["/", "/login", "/signup"];
 
 function isPublicPath(pathname: string): boolean {
   if (publicPaths.includes(pathname)) return true;
-  // Album, song, artist, and story pages are public
+  // Album, song, artist, story, and list pages are public
   if (pathname.startsWith("/album/")) return true;
   if (pathname.startsWith("/song/")) return true;
   if (pathname.startsWith("/artist/")) return true;
   if (pathname.startsWith("/story/")) return true;
+  if (pathname.startsWith("/list/")) return true;
   // API routes handle their own auth
   if (pathname.startsWith("/api/")) return true;
   // User profiles are public (single-segment paths like /@username)
@@ -17,8 +18,8 @@ function isPublicPath(pathname: string): boolean {
   const reserved = ["feed", "search", "settings", "login", "signup", "discover", "notifications", "welcome", "shelf", "gtkm", "recap"];
   const segments = pathname.split("/").filter(Boolean);
   if (segments.length === 1 && !reserved.includes(segments[0])) return true;
-  // Profile sub-pages: stats, followers, following
-  const profileSubpaths = ["stats", "followers", "following"];
+  // Profile sub-pages: stats, followers, following, charts
+  const profileSubpaths = ["stats", "followers", "following", "charts"];
   if (segments.length === 2 && profileSubpaths.includes(segments[1]) && !reserved.includes(segments[0])) return true;
   return false;
 }

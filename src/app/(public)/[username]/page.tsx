@@ -95,6 +95,8 @@ async function getFullProfile(username: string) {
     { data: shelves },
     { data: stories },
     { data: lyricPins },
+    { data: lists },
+    { data: charts },
     { data: badges },
   ] = await Promise.all([
     supabase.from("get_to_know_me").select("*, albums(*)").eq("user_id", profile.id).order("position"),
@@ -103,6 +105,8 @@ async function getFullProfile(username: string) {
     supabase.from("shelves").select(`*, items:shelf_items(id, item_type, position, note, albums(apple_id, title, artist_name, artwork_url), songs(apple_id, title, artist_name, artwork_url))`).eq("user_id", profile.id).order("is_favorites", { ascending: false }).order("created_at", { ascending: false }),
     supabase.from("stories").select("id, kind, target_apple_id, target_title, target_artist, target_artwork_url, headline, body, is_pinned, created_at").eq("user_id", profile.id).order("is_pinned", { ascending: false }).order("created_at", { ascending: false }),
     supabase.from("lyric_pins").select("*").eq("user_id", profile.id).order("position"),
+    supabase.from("lists").select("id, title, subtitle, created_at, items:list_items(position, target_title, target_artwork_url)").eq("user_id", profile.id).order("created_at", { ascending: false }),
+    supabase.from("charts").select("id, period_label, created_at, items:chart_items(*)").eq("user_id", profile.id).order("created_at", { ascending: false }),
     supabase.from("user_badges").select("*, badges(*)").eq("user_id", profile.id).order("is_displayed", { ascending: false }),
   ]);
 
@@ -121,6 +125,8 @@ async function getFullProfile(username: string) {
     shelves: shelvesWithItems,
     stories: stories || [],
     lyricPins: lyricPins || [],
+    lists: lists || [],
+    charts: charts || [],
     badges: badges || [],
   };
 }

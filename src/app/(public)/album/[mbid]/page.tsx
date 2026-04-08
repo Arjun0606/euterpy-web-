@@ -6,7 +6,6 @@ import VinylCover from "@/components/ui/VinylCover";
 import AlbumActions from "@/components/album/AlbumActions";
 import TrackList from "@/components/album/TrackList";
 import EditorialNotes from "@/components/album/EditorialNotes";
-import SetNowPlayingButton from "@/components/profile/NowPlaying";
 import TellStoryButton from "@/components/story/TellStoryButton";
 import StoriesSection from "@/components/story/StoriesSection";
 
@@ -256,13 +255,6 @@ export default async function AlbumPage({ params }: Props) {
             </a>
 
             <div className="mt-3 flex flex-wrap gap-2">
-              <SetNowPlayingButton
-                appleId={appleId}
-                kind="album"
-                title={album.title}
-                artist={album.artist_name}
-                artworkUrl={album.artwork_url}
-              />
               <TellStoryButton
                 kind="album"
                 appleId={appleId}

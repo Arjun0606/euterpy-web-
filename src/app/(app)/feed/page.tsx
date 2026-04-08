@@ -66,17 +66,6 @@ export default async function HomePage() {
     .order("created_at", { ascending: false })
     .limit(10);
 
-  // Now Playing — heartbeat of the home feed
-  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const { data: nowPlayingProfiles } = await supabase
-    .from("profiles")
-    .select("id, username, display_name, avatar_url, now_playing_apple_id, now_playing_kind, now_playing_title, now_playing_artist, now_playing_artwork_url, now_playing_set_at")
-    .not("now_playing_apple_id", "is", null)
-    .gte("now_playing_set_at", oneDayAgo)
-    .neq("id", user.id)
-    .order("now_playing_set_at", { ascending: false })
-    .limit(20);
-
   // Latest stories — to give the home feed a writing pulse
   const { data: latestStories } = await supabase
     .from("stories")
@@ -164,50 +153,6 @@ export default async function HomePage() {
 
       {/* Search */}
       <HomeSearch />
-
-      {/* === NOW PLAYING SCROLLER — heartbeat === */}
-      {nowPlayingProfiles && nowPlayingProfiles.length > 0 && (
-        <section className="mb-14">
-          <div className="flex items-baseline gap-2 mb-5">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-60" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
-            </span>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-accent">Right now</p>
-          </div>
-          <div className="flex gap-3 overflow-x-auto -mx-5 sm:-mx-8 px-5 sm:px-8 no-scrollbar pb-2">
-            {nowPlayingProfiles.map((p: any) => {
-              const href = p.now_playing_kind === "song" ? `/song/${p.now_playing_apple_id}` : `/album/${p.now_playing_apple_id}`;
-              const cover = p.now_playing_artwork_url ? art(p.now_playing_artwork_url, 200) : null;
-              return (
-                <Link key={p.id} href={href} className="shrink-0 w-44 group bg-card border border-border rounded-2xl p-4 hover:border-accent/40 transition-colors">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Link href={`/${p.username}`} className="w-6 h-6 rounded-full bg-background border border-border overflow-hidden flex items-center justify-center text-[10px] text-zinc-600 shrink-0">
-                      {p.avatar_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={p.avatar_url} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        p.username[0].toUpperCase()
-                      )}
-                    </Link>
-                    <p className="text-[10px] text-zinc-500 truncate">@{p.username}</p>
-                  </div>
-                  <div className="aspect-square rounded-md overflow-hidden bg-background border border-border mb-2">
-                    {cover ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={cover} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-zinc-700">♪</div>
-                    )}
-                  </div>
-                  <p className="text-xs font-medium truncate">{p.now_playing_title}</p>
-                  <p className="text-[10px] text-zinc-600 truncate">{p.now_playing_artist}</p>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-      )}
 
       {/* === HERO ALBUM OF THE WEEK — magazine cover === */}
       {heroAlbum && (
