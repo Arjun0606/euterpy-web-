@@ -6,6 +6,7 @@ import { getArtworkUrl } from "@/lib/apple-music/client";
 import StoryEditButton from "./StoryEditButton";
 import StoryShareCard from "./StoryShareCard";
 import StarButton from "@/components/social/StarButton";
+import RepostButton from "@/components/social/RepostButton";
 import StoryCommentsThread from "@/components/social/StoryCommentsThread";
 import VerifiedMark from "@/components/ui/VerifiedMark";
 import StoryBody from "@/components/story/StoryBody";
@@ -61,12 +62,11 @@ export default async function StoryPage({ params }: Props) {
   const author = (story.profiles as any) || {};
   const cover = art(story.target_artwork_url);
 
-  // Star count + my star state
-  const { count: starCount } = await supabase
-    .from("stars")
-    .select("id", { count: "exact", head: true })
-    .eq("kind", "story")
-    .eq("target_id", id);
+  // Star + repost counts
+  const [{ count: starCount }, { count: repostCount }] = await Promise.all([
+    supabase.from("stars").select("id", { count: "exact", head: true }).eq("kind", "story").eq("target_id", id),
+    supabase.from("reposts").select("id", { count: "exact", head: true }).eq("kind", "story").eq("target_id", id),
+  ]);
 
   const { data: { user: maybeUser } } = await supabase.auth.getUser();
   let myStar = false;
@@ -182,6 +182,7 @@ export default async function StoryPage({ params }: Props) {
               <p className="text-[11px] text-zinc-600">@{author.username} · {date}</p>
             </div>
             <StarButton kind="story" targetId={story.id} initialCount={starCount || 0} initialStarred={myStar} />
+            <RepostButton kind="story" targetId={story.id} initialCount={repostCount || 0} />
             {isOwnStory && (
               <StoryEditButton
                 story={{

@@ -16,7 +16,6 @@ export default function NavBar({ username, avatarUrl }: Props) {
     { href: "/feed", label: "Home", icon: "🏠" },
     { href: "/search", label: "Search", icon: "🔍" },
     { href: "/discover", label: "Discover", icon: "🧭" },
-    { href: "/circles", label: "Circles", icon: "◯" },
     { href: `/${username}`, label: "Profile", icon: "👤" },
     { href: "/settings", label: "Settings", icon: "⚙️" },
   ];
@@ -31,7 +30,7 @@ export default function NavBar({ username, avatarUrl }: Props) {
           </Link>
 
           <nav className="flex-1 flex items-center gap-1">
-            {links.slice(0, 4).map((link) => (
+            {links.slice(0, 3).map((link) => (
               <Link
                 key={link.href}
                 href={link.href}

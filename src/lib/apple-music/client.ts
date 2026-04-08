@@ -210,6 +210,51 @@ export async function getAppleMusicCharts(limit = 10): Promise<AppleMusicAlbum[]
   }
 }
 
+/**
+ * Editorial playlists curated by Apple Music's editorial team.
+ * These are the closest thing to a free magazine staff that exists.
+ * We use them as our discovery layer instead of doing it ourselves.
+ */
+export interface AppleMusicPlaylist {
+  id: string;
+  type: "playlists";
+  attributes: {
+    name: string;
+    curatorName?: string;
+    description?: { standard?: string; short?: string };
+    artwork?: { url: string; width: number; height: number; bgColor?: string; textColor1?: string };
+    url?: string;
+    playlistType?: string;
+  };
+}
+
+export async function getAppleMusicEditorialPlaylists(limit = 12): Promise<AppleMusicPlaylist[]> {
+  try {
+    const data = await appleRequest(`/catalog/us/charts?types=playlists&limit=${limit}`);
+    return data.results?.playlists?.[0]?.data || [];
+  } catch {
+    return [];
+  }
+}
+
+export async function getApplePlaylist(playlistId: string): Promise<AppleMusicPlaylist | null> {
+  try {
+    const data = await appleRequest(`/catalog/us/playlists/${playlistId}`);
+    return data.data?.[0] || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function getApplePlaylistTracks(playlistId: string): Promise<AppleMusicSong[]> {
+  try {
+    const data = await appleRequest(`/catalog/us/playlists/${playlistId}/tracks?limit=100`);
+    return data.data || [];
+  } catch {
+    return [];
+  }
+}
+
 export interface AppleMusicArtist {
   id: string;
   type: "artists";

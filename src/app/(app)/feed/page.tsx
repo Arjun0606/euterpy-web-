@@ -83,14 +83,15 @@ export default async function HomePage() {
     .order("average_rating", { ascending: false })
     .limit(10);
 
-  // 4. Friends doing intentional things — stories, lists, charts, lyric pins
+  // 4. Friends doing intentional things — stories, lists, charts, lyric pins, reposts
   // Only pulls if you follow people, otherwise empty
   let friendStories: any[] = [];
   let friendLists: any[] = [];
   let friendCharts: any[] = [];
   let friendLyrics: any[] = [];
+  let friendReposts: any[] = [];
   if (followingIds.length > 0) {
-    const [s, l, c, ly] = await Promise.all([
+    const [s, l, c, ly, rp] = await Promise.all([
       supabase
         .from("stories")
         .select("id, created_at, kind, target_apple_id, target_title, target_artist, target_artwork_url, headline, body, profiles(username, display_name, avatar_url, is_verified, verified_label)")
@@ -115,11 +116,57 @@ export default async function HomePage() {
         .in("user_id", followingIds)
         .order("created_at", { ascending: false })
         .limit(6),
+      supabase
+        .from("reposts")
+        .select("id, created_at, kind, target_id, comment, profiles(username, display_name, avatar_url, is_verified, verified_label)")
+        .in("user_id", followingIds)
+        .order("created_at", { ascending: false })
+        .limit(10),
     ]);
     friendStories = s.data || [];
     friendLists = l.data || [];
     friendCharts = c.data || [];
     friendLyrics = ly.data || [];
+    friendReposts = rp.data || [];
+  }
+
+  // Hydrate reposted content (we have target_id but not the content)
+  type RepostHydrated = { repost: any; type: "story" | "list" | "chart" | "lyric"; data: any };
+  const hydratedReposts: RepostHydrated[] = [];
+  if (friendReposts.length > 0) {
+    const storyIds = friendReposts.filter((r) => r.kind === "story").map((r) => r.target_id);
+    const listIds = friendReposts.filter((r) => r.kind === "list").map((r) => r.target_id);
+    const chartIds = friendReposts.filter((r) => r.kind === "chart").map((r) => r.target_id);
+    const lyricIds = friendReposts.filter((r) => r.kind === "lyric").map((r) => r.target_id);
+
+    const [hs, hl, hc, hly] = await Promise.all([
+      storyIds.length > 0
+        ? supabase.from("stories").select("id, kind, target_apple_id, target_title, target_artist, target_artwork_url, headline, body, profiles(username, display_name, avatar_url, is_verified, verified_label)").in("id", storyIds)
+        : Promise.resolve({ data: [] as any[] }),
+      listIds.length > 0
+        ? supabase.from("lists").select("id, title, subtitle, profiles(username, display_name, avatar_url, is_verified, verified_label), items:list_items(target_artwork_url, position)").in("id", listIds)
+        : Promise.resolve({ data: [] as any[] }),
+      chartIds.length > 0
+        ? supabase.from("charts").select("id, period_label, created_at, profiles(username, display_name, avatar_url, is_verified, verified_label), items:chart_items(position, target_title)").in("id", chartIds)
+        : Promise.resolve({ data: [] as any[] }),
+      lyricIds.length > 0
+        ? supabase.from("lyric_pins").select("id, lyric, song_apple_id, song_title, song_artist, song_artwork_url, profiles(username, display_name, avatar_url, is_verified, verified_label)").in("id", lyricIds)
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
+
+    const storyMap = new Map((hs.data || []).map((s: any) => [s.id, s]));
+    const listMap = new Map((hl.data || []).map((l: any) => [l.id, l]));
+    const chartMap = new Map((hc.data || []).map((c: any) => [c.id, c]));
+    const lyricMap = new Map((hly.data || []).map((l: any) => [l.id, l]));
+
+    for (const r of friendReposts) {
+      const target =
+        r.kind === "story" ? storyMap.get(r.target_id) :
+        r.kind === "list" ? listMap.get(r.target_id) :
+        r.kind === "chart" ? chartMap.get(r.target_id) :
+        lyricMap.get(r.target_id);
+      if (target) hydratedReposts.push({ repost: r, type: r.kind, data: target });
+    }
   }
 
 
@@ -165,15 +212,19 @@ export default async function HomePage() {
 
   // Merge friend feed — intentional content only
   type FriendItem =
-    | { type: "story"; data: any; date: string }
-    | { type: "list"; data: any; date: string }
-    | { type: "chart"; data: any; date: string }
-    | { type: "lyric"; data: any; date: string };
+    | { type: "story"; data: any; date: string; repost?: any }
+    | { type: "list"; data: any; date: string; repost?: any }
+    | { type: "chart"; data: any; date: string; repost?: any }
+    | { type: "lyric"; data: any; date: string; repost?: any };
   const friendFeed: FriendItem[] = [];
   for (const s of friendStories) friendFeed.push({ type: "story", data: s, date: s.created_at });
   for (const l of friendLists) friendFeed.push({ type: "list", data: l, date: l.created_at });
   for (const c of friendCharts) friendFeed.push({ type: "chart", data: c, date: c.created_at });
   for (const ly of friendLyrics) friendFeed.push({ type: "lyric", data: ly, date: ly.created_at });
+  // Reposts surface as the same kind of card but with a "reposted by X" attribution band
+  for (const hr of hydratedReposts) {
+    friendFeed.push({ type: hr.type, data: hr.data, date: hr.repost.created_at, repost: hr.repost });
+  }
   friendFeed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const firstName = (profile?.display_name || profile?.username || "").split(" ")[0];
@@ -376,6 +427,26 @@ export default async function HomePage() {
           <div className="space-y-6">
             {friendFeed.slice(0, 12).map((entry) => {
               const author = entry.data.profiles;
+              const reposter = entry.repost?.profiles;
+              const repostBand = entry.repost && reposter ? (
+                <div className="flex items-center gap-2 mb-3 pb-3 border-b border-white/[0.04]">
+                  <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 text-accent shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="17 1 21 5 17 9" />
+                    <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                    <polyline points="7 23 3 19 7 15" />
+                    <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+                  </svg>
+                  <p className="text-[11px] text-zinc-500">
+                    <Link href={`/${reposter.username}`} className="font-medium text-zinc-300 hover:text-accent transition-colors">
+                      {reposter.display_name || reposter.username}
+                    </Link>
+                    <span className="text-zinc-600"> reposted</span>
+                  </p>
+                  {entry.repost.comment && (
+                    <p className="editorial italic text-[11px] text-zinc-400 ml-2 truncate">&ldquo;{entry.repost.comment}&rdquo;</p>
+                  )}
+                </div>
+              ) : null;
               const headerLine = (
                 <div className="flex items-center gap-2.5 mb-3">
                   <Link href={`/${author?.username}`} className="w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center text-xs text-zinc-600 shrink-0 overflow-hidden">
@@ -402,6 +473,7 @@ export default async function HomePage() {
                 const preview = s.body.length > 200 ? s.body.slice(0, 200).trimEnd() + "…" : s.body;
                 return (
                   <Link key={`story-${s.id}`} href={`/story/${s.id}`} className="block group bg-card border border-border rounded-2xl p-5 hover:border-accent/40 transition-colors">
+                    {repostBand}
                     {headerLine}
                     <div className="flex gap-4">
                       {cover && (
@@ -425,6 +497,7 @@ export default async function HomePage() {
                 const previewItems = ((l.items || []) as any[]).sort((a, b) => a.position - b.position).slice(0, 4);
                 return (
                   <Link key={`list-${l.id}`} href={`/list/${l.id}`} className="block group bg-card border border-border rounded-2xl p-5 hover:border-accent/40 transition-colors">
+                    {repostBand}
                     {headerLine}
                     {previewItems.length > 0 && (
                       <div className="grid grid-cols-4 gap-1 mb-3 max-w-xs">
@@ -452,6 +525,7 @@ export default async function HomePage() {
                 const sortedItems = [...((ch.items || []) as any[])].sort((a, b) => a.position - b.position).slice(0, 5);
                 return (
                   <Link key={`chart-${ch.id}`} href={`/${author?.username}/charts`} className="block group bg-card border border-border rounded-2xl p-5 hover:border-accent/40 transition-colors">
+                    {repostBand}
                     {headerLine}
                     <p className="text-[10px] uppercase tracking-[0.18em] text-accent mb-1">— Ten right now</p>
                     <p className="font-display text-xl tracking-tight italic mb-3 group-hover:text-accent transition-colors">{ch.period_label || new Date(ch.created_at).toLocaleString("en-US", { month: "long", year: "numeric" })}</p>
@@ -474,6 +548,7 @@ export default async function HomePage() {
                 const ly = entry.data;
                 return (
                   <Link key={`lyric-${ly.id}`} href={`/song/${ly.song_apple_id}`} className="block group bg-card border border-border rounded-2xl p-5 hover:border-accent/40 transition-colors">
+                    {repostBand}
                     {headerLine}
                     <p className="font-display italic text-xl sm:text-2xl tracking-tight leading-[1.25] text-zinc-100 mb-4 line-clamp-3 group-hover:text-white transition-colors">
                       &ldquo;{ly.lyric}&rdquo;
