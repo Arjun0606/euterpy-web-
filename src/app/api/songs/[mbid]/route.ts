@@ -24,6 +24,9 @@ export async function GET(
     return NextResponse.json({ error: "Song not found" }, { status: 404 });
   }
 
+  // Extract parent album ID from the relationships include
+  const parentAlbumId = appleSong.relationships?.albums?.data?.[0]?.id || null;
+
   const { data: song, error } = await supabase
     .from("songs")
     .insert({
@@ -31,6 +34,7 @@ export async function GET(
       title: appleSong.attributes.name,
       artist_name: appleSong.attributes.artistName,
       album_name: appleSong.attributes.albumName,
+      album_apple_id: parentAlbumId,
       duration_ms: appleSong.attributes.durationInMillis,
       artwork_url: appleSong.attributes.artwork.url,
       track_number: appleSong.attributes.trackNumber,

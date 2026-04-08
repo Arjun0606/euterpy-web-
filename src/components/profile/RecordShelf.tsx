@@ -17,9 +17,11 @@ interface RatingItem {
   artist_name: string;
   artwork_url: string | null;
   album_name?: string | null;
+  album_type?: string;
 }
 
 type SortBy = "recent" | "rating" | "artist";
+type FilterType = "all" | "album" | "ep" | "single" | "song";
 type ShelfStyle = "minimal" | "wood" | "ornate" | "glass";
 
 interface Props {
@@ -215,7 +217,7 @@ function sortItems(items: RatingItem[], by: SortBy): RatingItem[] {
 export default function RecordShelf({ items, title = "The Shelf", showSort = true, shelfStyle = "minimal" }: Props) {
   const style = SHELF_STYLES[shelfStyle] || SHELF_STYLES.minimal;
   const [sortBy, setSortBy] = useState<SortBy>("recent");
-  const [filter, setFilter] = useState<"all" | "album" | "song">("all");
+  const [filter, setFilter] = useState<FilterType>("all");
 
   if (items.length === 0) {
     return (
@@ -226,7 +228,15 @@ export default function RecordShelf({ items, title = "The Shelf", showSort = tru
     );
   }
 
-  const filtered = filter === "all" ? items : items.filter((i) => i.type === filter);
+  const filtered = filter === "all" ? items : items.filter((i) => {
+    if (filter === "song") return i.type === "song";
+    if (filter === "album") return i.type === "album" && (!i.album_type || i.album_type === "album" || i.album_type === "compilation");
+    if (filter === "ep") return i.type === "album" && i.album_type === "ep";
+    if (filter === "single") return i.type === "album" && i.album_type === "single";
+    return true;
+  });
+  const epCount = items.filter((i) => i.type === "album" && i.album_type === "ep").length;
+  const singleCount = items.filter((i) => i.type === "album" && i.album_type === "single").length;
   const sorted = sortItems(filtered, sortBy);
   const albumCount = items.filter((i) => i.type === "album").length;
   const songCount = items.filter((i) => i.type === "song").length;
@@ -250,11 +260,17 @@ export default function RecordShelf({ items, title = "The Shelf", showSort = tru
 
       {/* Filter + Sort */}
       {showSort && (
-        <div className="flex items-center gap-2 mb-5">
-          <div className="flex gap-0.5 bg-card rounded-lg p-0.5 border border-border">
-            {([["all", "All"], ["album", "Albums"], ["song", "Songs"]] as [typeof filter, string][]).map(([f, label]) => (
+        <div className="flex items-center gap-2 mb-5 flex-wrap">
+          <div className="flex gap-0.5 bg-card rounded-lg p-0.5 border border-border overflow-x-auto no-scrollbar">
+            {([
+              ["all", "All"],
+              ["album", "Albums"],
+              ...(epCount > 0 ? [["ep", "EPs"]] as [FilterType, string][] : []),
+              ...(singleCount > 0 ? [["single", "Singles"]] as [FilterType, string][] : []),
+              ["song", "Songs"],
+            ] as [FilterType, string][]).map(([f, label]) => (
               <button key={f} onClick={() => setFilter(f)}
-                className={`px-3 py-1 text-[11px] rounded-md transition-colors ${
+                className={`px-3 py-1 text-[11px] rounded-md transition-colors whitespace-nowrap ${
                   filter === f ? "bg-accent text-white" : "text-zinc-600 hover:text-zinc-300 transition-colors"
                 }`}>{label}</button>
             ))}
@@ -302,12 +318,16 @@ export default function RecordShelf({ items, title = "The Shelf", showSort = tru
                         ) : (
                           <div className="w-full h-full bg-card flex items-center justify-center text-border">♪</div>
                         )}
-                        {/* Song badge */}
-                        {item.type === "song" && (
-                          <div className="absolute top-1 left-1 w-4 h-4 bg-black/60 rounded-full flex items-center justify-center">
-                            <span className="text-[8px] text-white">♪</span>
-                          </div>
-                        )}
+                        {/* Type badge */}
+                        {item.type === "song" ? (
+                          <div className="absolute top-1 left-1 px-1.5 py-0.5 bg-black/70 backdrop-blur-sm rounded text-[8px] text-white font-bold tracking-wider">SONG</div>
+                        ) : item.album_type === "ep" ? (
+                          <div className="absolute top-1 left-1 px-1.5 py-0.5 bg-accent/90 backdrop-blur-sm rounded text-[8px] text-white font-bold tracking-wider">EP</div>
+                        ) : item.album_type === "single" ? (
+                          <div className="absolute top-1 left-1 px-1.5 py-0.5 bg-accent/90 backdrop-blur-sm rounded text-[8px] text-white font-bold tracking-wider">SINGLE</div>
+                        ) : item.album_type === "compilation" ? (
+                          <div className="absolute top-1 left-1 px-1.5 py-0.5 bg-zinc-700/90 backdrop-blur-sm rounded text-[8px] text-white font-bold tracking-wider">COMP</div>
+                        ) : null}
                         {/* Ownership badge */}
                         {item.ownership && item.ownership !== "digital" && (
                           <div className="absolute bottom-1 right-1 text-[10px]">

@@ -48,6 +48,7 @@ export default function ProfilePage({ data }: Props) {
       type: "album" as const, ownership: r.ownership,
       apple_id: r.albums?.apple_id, title: r.albums?.title,
       artist_name: r.albums?.artist_name, artwork_url: r.albums?.artwork_url,
+      album_type: r.albums?.album_type || "album",
     })),
     ...songRatings.map((r: any) => ({
       id: r.id, score: r.score, reaction: r.reaction, created_at: r.created_at,
@@ -55,6 +56,7 @@ export default function ProfilePage({ data }: Props) {
       apple_id: r.songs?.apple_id, title: r.songs?.title,
       artist_name: r.songs?.artist_name, artwork_url: r.songs?.artwork_url,
       album_name: r.songs?.album_name,
+      album_type: "song",
     })),
   ].filter((item) => item.apple_id), [ratings, songRatings]);
 

@@ -183,6 +183,12 @@ export default async function AlbumPage({ params }: Props) {
 
           {/* Album Info */}
           <div className="text-center sm:text-left flex-1">
+            {/* Type badge */}
+            {album.album_type && (
+              <p className="text-[10px] uppercase tracking-[0.2em] text-accent font-semibold mb-3">
+                {album.album_type === "ep" ? "EP" : album.album_type === "compilation" ? "Compilation" : album.album_type === "single" ? "Single" : "Album"}
+              </p>
+            )}
             <h1 className="font-display text-4xl sm:text-6xl tracking-tight leading-none mb-3">
               {album.title}
             </h1>

@@ -212,9 +212,9 @@ export async function getAppleMusicCharts(limit = 10): Promise<AppleMusicAlbum[]
 
 export async function getSong(
   appleId: string
-): Promise<AppleMusicSong | null> {
+): Promise<(AppleMusicSong & { relationships?: { albums?: { data: { id: string }[] } } }) | null> {
   try {
-    const data = await appleRequest(`/catalog/us/songs/${appleId}`);
+    const data = await appleRequest(`/catalog/us/songs/${appleId}?include=albums`);
     return data.data?.[0] || null;
   } catch {
     return null;

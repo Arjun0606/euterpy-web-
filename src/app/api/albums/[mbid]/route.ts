@@ -51,6 +51,7 @@ export async function GET(
 
   const attrs = appleAlbum.attributes;
   const editorialText = attrs.editorialNotes?.standard || attrs.editorialNotes?.short || null;
+  const albumType = deriveAlbumType(attrs);
 
   const { data: album, error } = await supabase
     .from("albums")
@@ -67,6 +68,7 @@ export async function GET(
       copyright: attrs.copyright || null,
       apple_url: attrs.url || null,
       is_single: attrs.isSingle || false,
+      album_type: albumType,
     })
     .select()
     .single();
@@ -88,4 +90,12 @@ export async function GET(
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim();
+}
+
+function deriveAlbumType(attrs: any): "album" | "ep" | "single" | "compilation" {
+  if (attrs.isSingle) return "single";
+  if (attrs.isCompilation) return "compilation";
+  // Apple Music doesn't reliably tag EPs, so use track count heuristic
+  if (attrs.trackCount && attrs.trackCount >= 2 && attrs.trackCount <= 6 && !attrs.isSingle) return "ep";
+  return "album";
 }
