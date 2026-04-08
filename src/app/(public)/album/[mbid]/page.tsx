@@ -6,9 +6,7 @@ import VinylCover from "@/components/ui/VinylCover";
 import AlbumActions from "@/components/album/AlbumActions";
 import TrackList from "@/components/album/TrackList";
 import EditorialNotes from "@/components/album/EditorialNotes";
-import ReviewSection from "@/components/album/ReviewSection";
-import RatingDistributionBar from "@/components/album/RatingDistributionBar";
-import Stars from "@/components/ui/Stars";
+import SetNowPlayingButton from "@/components/profile/NowPlaying";
 
 interface Props {
   params: Promise<{ mbid: string }>;
@@ -75,6 +73,7 @@ async function getAlbumData(appleId: string) {
 
     const attrs = appleAlbum.attributes;
     const editorialText = attrs.editorialNotes?.standard || attrs.editorialNotes?.short || null;
+    const artistAppleId = appleAlbum.relationships?.artists?.data?.[0]?.id || null;
 
     const serviceClient = createServiceClient();
     const { data: inserted } = await serviceClient
@@ -83,6 +82,7 @@ async function getAlbumData(appleId: string) {
         apple_id: appleId,
         title: attrs.name,
         artist_name: attrs.artistName,
+        artist_apple_id: artistAppleId,
         release_date: attrs.releaseDate || null,
         artwork_url: attrs.artwork.url,
         genre_names: attrs.genreNames,
@@ -98,6 +98,17 @@ async function getAlbumData(appleId: string) {
 
     album = inserted;
     if (!album) return null;
+  }
+
+  // Backfill artist_apple_id if it was missing on a previously cached album
+  if (album && !album.artist_apple_id) {
+    const appleAlbum = await fetchAlbumFromApple(appleId);
+    const artistAppleId = appleAlbum?.relationships?.artists?.data?.[0]?.id || null;
+    if (artistAppleId) {
+      const serviceClient = createServiceClient();
+      await serviceClient.from("albums").update({ artist_apple_id: artistAppleId }).eq("id", album.id);
+      album.artist_apple_id = artistAppleId;
+    }
   }
 
   // Get current user
@@ -116,18 +127,10 @@ async function getAlbumData(appleId: string) {
     .select("*, songs!inner(apple_id, album_apple_id)")
     .eq("songs.album_apple_id", appleId);
 
-  // Reviews
-  const { data: reviews } = await supabase
-    .from("reviews")
-    .select("*, profiles(username, display_name, avatar_url)")
-    .eq("album_id", album.id)
-    .order("created_at", { ascending: false });
-
   return {
     album,
     ratings: ratings || [],
     songRatings: songRatings || [],
-    reviews: reviews || [],
     userId: user?.id || null,
   };
 }
@@ -137,7 +140,7 @@ export default async function AlbumPage({ params }: Props) {
   const data = await getAlbumData(appleId);
   if (!data) notFound();
 
-  const { album, ratings, songRatings, reviews, userId } = data;
+  const { album, ratings, songRatings, userId } = data;
 
   return (
     <div className="min-h-screen bg-background">
@@ -193,7 +196,16 @@ export default async function AlbumPage({ params }: Props) {
             <h1 className="font-display text-4xl sm:text-6xl tracking-tight leading-none mb-3">
               {album.title}
             </h1>
-            <p className="text-xl text-zinc-300 mb-3">{album.artist_name}</p>
+            {album.artist_apple_id ? (
+              <a
+                href={`/artist/${album.artist_apple_id}`}
+                className="text-xl text-zinc-300 mb-3 hover:text-accent transition-colors inline-block"
+              >
+                {album.artist_name}
+              </a>
+            ) : (
+              <p className="text-xl text-zinc-300 mb-3">{album.artist_name}</p>
+            )}
             {album.release_date && (
               <p className="text-sm text-zinc-500 mb-1">
                 {new Date(album.release_date).getFullYear()}
@@ -212,19 +224,13 @@ export default async function AlbumPage({ params }: Props) {
             )}
             {!album.record_label && !album.copyright && <div className="mb-4" />}
 
-            {/* Rating Summary */}
+            {/* Collection count */}
             {album.rating_count > 0 ? (
-              <div className="flex items-baseline gap-3">
-                <span className="text-4xl font-semibold text-accent">
-                  {Number(album.average_rating).toFixed(1)}
-                </span>
-                <span className="text-muted text-sm">
-                  / 5 from {album.rating_count}{" "}
-                  {album.rating_count === 1 ? "rating" : "ratings"}
-                </span>
-              </div>
+              <p className="text-sm text-zinc-500">
+                In <span className="text-accent font-semibold">{album.rating_count}</span> {album.rating_count === 1 ? "collection" : "collections"}
+              </p>
             ) : (
-              <p className="text-sm text-muted/40">Not yet rated</p>
+              <p className="text-sm text-muted/40">Not yet collected</p>
             )}
 
             {/* Listen */}
@@ -237,7 +243,17 @@ export default async function AlbumPage({ params }: Props) {
               <span>🎵</span> Listen
             </a>
 
-            {/* Rate / Edit button */}
+            <div className="mt-3">
+              <SetNowPlayingButton
+                appleId={appleId}
+                kind="album"
+                title={album.title}
+                artist={album.artist_name}
+                artworkUrl={album.artwork_url}
+              />
+            </div>
+
+            {/* Collection actions */}
             <AlbumActions
               albumAppleId={appleId}
               albumDbId={album.id}
@@ -248,50 +264,41 @@ export default async function AlbumPage({ params }: Props) {
           </div>
         </div>
 
-        {/* Rating Distribution */}
-        <RatingDistributionBar ratings={ratings.map((r: any) => ({ score: r.score }))} />
-
         {/* Track Listing */}
         <TrackList albumAppleId={appleId} songRatings={songRatings} />
 
         {/* Editorial Notes (from Apple Music) */}
         {album.editorial_notes && <EditorialNotes text={album.editorial_notes} />}
 
-        {/* Reviews */}
-        <ReviewSection
-          reviews={JSON.parse(JSON.stringify(reviews))}
-          albumId={album.id}
-          userId={userId}
-        />
-
-        {/* Community Reactions */}
-        <div>
-          <h2 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-6">
-            Community Reactions
-          </h2>
-          {ratings.length === 0 ? (
-            <p className="text-muted/60 text-sm">
-              No one has rated this album yet. Be the first.
-            </p>
-          ) : (
+        {/* In their collections — collectors with notes */}
+        {ratings.length > 0 && (
+          <div className="mb-12">
+            <h2 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-6">
+              In their collections
+            </h2>
             <div className="space-y-3">
-              {ratings.map((rating: any) => {
+              {ratings.filter((r: any) => r.reaction).slice(0, 12).map((rating: any) => {
                 const profile = rating.profiles;
+                const mediumLabel = rating.ownership === "vinyl" ? "💽 Vinyl"
+                  : rating.ownership === "cd" ? "💿 CD"
+                  : rating.ownership === "cassette" ? "📼 Cassette"
+                  : rating.ownership === "digital" ? "🎧 Stream"
+                  : null;
                 return (
                   <div
                     key={rating.id}
-                    className="flex items-start gap-4 p-4 rounded-2xl bg-card border border-border"
+                    className="flex items-start gap-4 p-5 rounded-2xl bg-card border border-border"
                   >
                     <a
                       href={`/${profile?.username}`}
-                      className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center text-sm text-muted shrink-0 hover:border-accent transition-colors"
+                      className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center text-sm text-muted shrink-0 hover:border-accent transition-colors overflow-hidden"
                     >
                       {profile?.avatar_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={profile.avatar_url}
                           alt={profile.username}
-                          className="w-full h-full rounded-full object-cover"
+                          className="w-full h-full object-cover"
                         />
                       ) : (
                         profile?.username?.[0]?.toUpperCase() || "?"
@@ -299,27 +306,30 @@ export default async function AlbumPage({ params }: Props) {
                     </a>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1.5">
                         <a
                           href={`/${profile?.username}`}
                           className="font-medium text-sm hover:text-accent transition-colors"
                         >
                           {profile?.display_name || profile?.username}
                         </a>
-                        <Stars score={rating.score} />
+                        {mediumLabel && (
+                          <span className="text-[10px] text-zinc-600">{mediumLabel}</span>
+                        )}
                       </div>
-                      {rating.reaction && (
-                        <p className="text-sm text-muted leading-relaxed">
-                          {rating.reaction}
-                        </p>
-                      )}
+                      <p className="editorial text-sm text-zinc-300 leading-relaxed">
+                        &ldquo;{rating.reaction}&rdquo;
+                      </p>
                     </div>
                   </div>
                 );
               })}
+              {ratings.filter((r: any) => r.reaction).length === 0 && (
+                <p className="text-zinc-600 text-sm">No one has written about this album yet.</p>
+              )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Anonymous CTA banner */}
         {!userId && (

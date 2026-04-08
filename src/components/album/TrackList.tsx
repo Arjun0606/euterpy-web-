@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import Stars from "@/components/ui/Stars";
 
 interface Track {
@@ -89,20 +90,21 @@ export default function TrackList({ albumAppleId, songRatings = [] }: Props) {
           const isLast = index === arr.length - 1 && (expanded || tracks.length <= 6);
 
           return (
-            <div
+            <Link
               key={track.appleId}
-              className={`flex items-center gap-3 px-4 py-3 hover:bg-card-hover transition-colors ${
+              href={`/song/${track.appleId}`}
+              className={`flex items-center gap-3 px-4 py-3 hover:bg-card-hover transition-colors group ${
                 !isLast ? "border-b border-border/50" : ""
               }`}
             >
               {/* Track number */}
-              <span className="w-6 text-right text-xs text-muted/40 shrink-0 tabular-nums">
+              <span className="w-6 text-right text-xs text-muted/40 shrink-0 tabular-nums group-hover:text-accent transition-colors">
                 {track.trackNumber}
               </span>
 
               {/* Track info */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{track.title}</p>
+                <p className="text-sm font-medium truncate group-hover:text-accent transition-colors">{track.title}</p>
                 {track.artistName && (
                   <p className="text-xs text-muted/60 truncate">
                     {track.artistName}
@@ -117,7 +119,7 @@ export default function TrackList({ albumAppleId, songRatings = [] }: Props) {
               <span className="text-xs text-muted/40 tabular-nums shrink-0">
                 {formatDuration(track.durationMs)}
               </span>
-            </div>
+            </Link>
           );
         })}
         {tracks.length > 6 && (

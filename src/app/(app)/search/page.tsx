@@ -1,68 +1,68 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
-interface SearchResult {
+interface AlbumResult {
+  kind: "album";
   appleId: string;
   title: string;
   artistName: string;
   artworkUrl: string | null;
   releaseDate?: string | null;
-  albumTitle?: string | null;
+}
+
+interface SongResult {
+  kind: "song";
+  appleId: string;
+  title: string;
+  artistName: string;
+  artworkUrl: string | null;
+  albumName?: string | null;
   durationMs?: number | null;
 }
 
-type SearchTab = "albums" | "songs";
-
 export default function SearchPage() {
-  const [query, setQuery] = useState("");
-  const [tab, setTab] = useState<SearchTab>("albums");
-  const [results, setResults] = useState<SearchResult[]>([]);
+  const params = useSearchParams();
+  const initial = params.get("q") || "";
+  const [query, setQuery] = useState(initial);
+  const [albums, setAlbums] = useState<AlbumResult[]>([]);
+  const [songs, setSongs] = useState<SongResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const search = useCallback(
-    async (q: string, searchTab: SearchTab) => {
-      if (q.trim().length < 2) {
-        setResults([]);
-        setSearched(false);
-        return;
-      }
+  const search = useCallback(async (q: string) => {
+    if (q.trim().length < 2) {
+      setAlbums([]);
+      setSongs([]);
+      setSearched(false);
+      return;
+    }
+    setLoading(true);
+    setSearched(true);
+    try {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q.trim())}`);
+      const data = await res.json();
+      setAlbums(data.albums || []);
+      setSongs(data.songs || []);
+    } catch {
+      setAlbums([]);
+      setSongs([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-      setLoading(true);
-      setSearched(true);
+  useEffect(() => {
+    if (initial) search(initial);
+  }, [initial, search]);
 
-      const endpoint =
-        searchTab === "albums" ? "/api/albums/search" : "/api/songs/search";
-
-      try {
-        const res = await fetch(
-          `${endpoint}?q=${encodeURIComponent(q.trim())}`
-        );
-        const data = await res.json();
-        setResults(data.results || []);
-      } catch {
-        setResults([]);
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
-
-  function handleInputChange(value: string) {
+  function handleInput(value: string) {
     setQuery(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => search(value, tab), 400);
-  }
-
-  function handleTabChange(newTab: SearchTab) {
-    setTab(newTab);
-    if (query.trim().length >= 2) {
-      search(query, newTab);
-    }
+    debounceRef.current = setTimeout(() => search(value), 350);
   }
 
   function formatDuration(ms: number): string {
@@ -72,143 +72,103 @@ export default function SearchPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Top Bar */}
-      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border">
-        <div className="max-w-3xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between">
-          <Link href="/feed">
-            <h1 className="font-display text-2xl">Euterpy</h1>
-          </Link>
-          <nav className="flex gap-6 text-sm">
-            <Link
-              href="/feed"
-              className="text-muted hover:text-foreground transition-colors"
-            >
-              Feed
-            </Link>
-          </nav>
-        </div>
-      </header>
+    <main className="max-w-3xl mx-auto px-5 sm:px-8 py-10 sm:py-14">
+      {/* Header */}
+      <div className="mb-8">
+        <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-2">Search</p>
+        <h1 className="font-display text-4xl sm:text-5xl tracking-tight leading-none">
+          Find <span className="italic text-accent">your sound.</span>
+        </h1>
+      </div>
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-8 py-6">
-        {/* Search Input */}
-        <div className="mb-4">
-          <input
-            type="text"
-            placeholder={
-              tab === "albums" ? "Search albums..." : "Search songs..."
-            }
-            value={query}
-            onChange={(e) => handleInputChange(e.target.value)}
-            autoFocus
-            className="w-full px-4 py-3 bg-card border border-border rounded-lg text-foreground placeholder:text-muted/40 focus:outline-none focus:border-zinc-700 transition-colors text-lg"
-          />
-        </div>
+      {/* Search input */}
+      <div className="relative mb-10">
+        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+          </svg>
+        </span>
+        <input
+          type="text"
+          placeholder="Albums, songs, artists..."
+          value={query}
+          onChange={(e) => handleInput(e.target.value)}
+          autoFocus
+          className="w-full pl-12 pr-4 py-4 bg-input border border-border rounded-2xl text-base text-foreground placeholder:text-muted/40 focus:outline-none focus:border-zinc-700 transition-colors"
+        />
+      </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 mb-6 bg-card rounded-lg p-1 border border-border">
-          <button
-            onClick={() => handleTabChange("albums")}
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
-              tab === "albums"
-                ? "bg-accent text-white"
-                : "text-muted hover:text-foreground transition-colors"
-            }`}
-          >
-            Albums
-          </button>
-          <button
-            onClick={() => handleTabChange("songs")}
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
-              tab === "songs"
-                ? "bg-accent text-white"
-                : "text-muted hover:text-foreground transition-colors"
-            }`}
-          >
-            Songs
-          </button>
-        </div>
+      {/* Loading */}
+      {loading && (
+        <p className="text-center text-zinc-600 text-sm py-12">Searching...</p>
+      )}
 
-        {/* Results */}
-        {loading && (
-          <p className="text-center text-muted text-sm py-8">Searching...</p>
-        )}
+      {/* Empty */}
+      {!loading && searched && albums.length === 0 && songs.length === 0 && (
+        <p className="text-center text-zinc-600 text-sm py-12">No results. Try a different search.</p>
+      )}
 
-        {!loading && searched && results.length === 0 && (
-          <p className="text-center text-muted text-sm py-8">
-            No {tab} found.
-          </p>
-        )}
+      {!loading && !searched && (
+        <p className="text-center text-zinc-700 text-xs py-12">Type something to start.</p>
+      )}
 
-        {!loading && results.length > 0 && (
-          <div className="space-y-1">
-            {results.map((item) => (
-              <Link
-                key={item.appleId}
-                href={
-                  tab === "albums"
-                    ? `/album/${item.appleId}`
-                    : `/song/${item.appleId}`
-                }
-                className="flex items-center gap-4 p-3 -mx-3 rounded-lg hover:bg-card-hover transition-colors"
-              >
-                {/* Cover art */}
-                <div
-                  className={`${tab === "songs" ? "w-11 h-11" : "w-14 h-14"} rounded bg-card border border-border overflow-hidden shrink-0`}
-                >
+      {/* Albums */}
+      {!loading && albums.length > 0 && (
+        <section className="mb-10">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-4">Albums</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {albums.slice(0, 9).map((item) => (
+              <Link key={item.appleId} href={`/album/${item.appleId}`} className="group">
+                <div className="aspect-square rounded-xl overflow-hidden bg-card border border-border mb-2 group-hover:border-accent/40 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl group-hover:shadow-accent/10">
                   {item.artworkUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={item.artworkUrl}
-                      alt={item.title}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = "none";
-                      }}
-                    />
+                    <img src={item.artworkUrl} alt={item.title} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs text-border">
-                      ♪
-                    </div>
+                    <div className="w-full h-full flex items-center justify-center text-zinc-700">♪</div>
                   )}
                 </div>
-
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{item.title}</p>
-                  <p className="text-sm text-muted truncate">
-                    {item.artistName}
-                    {tab === "songs" && item.albumTitle && (
-                      <span className="text-muted/40">
-                        {" · "}
-                        {item.albumTitle}
-                      </span>
-                    )}
-                  </p>
-                </div>
-
-                {/* Meta */}
-                <div className="text-xs text-muted/40 shrink-0">
-                  {tab === "albums" && item.releaseDate && (
-                    <span>{item.releaseDate.substring(0, 4)}</span>
-                  )}
-                  {tab === "songs" && item.durationMs && (
-                    <span>{formatDuration(item.durationMs)}</span>
-                  )}
-                </div>
+                <p className="text-sm font-medium truncate">{item.title}</p>
+                <p className="text-xs text-zinc-500 truncate">{item.artistName}</p>
               </Link>
             ))}
           </div>
-        )}
+        </section>
+      )}
 
-        {!searched && !loading && (
-          <div className="text-center py-16">
-            <p className="text-muted text-sm">
-              Search for {tab === "albums" ? "an album" : "a song"} to rate it.
-            </p>
+      {/* Songs */}
+      {!loading && songs.length > 0 && (
+        <section className="mb-10">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-4">Songs</p>
+          <div className="border border-border rounded-xl overflow-hidden">
+            {songs.slice(0, 12).map((item, i) => (
+              <Link
+                key={item.appleId}
+                href={`/song/${item.appleId}`}
+                className={`flex items-center gap-3 px-4 py-3 hover:bg-card-hover transition-colors group ${i !== Math.min(songs.length, 12) - 1 ? "border-b border-border/50" : ""}`}
+              >
+                <div className="w-11 h-11 rounded-md overflow-hidden bg-card border border-border shrink-0">
+                  {item.artworkUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={item.artworkUrl} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-xs text-border">♪</div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate group-hover:text-accent transition-colors">{item.title}</p>
+                  <p className="text-xs text-zinc-500 truncate">
+                    {item.artistName}
+                    {item.albumName && <span className="text-zinc-700"> · {item.albumName}</span>}
+                  </p>
+                </div>
+                {item.durationMs && (
+                  <span className="text-xs text-zinc-600 tabular-nums shrink-0">{formatDuration(item.durationMs)}</span>
+                )}
+              </Link>
+            ))}
           </div>
-        )}
-      </main>
-    </div>
+        </section>
+      )}
+    </main>
   );
 }

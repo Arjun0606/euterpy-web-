@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import SongRatingModal from "@/components/album/SongRatingModal";
 import AddToShelfModal from "@/components/album/AddToShelfModal";
-import Stars from "@/components/ui/Stars";
 
 interface Props {
   songAppleId: string;
@@ -56,34 +55,30 @@ export default function SongActions({ songAppleId, songDbId, songTitle, artistNa
 
   return (
     <>
-      <div className="flex items-center gap-3 mt-6">
-        {userRating ? (
+      <div className="flex flex-wrap items-center gap-3 mt-6">
+        {userId ? (
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 px-5 py-2 border border-border rounded-full hover:border-accent transition-colors group"
+            className={`px-6 py-2.5 font-medium rounded-full text-sm transition-colors ${
+              userRating
+                ? "border border-accent/40 text-accent hover:bg-accent/10"
+                : "bg-accent text-white hover:bg-accent-hover"
+            }`}
           >
-            <Stars score={userRating.score} />
-            <span className="text-xs text-muted group-hover:text-accent transition-colors">Edit</span>
-          </button>
-        ) : userId ? (
-          <button
-            onClick={() => setShowModal(true)}
-            className="px-6 py-2 bg-accent text-white font-medium rounded-full hover:bg-accent-hover transition-colors text-sm"
-          >
-            Rate Song
+            {userRating ? "✓ In your collection" : "+ Add to collection"}
           </button>
         ) : (
-          <a href="/signup" className="px-6 py-2 bg-accent text-white font-medium rounded-full hover:bg-accent-hover transition-colors text-sm">
-            Sign up to rate
+          <a href="/signup" className="px-6 py-2.5 bg-accent text-white font-medium rounded-full hover:bg-accent-hover transition-colors text-sm">
+            Sign up to collect
           </a>
         )}
 
         {userId && (
           <button
             onClick={() => setShowShelfModal(true)}
-            className="px-4 py-2 border border-border rounded-full text-sm text-muted hover:text-foreground hover:border-foreground/20 transition-colors"
+            className="px-5 py-2.5 border border-border rounded-full text-sm text-zinc-500 hover:text-zinc-200 hover:border-zinc-700 transition-colors"
           >
-            + Add to
+            Pin to shelf
           </button>
         )}
       </div>

@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import RatingModal from "@/components/album/RatingModal";
+import CollectionModal from "@/components/album/CollectionModal";
 import AddToShelfModal from "@/components/album/AddToShelfModal";
-import Stars from "@/components/ui/Stars";
 
 interface Props {
   albumAppleId: string;
@@ -21,12 +20,12 @@ export default function AlbumActions({
   artistName,
   artworkUrl,
 }: Props) {
-  const [showModal, setShowModal] = useState(false);
-  const [showShelfModal, setShowShelfModal] = useState(false);
-  const [userRating, setUserRating] = useState<{
+  const [showCollection, setShowCollection] = useState(false);
+  const [showShelf, setShowShelf] = useState(false);
+  const [existing, setExisting] = useState<{
     id: string;
-    score: number;
-    reaction: string | null;
+    ownership?: string | null;
+    reaction?: string | null;
   } | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
@@ -37,12 +36,12 @@ export default function AlbumActions({
         setUserId(user.id);
         supabase
           .from("ratings")
-          .select("id, score, reaction")
+          .select("id, ownership, reaction")
           .eq("user_id", user.id)
           .eq("album_id", albumDbId)
           .single()
           .then(({ data }) => {
-            if (data) setUserRating(data);
+            if (data) setExisting(data);
           });
       }
     });
@@ -53,73 +52,67 @@ export default function AlbumActions({
     if (userId) {
       supabase
         .from("ratings")
-        .select("id, score, reaction")
+        .select("id, ownership, reaction")
         .eq("user_id", userId)
         .eq("album_id", albumDbId)
         .single()
         .then(({ data }) => {
-          if (data) setUserRating(data);
+          setExisting(data || null);
         });
     }
   }
 
   return (
     <>
-      <div className="flex items-center gap-3 mt-6">
-        {userRating ? (
+      <div className="flex flex-wrap items-center gap-3 mt-6">
+        {userId ? (
           <button
-            onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 px-5 py-2 border border-border rounded-full hover:border-accent transition-colors group"
+            onClick={() => setShowCollection(true)}
+            className={`px-6 py-2.5 font-medium rounded-full text-sm transition-colors ${
+              existing
+                ? "border border-accent/40 text-accent hover:bg-accent/10"
+                : "bg-accent text-white hover:bg-accent-hover"
+            }`}
           >
-            <Stars score={userRating.score} />
-            <span className="text-xs text-muted group-hover:text-accent transition-colors">
-              Edit
-            </span>
-          </button>
-        ) : userId ? (
-          <button
-            onClick={() => setShowModal(true)}
-            className="px-6 py-2 bg-accent text-white font-medium rounded-full hover:bg-accent-hover transition-colors text-sm"
-          >
-            Rate Album
+            {existing ? "✓ In your collection" : "+ Add to collection"}
           </button>
         ) : (
           <a
             href="/signup"
-            className="px-6 py-2 bg-accent text-white font-medium rounded-full hover:bg-accent-hover transition-colors text-sm"
+            className="px-6 py-2.5 bg-accent text-white font-medium rounded-full hover:bg-accent-hover transition-colors text-sm"
           >
-            Sign up to rate
+            Sign up to collect
           </a>
         )}
 
         {userId && (
           <button
-            onClick={() => setShowShelfModal(true)}
-            className="px-4 py-2 border border-border rounded-full text-sm text-muted hover:text-foreground hover:border-foreground/20 transition-colors"
+            onClick={() => setShowShelf(true)}
+            className="px-5 py-2.5 border border-border rounded-full text-sm text-zinc-500 hover:text-zinc-200 hover:border-zinc-700 transition-colors"
           >
-            + Add to
+            Pin to shelf
           </button>
         )}
       </div>
 
-      {showModal && (
-        <RatingModal
+      {showCollection && (
+        <CollectionModal
           albumAppleId={albumAppleId}
           albumTitle={albumTitle}
           artistName={artistName}
           artworkUrl={artworkUrl}
-          existingRating={userRating}
-          onClose={() => setShowModal(false)}
+          existing={existing}
+          onClose={() => setShowCollection(false)}
           onSaved={handleSaved}
         />
       )}
 
-      {showShelfModal && (
+      {showShelf && (
         <AddToShelfModal
           albumDbId={albumDbId}
           itemTitle={albumTitle}
           artistName={artistName}
-          onClose={() => setShowShelfModal(false)}
+          onClose={() => setShowShelf(false)}
         />
       )}
     </>

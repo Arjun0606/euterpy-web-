@@ -3,17 +3,23 @@ interface Props {
   size?: "sm" | "md" | "lg";
 }
 
+/**
+ * Identity-era replacement for the old star rating.
+ * Score is now an internal signal — score >= 4 means "loved".
+ * In the UI, we render a small heart for loved items, nothing otherwise.
+ */
 export default function Stars({ score, size = "sm" }: Props) {
+  if (!score || score < 4) return null;
+
   const sizeClasses = {
-    sm: "text-sm",
-    md: "text-base",
-    lg: "text-xl",
+    sm: "text-xs",
+    md: "text-sm",
+    lg: "text-base",
   };
 
   return (
-    <span className={`text-accent ${sizeClasses[size]}`}>
-      {"★".repeat(Math.round(score))}
-      {"☆".repeat(5 - Math.round(score))}
+    <span className={`text-accent ${sizeClasses[size]}`} title="Loved">
+      ❤
     </span>
   );
 }

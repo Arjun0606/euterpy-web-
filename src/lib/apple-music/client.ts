@@ -210,6 +210,38 @@ export async function getAppleMusicCharts(limit = 10): Promise<AppleMusicAlbum[]
   }
 }
 
+export interface AppleMusicArtist {
+  id: string;
+  type: "artists";
+  attributes: {
+    name: string;
+    genreNames?: string[];
+    artwork?: { url: string; width: number; height: number };
+    url?: string;
+  };
+  relationships?: {
+    albums?: { data: AppleMusicAlbum[] };
+  };
+}
+
+export async function getArtist(appleId: string): Promise<AppleMusicArtist | null> {
+  try {
+    const data = await appleRequest(`/catalog/us/artists/${appleId}?include=albums&views=top-songs,full-albums&limit[albums]=25`);
+    return data.data?.[0] || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function getArtistAlbums(appleId: string, limit = 25): Promise<AppleMusicAlbum[]> {
+  try {
+    const data = await appleRequest(`/catalog/us/artists/${appleId}/albums?limit=${limit}`);
+    return data.data || [];
+  } catch {
+    return [];
+  }
+}
+
 export async function getSong(
   appleId: string
 ): Promise<(AppleMusicSong & { relationships?: { albums?: { data: { id: string }[] } } }) | null> {

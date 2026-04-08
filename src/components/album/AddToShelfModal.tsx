@@ -31,11 +31,20 @@ const GTKM_LABELS = [
   "The one that changed everything",
 ];
 
+const MEDIUM_OPTIONS = [
+  { value: "vinyl", label: "Vinyl", emoji: "💽" },
+  { value: "cd", label: "CD", emoji: "💿" },
+  { value: "cassette", label: "Cassette", emoji: "📼" },
+  { value: "digital", label: "Stream", emoji: "🎧" },
+  { value: "live", label: "Live", emoji: "🎤" },
+];
+
 export default function AddToShelfModal({ albumDbId, songDbId, itemTitle, artistName, onClose }: Props) {
   const [shelves, setShelves] = useState<Shelf[]>([]);
   const [gtkmSlots, setGtkmSlots] = useState<GtkmSlot[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
+  const [medium, setMedium] = useState<string | null>(null);
 
   const supabase = createClient();
   const isAlbum = !!albumDbId;
@@ -81,6 +90,7 @@ export default function AddToShelfModal({ albumDbId, songDbId, itemTitle, artist
     const payload: any = { shelf_id: shelfId, item_type: albumDbId ? "album" : "song", position: 0 };
     if (albumDbId) payload.album_id = albumDbId;
     if (songDbId) payload.song_id = songDbId;
+    if (medium) payload.medium = medium;
 
     const { error } = await supabase.from("shelf_items").insert(payload);
     if (error?.code === "23505") toast("Already in this shelf");
@@ -169,6 +179,29 @@ export default function AddToShelfModal({ albumDbId, songDbId, itemTitle, artist
 
             {/* Divider */}
             {isAlbum && shelves.length > 0 && <div className="border-t border-border my-2" />}
+
+            {/* Medium picker — for albums going to a shelf */}
+            {isAlbum && (
+              <div className="mb-3 px-2">
+                <p className="text-[10px] uppercase tracking-[0.15em] text-zinc-600 font-medium mb-2">How do you have it? <span className="text-zinc-700 normal-case tracking-normal">(optional)</span></p>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {MEDIUM_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setMedium(medium === opt.value ? null : opt.value)}
+                      className={`flex flex-col items-center gap-0.5 py-2 rounded-lg text-[10px] font-medium transition-colors ${
+                        medium === opt.value
+                          ? "bg-accent/15 border border-accent/40 text-accent"
+                          : "bg-input border border-border text-zinc-500 hover:text-zinc-300"
+                      }`}
+                    >
+                      <span className="text-base">{opt.emoji}</span>
+                      <span>{opt.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Shelves */}
             {shelves.length > 0 && (

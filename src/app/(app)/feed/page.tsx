@@ -76,15 +76,15 @@ export default async function HomePage() {
     .order("average_rating", { ascending: false })
     .limit(10);
 
-  // Featured review — most-loved review this month with substantial body
-  const { data: featuredReviews } = await supabase
-    .from("reviews")
-    .select("id, title, body, score, created_at, profiles(username, display_name, avatar_url), albums(apple_id, title, artist_name, artwork_url)")
+  // Featured note — a substantial collector's note from the past month
+  const { data: featuredNotes } = await supabase
+    .from("ratings")
+    .select("id, reaction, ownership, created_at, profiles(username, display_name, avatar_url), albums(apple_id, title, artist_name, artwork_url)")
     .gte("created_at", monthAgo)
-    .not("body", "is", null)
-    .order("upvotes", { ascending: false })
-    .limit(5);
-  const featuredReview = (featuredReviews || []).find((r: any) => r.body && r.body.length > 80 && r.albums) || null;
+    .not("reaction", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(20);
+  const featuredNote = (featuredNotes || []).find((r: any) => r.reaction && r.reaction.length > 80 && r.albums) || null;
 
   // 4. Activity from people you follow (ratings + reviews)
   const { data: feedItems } = await supabase
@@ -101,16 +101,6 @@ export default async function HomePage() {
     .order("created_at", { ascending: false })
     .limit(20);
 
-  let followedReviews: any[] = [];
-  if (followingIds.length > 0) {
-    const { data } = await supabase
-      .from("reviews")
-      .select("*, profiles(username, display_name, avatar_url), albums(apple_id, title, artist_name, artwork_url), songs(apple_id, title, artist_name, artwork_url)")
-      .in("user_id", followingIds)
-      .order("created_at", { ascending: false })
-      .limit(10);
-    followedReviews = data || [];
-  }
 
   // 5. Hidden gems — high rating, low count
   const { data: hiddenGems } = await supabase
@@ -144,13 +134,10 @@ export default async function HomePage() {
   }
 
   // Merge personal feed
-  const allFeedEntries: { type: "rating" | "review"; data: any; date: string }[] = [];
+  const allFeedEntries: { type: "rating"; data: any; date: string }[] = [];
   for (const item of (feedItems || []) as any[]) {
     if (!item.actor || !item.rating || !item.rating.album) continue;
     allFeedEntries.push({ type: "rating", data: item, date: item.created_at });
-  }
-  for (const review of followedReviews) {
-    allFeedEntries.push({ type: "review", data: review, date: review.created_at });
   }
   allFeedEntries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
@@ -202,8 +189,7 @@ export default async function HomePage() {
                   </h2>
                   <p className="font-display italic text-2xl sm:text-3xl text-zinc-400 mb-6">{heroAlbum.artist_name}</p>
                   <div className="flex items-center gap-3 mb-6">
-                    <Stars score={Number(heroAlbum.average_rating)} />
-                    <span className="text-xs text-zinc-500">{Number(heroAlbum.average_rating).toFixed(1)} · {heroAlbum.rating_count} {heroAlbum.rating_count === 1 ? "rating" : "ratings"}</span>
+                    <span className="text-xs text-zinc-500">In {heroAlbum.rating_count} {heroAlbum.rating_count === 1 ? "collection" : "collections"}</span>
                   </div>
                   {heroAlbum.editorial_notes && (
                     <p className="editorial text-base sm:text-lg text-zinc-300 leading-relaxed line-clamp-4 max-w-xl">
@@ -244,11 +230,10 @@ export default async function HomePage() {
                     <p className="text-sm sm:text-base font-medium truncate group-hover:text-accent transition-colors">{album.title}</p>
                     <p className="text-xs text-zinc-500 truncate">{album.artist_name}</p>
                   </div>
-                  {album.average_rating && (
-                    <div className="hidden sm:flex items-center gap-2 shrink-0">
-                      <Stars score={Number(album.average_rating)} size="sm" />
-                      <span className="text-[11px] text-zinc-600 tabular-nums">{Number(album.average_rating).toFixed(1)}</span>
-                    </div>
+                  {album.rating_count > 0 && (
+                    <span className="hidden sm:inline text-[11px] text-zinc-600 shrink-0 tabular-nums">
+                      {album.rating_count} {album.rating_count === 1 ? "collector" : "collectors"}
+                    </span>
                   )}
                 </Link>
               </li>
@@ -257,31 +242,30 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* === FEATURED REVIEW — magazine pull-quote === */}
-      {featuredReview && featuredReview.albums && (
+      {/* === COLLECTOR'S VOICE — pull-quote from a real note === */}
+      {featuredNote && featuredNote.albums && (
         <section className="mb-20">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-6">— Critic's voice</p>
-          <Link href={`/album/${(featuredReview.albums as any).apple_id}`} className="block group">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-6">— A collector&apos;s voice</p>
+          <Link href={`/album/${(featuredNote.albums as any).apple_id}`} className="block group">
             <blockquote className="relative pl-8 sm:pl-12 border-l-2 border-accent">
               <p className="font-display italic text-2xl sm:text-4xl leading-[1.2] tracking-tight text-zinc-100 line-clamp-5 group-hover:text-white transition-colors">
-                &ldquo;{featuredReview.body}&rdquo;
+                &ldquo;{featuredNote.reaction}&rdquo;
               </p>
               <div className="flex items-center gap-3 mt-6">
                 <div className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center text-xs text-zinc-500 overflow-hidden shrink-0">
-                  {(featuredReview.profiles as any)?.avatar_url ? (
+                  {(featuredNote.profiles as any)?.avatar_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={(featuredReview.profiles as any).avatar_url} alt="" className="w-full h-full object-cover" />
-                  ) : ((featuredReview.profiles as any)?.username?.[0]?.toUpperCase() || "?")}
+                    <img src={(featuredNote.profiles as any).avatar_url} alt="" className="w-full h-full object-cover" />
+                  ) : ((featuredNote.profiles as any)?.username?.[0]?.toUpperCase() || "?")}
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-zinc-300">
-                    {(featuredReview.profiles as any)?.display_name || (featuredReview.profiles as any)?.username}
+                    {(featuredNote.profiles as any)?.display_name || (featuredNote.profiles as any)?.username}
                   </p>
                   <p className="text-[11px] text-zinc-600 truncate">
-                    on <span className="italic">{(featuredReview.albums as any).title}</span> by {(featuredReview.albums as any).artist_name}
+                    on <span className="italic">{(featuredNote.albums as any).title}</span> by {(featuredNote.albums as any).artist_name}
                   </p>
                 </div>
-                <Stars score={featuredReview.score} size="sm" />
               </div>
             </blockquote>
           </Link>
@@ -319,13 +303,11 @@ export default async function HomePage() {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm">
                         <Link href={`/${actor.username}`} className="font-medium hover:text-accent transition-colors">{actor.display_name || actor.username}</Link>
-                        <span className="text-zinc-600"> rated </span>
+                        <span className="text-zinc-600"> {rating.score >= 4 ? "loved" : "added"} </span>
                         <Link href={`/album/${album.apple_id}`} className="font-medium hover:text-accent transition-colors">{album.title}</Link>
+                        {rating.score >= 4 && <span className="text-accent ml-1">❤</span>}
                       </p>
                       <p className="text-xs text-zinc-600 mt-0.5">{album.artist_name}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Stars score={rating.score} />
-                      </div>
                       {rating.reaction && <p className="editorial text-sm text-zinc-300 mt-2">&ldquo;{rating.reaction}&rdquo;</p>}
                       <div className="mt-2"><LikeButton ratingId={rating.id} initialCount={rating.like_count || 0} /></div>
                     </div>
@@ -338,40 +320,7 @@ export default async function HomePage() {
                   </div>
                 );
               }
-
-              const review = entry.data;
-              const reviewItem = review.albums || review.songs;
-              const isAlbum = !!review.albums;
-              const author = review.profiles;
-              return (
-                <div key={`rv-${review.id}`} className="bg-card border border-border rounded-xl p-5">
-                  <div className="flex items-center gap-3 mb-3">
-                    <Link href={`/${author?.username}`} className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center text-sm text-zinc-600 shrink-0 overflow-hidden">
-                      {author?.avatar_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={author.avatar_url} alt="" className="w-full h-full object-cover" />
-                      ) : author?.username?.[0]?.toUpperCase() || "?"}
-                    </Link>
-                    <div className="flex-1 min-w-0">
-                      <Link href={`/${author?.username}`} className="text-sm font-medium hover:text-accent transition-colors">{author?.display_name || author?.username}</Link>
-                      <span className="text-zinc-600 text-xs"> reviewed</span>
-                    </div>
-                    <Stars score={review.score} />
-                  </div>
-                  <Link href={isAlbum ? `/album/${reviewItem?.apple_id}` : `/song/${reviewItem?.apple_id}`} className="flex items-center gap-3 mb-3 hover:opacity-80">
-                    {reviewItem?.artwork_url && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={art(reviewItem.artwork_url, 80)!} alt="" className="w-10 h-10 rounded object-cover" />
-                    )}
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{reviewItem?.title}</p>
-                      <p className="text-xs text-zinc-600">{reviewItem?.artist_name}</p>
-                    </div>
-                  </Link>
-                  {review.title && <p className="font-display text-lg mb-2">{review.title}</p>}
-                  <p className="editorial text-sm text-zinc-300 line-clamp-3">{review.body}</p>
-                </div>
-              );
+              return null;
             })}
           </div>
         </section>
@@ -396,10 +345,7 @@ export default async function HomePage() {
                 </div>
                 <p className="text-sm font-medium truncate">{album.title}</p>
                 <p className="text-xs text-zinc-500 truncate">{album.artist_name}</p>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <Stars score={Number(album.average_rating)} size="sm" />
-                  <span className="text-[10px] text-zinc-600">({album.rating_count})</span>
-                </div>
+                <p className="text-[10px] text-zinc-600 mt-1">{album.rating_count} {album.rating_count === 1 ? "collector" : "collectors"}</p>
               </Link>
             ))}
           </div>
@@ -456,7 +402,7 @@ function Scroller({ children }: { children: React.ReactNode }) {
   );
 }
 
-function AlbumCard({ album, showRating = false }: { album: any; showRating?: boolean }) {
+function AlbumCard({ album }: { album: any }) {
   return (
     <Link href={`/album/${album.apple_id}`} className="shrink-0 w-32 sm:w-36 group">
       <div className="aspect-square rounded-xl overflow-hidden bg-card border border-border mb-2 group-hover:border-zinc-700 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl group-hover:shadow-accent/10 relative">
@@ -466,7 +412,6 @@ function AlbumCard({ album, showRating = false }: { album: any; showRating?: boo
         ) : (
           <div className="w-full h-full flex items-center justify-center text-zinc-700">♪</div>
         )}
-        {/* Type badge */}
         {album.album_type === "ep" && (
           <div className="absolute top-1 left-1 px-1.5 py-0.5 bg-accent/90 backdrop-blur-sm rounded text-[8px] text-white font-bold tracking-wider">EP</div>
         )}
@@ -476,9 +421,6 @@ function AlbumCard({ album, showRating = false }: { album: any; showRating?: boo
       </div>
       <p className="text-xs font-medium truncate">{album.title}</p>
       <p className="text-[11px] text-zinc-600 truncate">{album.artist_name}</p>
-      {showRating && album.average_rating && (
-        <p className="text-[11px] text-accent mt-0.5">★ {Number(album.average_rating).toFixed(1)}</p>
-      )}
     </Link>
   );
 }

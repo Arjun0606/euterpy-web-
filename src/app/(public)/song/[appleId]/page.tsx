@@ -4,8 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { getArtworkUrl, getSong as fetchSongFromApple } from "@/lib/apple-music/client";
 import SongActions from "./SongActions";
-import ReviewSection from "@/components/album/ReviewSection";
-import Stars from "@/components/ui/Stars";
+import SetNowPlayingButton from "@/components/profile/NowPlaying";
 
 interface Props {
   params: Promise<{ appleId: string }>;
@@ -162,27 +161,31 @@ export default async function SongPage({ params }: Props) {
             {song.composer_name && (
               <p className="text-xs text-muted/30 mb-2">Written by {song.composer_name}</p>
             )}
-            <a
-              href={song.apple_url || `https://music.apple.com/song/${appleId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 mb-4 px-4 py-1.5 bg-card border border-border rounded-full text-xs text-muted hover:text-foreground hover:border-foreground/20 transition-colors"
-            >
-              <span>🎵</span> Listen
-            </a>
+            <div className="flex flex-wrap items-center gap-2 mb-3 justify-center sm:justify-start">
+              <a
+                href={song.apple_url || `https://music.apple.com/song/${appleId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-card border border-border rounded-full text-xs text-muted hover:text-foreground hover:border-foreground/20 transition-colors"
+              >
+                <span>🎵</span> Listen
+              </a>
+              <SetNowPlayingButton
+                appleId={appleId}
+                kind="song"
+                title={song.title}
+                artist={song.artist_name}
+                artworkUrl={song.artwork_url}
+              />
+            </div>
 
-            {/* Rating Summary */}
+            {/* Collection count */}
             {song.rating_count > 0 ? (
-              <div className="flex items-baseline gap-3">
-                <span className="text-4xl font-semibold text-accent">
-                  {Number(song.average_rating).toFixed(1)}
-                </span>
-                <span className="text-muted text-sm">
-                  / 5 from {song.rating_count} {song.rating_count === 1 ? "rating" : "ratings"}
-                </span>
-              </div>
+              <p className="text-sm text-zinc-500">
+                In <span className="text-accent font-semibold">{song.rating_count}</span> {song.rating_count === 1 ? "collection" : "collections"}
+              </p>
             ) : (
-              <p className="text-sm text-muted/40">Not yet rated</p>
+              <p className="text-sm text-muted/40">Not yet collected</p>
             )}
 
             <SongActions
@@ -196,50 +199,41 @@ export default async function SongPage({ params }: Props) {
           </div>
         </div>
 
-        {/* Reviews */}
-        <ReviewSection
-          reviews={JSON.parse(JSON.stringify(reviews || []))}
-          songId={song.id}
-          userId={user?.id || null}
-        />
-
-        {/* Community Reactions */}
-        <div>
-          <h2 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-6">Community Reactions</h2>
-          {(!ratings || ratings.length === 0) ? (
-            <p className="text-muted/60 text-sm">No one has rated this song yet. Be the first.</p>
-          ) : (
+        {/* In their collections */}
+        {ratings && ratings.length > 0 && (
+          <div className="mb-12">
+            <h2 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-6">In their collections</h2>
             <div className="space-y-3">
-              {ratings.map((rating: any) => {
+              {ratings.filter((r: any) => r.reaction).slice(0, 12).map((rating: any) => {
                 const profile = rating.profiles;
                 return (
-                  <div key={rating.id} className="flex items-start gap-4 p-4 rounded-xl bg-card/50 border border-border">
+                  <div key={rating.id} className="flex items-start gap-4 p-5 rounded-2xl bg-card border border-border">
                     <a
                       href={`/${profile?.username}`}
-                      className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center text-sm text-muted shrink-0 hover:border-accent transition-colors"
+                      className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center text-sm text-muted shrink-0 hover:border-accent transition-colors overflow-hidden"
                     >
                       {profile?.avatar_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={profile.avatar_url} alt={profile.username} className="w-full h-full rounded-full object-cover" />
+                        <img src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" />
                       ) : (
                         profile?.username?.[0]?.toUpperCase() || "?"
                       )}
                     </a>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <a href={`/${profile?.username}`} className="font-medium text-sm hover:text-accent transition-colors">
-                          {profile?.display_name || profile?.username}
-                        </a>
-                        <Stars score={rating.score} />
-                      </div>
-                      {rating.reaction && <p className="text-sm text-muted leading-relaxed">{rating.reaction}</p>}
+                      <a href={`/${profile?.username}`} className="font-medium text-sm hover:text-accent transition-colors block mb-1.5">
+                        {profile?.display_name || profile?.username}
+                      </a>
+                      <p className="editorial text-sm text-zinc-300 leading-relaxed">&ldquo;{rating.reaction}&rdquo;</p>
                     </div>
                   </div>
                 );
               })}
+              {ratings.filter((r: any) => r.reaction).length === 0 && (
+                <p className="text-zinc-600 text-sm">No one has written about this song yet.</p>
+              )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Anonymous CTA banner */}
         {!user && (

@@ -1,38 +1,56 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { getArtworkUrl } from "@/lib/apple-music/client";
 import Link from "next/link";
 
-interface SearchResult {
+interface AlbumResult {
+  kind: "album";
   appleId: string;
   title: string;
   artistName: string;
   artworkUrl: string | null;
 }
 
-function art(url: string | null, size = 80): string | null {
-  if (!url) return null;
-  return getArtworkUrl(url, size, size);
+interface SongResult {
+  kind: "song";
+  appleId: string;
+  title: string;
+  artistName: string;
+  artworkUrl: string | null;
+  albumName?: string | null;
 }
+
+type Result = AlbumResult | SongResult;
 
 export default function HomeSearch() {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<SearchResult[]>([]);
+  const [results, setResults] = useState<Result[]>([]);
   const [loading, setLoading] = useState(false);
   const [focused, setFocused] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const router = useRouter();
 
   const search = useCallback(async (q: string) => {
-    if (q.trim().length < 2) { setResults([]); return; }
+    if (q.trim().length < 2) {
+      setResults([]);
+      return;
+    }
     setLoading(true);
     try {
-      const res = await fetch(`/api/albums/search?q=${encodeURIComponent(q.trim())}`);
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q.trim())}`);
       const data = await res.json();
-      setResults((data.results || []).slice(0, 5));
-    } catch { setResults([]); }
+      // Interleave: 3 albums, then 3 songs, then more albums
+      const albums: AlbumResult[] = (data.albums || []).slice(0, 4).map((a: any) => ({ ...a, kind: "album" }));
+      const songs: SongResult[] = (data.songs || []).slice(0, 4).map((s: any) => ({ ...s, kind: "song" }));
+      const merged: Result[] = [];
+      const max = Math.max(albums.length, songs.length);
+      for (let i = 0; i < max; i++) {
+        if (albums[i]) merged.push(albums[i]);
+        if (songs[i]) merged.push(songs[i]);
+      }
+      setResults(merged.slice(0, 6));
+    } catch {
+      setResults([]);
+    }
     setLoading(false);
   }, []);
 
@@ -61,29 +79,29 @@ export default function HomeSearch() {
         />
       </div>
 
-      {/* Dropdown results */}
       {focused && (query.length >= 2 || results.length > 0) && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-xl shadow-2xl z-50 overflow-hidden">
-          {loading && (
-            <p className="px-4 py-3 text-xs text-muted">Searching...</p>
-          )}
+          {loading && <p className="px-4 py-3 text-xs text-muted">Searching...</p>}
           {!loading && results.length === 0 && query.length >= 2 && (
-            <p className="px-4 py-3 text-xs text-muted">No results. Try a different search.</p>
+            <p className="px-4 py-3 text-xs text-muted">No results.</p>
           )}
           {results.map((item) => (
             <Link
-              key={item.appleId}
-              href={`/album/${item.appleId}`}
+              key={`${item.kind}-${item.appleId}`}
+              href={item.kind === "album" ? `/album/${item.appleId}` : `/song/${item.appleId}`}
               className="flex items-center gap-3 px-4 py-2.5 hover:bg-card-hover transition-colors"
             >
               {item.artworkUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={art(item.artworkUrl)!} alt="" className="w-9 h-9 rounded object-cover" />
+                <img src={item.artworkUrl} alt="" className="w-9 h-9 rounded object-cover" />
               )}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{item.title}</p>
                 <p className="text-xs text-muted truncate">{item.artistName}</p>
               </div>
+              <span className="text-[9px] uppercase tracking-wider text-zinc-700 shrink-0">
+                {item.kind}
+              </span>
             </Link>
           ))}
           {query.length >= 2 && (

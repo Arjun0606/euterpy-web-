@@ -12,6 +12,7 @@ import TasteMatch from "./TasteMatch";
 import ShelfEditor from "./ShelfEditor";
 import BlockButton from "./BlockButton";
 import StatsView from "@/components/stats/StatsView";
+import NowPlayingPill from "./NowPlayingPill";
 
 type Tab = "collection" | "stats" | "reviews";
 
@@ -105,6 +106,21 @@ export default function ProfilePage({ data }: Props) {
               <p className="editorial text-base text-zinc-300 mt-4 leading-relaxed">
                 {profile.bio}
               </p>
+            )}
+
+            {/* Now Playing — ephemeral 24h status */}
+            {profile.now_playing_apple_id && profile.now_playing_set_at && profile.now_playing_kind && (
+              <div className="mt-4">
+                <NowPlayingPill
+                  appleId={profile.now_playing_apple_id}
+                  kind={profile.now_playing_kind}
+                  title={profile.now_playing_title || ""}
+                  artist={profile.now_playing_artist || ""}
+                  artworkUrl={profile.now_playing_artwork_url}
+                  setAt={profile.now_playing_set_at}
+                  isOwner={isOwnProfile}
+                />
+              </div>
             )}
 
             {/* Social links */}
