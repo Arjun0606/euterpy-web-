@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getArtworkUrl, getAppleMusicCharts } from "@/lib/apple-music/client";
 import Link from "next/link";
 import Stars from "@/components/ui/Stars";
+import PeopleSearch from "@/components/profile/PeopleSearch";
 
 export const metadata = { title: "Discover" };
 
@@ -92,12 +93,15 @@ export default async function DiscoverPage() {
     <main className="max-w-3xl mx-auto px-5 sm:px-8 py-10 sm:py-14">
 
       {/* Header */}
-      <div className="mb-10">
+      <div className="mb-8">
         <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-2">Explore</p>
         <h1 className="font-display text-4xl sm:text-5xl tracking-tight leading-none">
           Discover what <span className="italic text-accent">moves you.</span>
         </h1>
       </div>
+
+      {/* People search */}
+      <PeopleSearch />
 
       {/* Apple Music Charts — real data from Apple */}
       {appleAlbums.length > 0 && (

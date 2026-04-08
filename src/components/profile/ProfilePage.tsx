@@ -86,9 +86,19 @@ export default function ProfilePage({ data }: Props) {
           </div>
 
           <div className="flex-1 min-w-0">
-            <h1 className="font-display text-3xl sm:text-5xl tracking-tight truncate leading-none mb-1">
-              {profile.display_name || profile.username}
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="font-display text-3xl sm:text-5xl tracking-tight truncate leading-none mb-1">
+                {profile.display_name || profile.username}
+              </h1>
+              {isOwnProfile && (
+                <a href="/settings" aria-label="Edit profile"
+                  className="shrink-0 w-8 h-8 rounded-full border border-border flex items-center justify-center text-zinc-500 hover:text-accent hover:border-zinc-700 transition-colors">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                  </svg>
+                </a>
+              )}
+            </div>
             <p className="text-accent text-sm">@{profile.username}</p>
 
             {profile.bio && (
@@ -114,16 +124,23 @@ export default function ProfilePage({ data }: Props) {
             {/* Stats */}
             <div className="flex gap-5 mt-4 text-sm">
               <span className="text-zinc-500"><span className="text-white font-semibold">{profile.album_count}</span> albums</span>
-              <span className="text-zinc-500"><span className="text-white font-semibold">{profile.follower_count}</span> followers</span>
-              <span className="text-zinc-500"><span className="text-white font-semibold">{profile.following_count}</span> following</span>
+              <a href={`/${profile.username}/followers`} className="text-zinc-500 hover:text-zinc-300 transition-colors">
+                <span className="text-white font-semibold">{profile.follower_count}</span> followers
+              </a>
+              <a href={`/${profile.username}/following`} className="text-zinc-500 hover:text-zinc-300 transition-colors">
+                <span className="text-white font-semibold">{profile.following_count}</span> following
+              </a>
             </div>
 
             {/* Badges */}
             {displayedBadges.length > 0 && (
-              <div className="flex gap-2 mt-3">
+              <div className="flex items-center gap-2 mt-3">
                 {displayedBadges.map((ub: any) => (
                   <span key={ub.id} className="text-lg" title={ub.badges?.name}>{ub.badges?.icon}</span>
                 ))}
+                {badges.length > displayedBadges.length && (
+                  <span className="text-[10px] text-zinc-600 ml-1">+{badges.length - displayedBadges.length} more</span>
+                )}
               </div>
             )}
 
@@ -196,9 +213,12 @@ export default function ProfilePage({ data }: Props) {
               />
             )}
             {shelfItems.length === 0 && isOwnProfile && (
-              <div className="mb-10 text-center py-12 border border-dashed border-border rounded-2xl">
-                <p className="text-zinc-500 text-sm">Your shelf is empty.</p>
-                <p className="text-zinc-700 text-xs mt-1">Rate albums to start building your collection.</p>
+              <div className="mb-10 text-center py-14 border border-dashed border-border rounded-2xl">
+                <p className="font-display text-2xl mb-2">Your shelf awaits.</p>
+                <p className="text-zinc-500 text-sm mb-5">Rate albums to start building your collection.</p>
+                <a href="/search" className="inline-block px-6 py-2.5 bg-accent text-white rounded-full text-xs font-medium hover:bg-accent-hover transition-colors">
+                  Rate your first album →
+                </a>
               </div>
             )}
 

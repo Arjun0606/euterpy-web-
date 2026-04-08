@@ -128,13 +128,31 @@ export default function GetToKnowMe({ items: initialItems, username, isOwner = f
     setFlipped((prev) => ({ ...prev, [position]: !prev[position] }));
   }
 
-  if (items.length === 0) return null;
+  if (items.length === 0 && !isOwner) return null;
+  if (items.length === 0 && isOwner) {
+    return (
+      <div className="mb-14">
+        <div className="flex items-center justify-between mb-5">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">Get to know {username}</p>
+        </div>
+        <a href="/gtkm" className="block py-12 text-center border border-dashed border-zinc-800 rounded-2xl hover:border-accent/40 transition-colors">
+          <p className="font-display text-2xl mb-2">Pick your three albums</p>
+          <p className="text-sm text-zinc-500">The records that define you. They&apos;ll sit at the top of your profile.</p>
+        </a>
+      </div>
+    );
+  }
 
   return (
     <div className="mb-14">
-      <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-5">
-        Get to know {username}
-      </p>
+      <div className="flex items-center justify-between mb-5">
+        <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">
+          Get to know {username}
+        </p>
+        {isOwner && (
+          <a href="/gtkm" className="text-[11px] text-accent hover:underline">Edit →</a>
+        )}
+      </div>
 
       {/* Carousel */}
       <div className="relative">
