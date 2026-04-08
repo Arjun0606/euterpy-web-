@@ -83,7 +83,7 @@ export async function GET(
         {/* Top: brand bar */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isSquare ? 50 : 30 }}>
           <div style={{ fontSize: 18, color: "#52525b", letterSpacing: "0.22em", fontWeight: 700, display: "flex" }}>EUTERPY</div>
-          <div style={{ fontSize: 16, color: "#52525b", letterSpacing: "0.16em", display: "flex" }}>euterpy.app/{profile.username}</div>
+          <div style={{ fontSize: 16, color: "#52525b", letterSpacing: "0.16em", display: "flex" }}>euterpy.com/{profile.username}</div>
         </div>
 
         {/* Identity row: name + handle */}

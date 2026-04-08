@@ -147,7 +147,7 @@ export default function SignUpPage() {
             <h2 className="font-display text-2xl sm:text-3xl mb-2">Pick your name</h2>
             <p className="text-zinc-500 text-sm mb-2">This is how people find you.</p>
             <p className="font-mono text-zinc-600 text-sm mb-8">
-              euterpy.app/<span className="text-accent">{username || "..."}</span>
+              euterpy.com/<span className="text-accent">{username || "..."}</span>
             </p>
 
             <div className="relative mb-4">

@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     alternates: {
       types: {
-        "application/json+oembed": `/api/oembed?url=${encodeURIComponent(`https://euterpy.app/story/${id}`)}`,
+        "application/json+oembed": `/api/oembed?url=${encodeURIComponent(`https://euterpy.com/story/${id}`)}`,
       },
     },
   };

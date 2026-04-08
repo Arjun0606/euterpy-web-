@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   },
   description:
     "Your taste in music says more about you than anything else. The page where music becomes who you are — at one link you can put in your bio.",
-  metadataBase: new URL("https://euterpy.app"),
+  metadataBase: new URL("https://euterpy.com"),
   openGraph: {
     siteName: "Euterpy",
     type: "website",

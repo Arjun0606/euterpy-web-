@@ -174,7 +174,7 @@ export async function GET(
                 {author.display_name || author.username}
               </div>
               <div style={{ fontSize: 14, color: "#FF1493", marginTop: 2, display: "flex" }}>
-                euterpy.app/{author.username}
+                euterpy.com/{author.username}
               </div>
             </div>
           </div>

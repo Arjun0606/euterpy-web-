@@ -134,7 +134,7 @@ export async function GET(
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
             <div style={{ fontSize: 14, color: "#FF1493", display: "flex" }}>
-              euterpy.app
+              euterpy.com
             </div>
             <div style={{ fontSize: 12, color: "#52525b", marginTop: 4, display: "flex" }}>
               @{author.username}

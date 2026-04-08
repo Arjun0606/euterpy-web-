@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 
 /**
- * OEmbed endpoint — when someone pastes a euterpy.app URL on Twitter,
+ * OEmbed endpoint — when someone pastes a euterpy.com URL on Twitter,
  * Notion, Bluesky, Discord, etc, the platform requests this endpoint
  * to get a rich card preview.
  *
@@ -14,7 +14,7 @@ import { createServiceClient } from "@/lib/supabase/server";
  *   /[username]
  */
 
-const ROOT = "https://euterpy.app";
+const ROOT = "https://euterpy.com";
 
 interface OembedResponse {
   version: "1.0";
@@ -56,7 +56,11 @@ export async function GET(request: NextRequest) {
   }
 
   // Only handle our own URLs
-  if (!parsed.hostname.endsWith("euterpy.app") && parsed.hostname !== "localhost") {
+  if (
+    !parsed.hostname.endsWith("euterpy.com") &&
+    !parsed.hostname.endsWith("euterpy.app") &&
+    parsed.hostname !== "localhost"
+  ) {
     return NextResponse.json({ error: "Unsupported url" }, { status: 404 });
   }
 

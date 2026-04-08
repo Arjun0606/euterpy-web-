@@ -134,7 +134,7 @@ export default async function Home() {
               <p className="font-display text-5xl text-accent mb-4">03</p>
               <h3 className="font-display text-2xl tracking-tight mb-4">A link you put in your bio</h3>
               <p className="editorial text-base text-zinc-400 leading-relaxed">
-                <span className="font-mono text-accent">euterpy.app/yourname</span> — the page where strangers fall in love with your taste at a glance, and friends find what you found before everyone else.
+                <span className="font-mono text-accent">euterpy.com/yourname</span> — the page where strangers fall in love with your taste at a glance, and friends find what you found before everyone else.
               </p>
             </div>
           </div>
