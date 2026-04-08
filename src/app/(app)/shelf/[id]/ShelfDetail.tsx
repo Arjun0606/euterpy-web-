@@ -24,75 +24,102 @@ interface Props {
 
 type ShelfStyle = "minimal" | "wood" | "ornate" | "glass";
 
-const SHELF_STYLES: Record<ShelfStyle, { ledge: React.CSSProperties; shadow: React.CSSProperties }> = {
+interface ShelfStyleConfig {
+  frame: React.CSSProperties;
+  ledge: React.CSSProperties;
+  shadow: React.CSSProperties;
+  innerPadding: string;
+}
+
+const SHELF_STYLES: Record<ShelfStyle, ShelfStyleConfig> = {
   minimal: {
+    frame: {},
     ledge: {
       background: "linear-gradient(to bottom, #2a2a2a 0%, #1a1a1a 50%, #0a0a0a 100%)",
       boxShadow: "0 2px 8px rgba(0,0,0,0.5), 0 1px 2px rgba(255,255,255,0.04) inset",
-      height: "5px",
+      height: "4px",
       borderRadius: "1px",
     },
-    shadow: { background: "linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 100%)", height: "16px" },
+    shadow: { background: "linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 100%)", height: "12px" },
+    innerPadding: "0",
   },
   wood: {
-    ledge: {
+    frame: {
       backgroundImage: `
         repeating-linear-gradient(180deg,
           rgba(0,0,0,0.0) 0px,
-          rgba(0,0,0,0.12) 1px,
-          rgba(255,200,140,0.08) 2px,
-          rgba(0,0,0,0.0) 4px
+          rgba(0,0,0,0.18) 1px,
+          rgba(255,200,140,0.06) 2px,
+          rgba(0,0,0,0.0) 5px
         ),
-        linear-gradient(to bottom,
-          #d49060 0%,
-          #b66f3a 25%,
-          #8a4f22 60%,
-          #5a3010 100%
+        linear-gradient(135deg,
+          #4a2810 0%,
+          #6b3f1a 25%,
+          #4a2810 50%,
+          #6b3f1a 75%,
+          #4a2810 100%
         )
       `,
-      boxShadow: `
-        0 8px 24px rgba(0,0,0,0.85),
-        0 4px 8px rgba(255,200,140,0.25) inset,
-        0 -3px 3px rgba(0,0,0,0.6) inset,
-        0 0 0 1px rgba(80,40,15,0.6)
-      `,
-      height: "18px",
-      borderRadius: "2px",
+      borderLeft: "6px solid #3a1f0a",
+      borderRight: "6px solid #3a1f0a",
+      borderTop: "4px solid #2a1505",
+      boxShadow: `inset 0 4px 16px rgba(0,0,0,0.6), inset 0 -2px 8px rgba(0,0,0,0.4), inset 8px 0 16px rgba(0,0,0,0.4), inset -8px 0 16px rgba(0,0,0,0.4)`,
+      borderRadius: "4px 4px 0 0",
+      paddingTop: "20px",
     },
-    shadow: { background: "linear-gradient(to bottom, rgba(50,25,5,0.85) 0%, rgba(50,25,5,0.2) 50%, transparent 100%)", height: "32px" },
+    ledge: {
+      backgroundImage: `repeating-linear-gradient(180deg, rgba(0,0,0,0.0) 0px, rgba(0,0,0,0.15) 1px, rgba(255,200,140,0.1) 2px, rgba(0,0,0,0.0) 5px), linear-gradient(to bottom, #d49060 0%, #b66f3a 25%, #8a4f22 60%, #4a2810 100%)`,
+      boxShadow: `0 12px 32px rgba(0,0,0,0.85), 0 4px 8px rgba(255,200,140,0.25) inset, 0 -3px 3px rgba(0,0,0,0.6) inset, 0 0 0 1px rgba(40,20,5,0.8)`,
+      height: "22px",
+      borderRadius: "0 0 4px 4px",
+    },
+    shadow: { background: "linear-gradient(to bottom, rgba(40,20,5,0.85) 0%, rgba(40,20,5,0.2) 50%, transparent 100%)", height: "36px" },
+    innerPadding: "16px 16px 0 16px",
   },
   ornate: {
-    ledge: {
-      backgroundImage: `linear-gradient(to bottom, #f5d99a 0%, #e8b870 12%, #c89548 30%, #966828 55%, #5a3c0e 90%, #2e1f06 100%)`,
-      boxShadow: `
-        0 10px 32px rgba(0,0,0,0.9),
-        0 5px 0 rgba(245,217,154,0.5) inset,
-        0 -3px 0 rgba(0,0,0,0.6) inset,
-        0 0 0 1px rgba(245,217,154,0.6),
-        0 0 0 3px rgba(40,25,5,0.8),
-        0 0 24px rgba(232,184,112,0.35)
-      `,
-      height: "22px",
-      borderRadius: "4px",
+    frame: {
+      background: "linear-gradient(180deg, #1a1108 0%, #2e1f06 100%)",
+      borderLeft: "8px solid #966828",
+      borderRight: "8px solid #966828",
+      borderTop: "6px solid #c89548",
+      boxShadow: `inset 0 6px 20px rgba(0,0,0,0.7), inset 0 -2px 8px rgba(0,0,0,0.5), inset 8px 0 20px rgba(0,0,0,0.5), inset -8px 0 20px rgba(0,0,0,0.5), 0 0 0 1px rgba(245,217,154,0.4), 0 0 32px rgba(232,184,112,0.2)`,
+      borderRadius: "6px 6px 0 0",
+      paddingTop: "24px",
     },
-    shadow: { background: "linear-gradient(to bottom, rgba(40,25,5,0.85) 0%, rgba(40,25,5,0.2) 50%, transparent 100%)", height: "36px" },
+    ledge: {
+      backgroundImage: `linear-gradient(to bottom, #f5d99a 0%, #e8b870 15%, #c89548 35%, #966828 65%, #5a3c0e 95%, #2e1f06 100%)`,
+      boxShadow: `0 14px 36px rgba(0,0,0,0.9), 0 6px 0 rgba(245,217,154,0.6) inset, 0 -3px 0 rgba(0,0,0,0.6) inset, 0 0 0 1px rgba(245,217,154,0.7), 0 0 32px rgba(232,184,112,0.4)`,
+      height: "26px",
+      borderRadius: "0 0 6px 6px",
+    },
+    shadow: { background: "linear-gradient(to bottom, rgba(40,25,5,0.85) 0%, rgba(40,25,5,0.2) 50%, transparent 100%)", height: "40px" },
+    innerPadding: "20px 20px 0 20px",
   },
   glass: {
+    frame: {
+      background: "linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)",
+      borderLeft: "1px solid rgba(255,255,255,0.15)",
+      borderRight: "1px solid rgba(255,255,255,0.15)",
+      borderTop: "1px solid rgba(255,255,255,0.25)",
+      boxShadow: `inset 0 2px 12px rgba(255,255,255,0.06), inset 0 -2px 8px rgba(0,0,0,0.3), 0 0 32px rgba(255,255,255,0.04)`,
+      backdropFilter: "blur(8px)",
+      WebkitBackdropFilter: "blur(8px)",
+      borderRadius: "4px 4px 0 0",
+      paddingTop: "16px",
+    },
     ledge: {
       background: "linear-gradient(to bottom, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.18) 25%, rgba(255,255,255,0.06) 70%, rgba(255,255,255,0.02) 100%)",
-      boxShadow: `
-        0 6px 24px rgba(0,0,0,0.5),
-        0 3px 0 rgba(255,255,255,0.5) inset,
-        0 -1px 0 rgba(255,255,255,0.1) inset,
-        0 0 32px rgba(255,255,255,0.08)
-      `,
+      boxShadow: `0 8px 28px rgba(0,0,0,0.5), 0 3px 0 rgba(255,255,255,0.5) inset, 0 -1px 0 rgba(255,255,255,0.1) inset, 0 0 32px rgba(255,255,255,0.1)`,
       backdropFilter: "blur(20px)",
       WebkitBackdropFilter: "blur(20px)",
-      height: "16px",
-      borderRadius: "3px",
-      border: "1px solid rgba(255,255,255,0.18)",
+      height: "18px",
+      borderRadius: "0 0 4px 4px",
+      borderLeft: "1px solid rgba(255,255,255,0.18)",
+      borderRight: "1px solid rgba(255,255,255,0.18)",
+      borderBottom: "1px solid rgba(255,255,255,0.18)",
     },
     shadow: { background: "linear-gradient(to bottom, rgba(255,255,255,0.08) 0%, transparent 100%)", height: "24px" },
+    innerPadding: "12px 12px 0 12px",
   },
 };
 
@@ -171,11 +198,12 @@ export default function ShelfDetail({ shelf, items: initialItems, isOwner }: Pro
           {isOwner && <p className="text-xs text-zinc-700 mt-1">Add albums or songs from their detail pages.</p>}
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-6">
           {rows.map((row, rowIndex) => (
             <div key={rowIndex} className="relative">
-              {/* Items on the shelf */}
-              <div className="flex gap-2 sm:gap-3 pb-2 relative z-10">
+              {/* Frame wraps the row */}
+              <div style={{ ...style.frame, padding: style.innerPadding }}>
+                <div className="flex gap-2 sm:gap-3 pb-2 relative z-10">
                 {row.map((item) => {
                   const data = item.item_type === "album" ? item.albums : item.songs;
                   const href = item.item_type === "album" ? `/album/${data?.apple_id}` : `/song/${data?.apple_id}`;
@@ -183,8 +211,13 @@ export default function ShelfDetail({ shelf, items: initialItems, isOwner }: Pro
                     <div key={item.id} className="group flex-1 min-w-0 max-w-[20%] relative">
                       <Link href={href} className="block">
                         <div
-                          className="aspect-square rounded-sm overflow-hidden shadow-lg border border-white/5 transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-2xl group-hover:shadow-accent/10"
-                          style={{ transformOrigin: "bottom center" }}
+                          className="aspect-square rounded-sm overflow-hidden border border-white/5 transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-2xl group-hover:shadow-accent/10"
+                          style={{
+                            transformOrigin: "bottom center",
+                            boxShadow: styleKey === "minimal"
+                              ? "0 6px 16px rgba(0,0,0,0.6)"
+                              : "0 8px 24px rgba(0,0,0,0.8), 0 0 0 1px rgba(0,0,0,0.6)",
+                          }}
                         >
                           {data?.artwork_url ? (
                             // eslint-disable-next-line @next/next/no-img-element
@@ -214,11 +247,12 @@ export default function ShelfDetail({ shelf, items: initialItems, isOwner }: Pro
                 {Array.from({ length: 5 - row.length }).map((_, i) => (
                   <div key={`empty-${i}`} className="flex-1 min-w-0 max-w-[20%]" />
                 ))}
+                </div>
               </div>
 
-              {/* Shelf ledge — uses the shelf's style */}
-              <div className="rounded-full relative z-0" style={style.ledge} />
-              <div className="-mt-1" style={style.shadow} />
+              {/* Shelf ledge — front lip below the frame */}
+              <div className="relative z-0" style={style.ledge} />
+              <div style={style.shadow} />
             </div>
           ))}
         </div>
