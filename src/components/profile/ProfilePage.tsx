@@ -16,7 +16,6 @@ import StoriesSection from "@/components/story/StoriesSection";
 import LyricPinsSection from "./LyricPinsSection";
 import ListsSection from "@/components/list/ListsSection";
 import ChartSection from "@/components/chart/ChartSection";
-import VerifiedMark from "@/components/ui/VerifiedMark";
 
 type Tab = "collection" | "stats" | "stories";
 
@@ -96,9 +95,8 @@ export default function ProfilePage({ data }: Props) {
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3">
-              <h1 className="font-display text-3xl sm:text-5xl tracking-tight truncate leading-none mb-1 flex items-center gap-2">
+              <h1 className="font-display text-3xl sm:text-5xl tracking-tight truncate leading-none mb-1">
                 {profile.display_name || profile.username}
-                {profile.is_verified && <VerifiedMark label={profile.verified_label} size="lg" />}
               </h1>
               {isOwnProfile && (
                 <a href="/settings" aria-label="Edit profile"

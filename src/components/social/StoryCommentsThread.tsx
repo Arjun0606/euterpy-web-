@@ -4,8 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import VerifiedMark from "@/components/ui/VerifiedMark";
-
 interface Comment {
   id: string;
   body: string;
@@ -15,8 +13,6 @@ interface Comment {
     username: string;
     display_name: string | null;
     avatar_url: string | null;
-    is_verified?: boolean;
-    verified_label?: string | null;
   } | null;
 }
 
@@ -48,7 +44,7 @@ export default function StoryCommentsThread({ storyId, initial, currentUserId, s
           user_id: currentUserId,
           body: body.trim(),
         })
-        .select("id, body, created_at, user_id, profiles(username, display_name, avatar_url, is_verified, verified_label)")
+        .select("id, body, created_at, user_id, profiles(username, display_name, avatar_url)")
         .single();
       if (error) throw error;
       if (data) {
@@ -146,10 +142,9 @@ export default function StoryCommentsThread({ storyId, initial, currentUserId, s
                   <div className="flex items-center gap-2 mb-1.5">
                     <Link
                       href={`/${author?.username}`}
-                      className="text-sm font-medium hover:text-accent transition-colors inline-flex items-center gap-1"
+                      className="text-sm font-medium hover:text-accent transition-colors"
                     >
                       {author?.display_name || author?.username}
-                      {author?.is_verified && <VerifiedMark label={author.verified_label} size="sm" />}
                     </Link>
                     <span className="text-[10px] text-zinc-700">
                       {new Date(comment.created_at).toLocaleDateString("en-US", {

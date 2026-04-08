@@ -134,7 +134,7 @@ async function getFullProfile(username: string) {
       // Find which of those people also follow the profile
       const { data: theyFollow } = await supabase
         .from("follows")
-        .select("follower_id, profiles!follows_follower_id_fkey(id, username, display_name, avatar_url, is_verified, verified_label)")
+        .select("follower_id, profiles!follows_follower_id_fkey(id, username, display_name, avatar_url)")
         .eq("following_id", profile.id)
         .in("follower_id", viewerFollowingIds)
         .limit(8);

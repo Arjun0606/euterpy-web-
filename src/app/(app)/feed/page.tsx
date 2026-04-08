@@ -44,7 +44,9 @@ export default async function HomePage() {
   // === DATA FETCHING ===
 
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
+  // The Pulse window — 7 days, so the strip is always populated in early days.
+  // As the platform grows we can shrink this back to 24h or 6h.
+  const pulseWindow = weekAgo;
 
   // ALBUM OF THE DAY — the daily fallback for the hero.
   // Picked deterministically: the album that's been collected most in the past 24h,
@@ -90,7 +92,7 @@ export default async function HomePage() {
     id: string;
     kind: "story" | "list" | "chart" | "lyric" | "mark" | "echo";
     created_at: string;
-    actor: { username: string; display_name: string | null; avatar_url: string | null; is_verified?: boolean };
+    actor: { username: string; display_name: string | null; avatar_url: string | null };
     href: string;
   };
   const pulse: PulseAct[] = [];
@@ -98,38 +100,38 @@ export default async function HomePage() {
     const [pStories, pLists, pCharts, pLyrics, pMarks, pEchoes] = await Promise.all([
       supabase
         .from("stories")
-        .select("id, created_at, profiles(username, display_name, avatar_url, is_verified)")
-        .gte("created_at", sixHoursAgo)
+        .select("id, created_at, profiles(username, display_name, avatar_url)")
+        .gte("created_at", pulseWindow)
         .order("created_at", { ascending: false })
         .limit(4),
       supabase
         .from("lists")
-        .select("id, created_at, profiles(username, display_name, avatar_url, is_verified)")
-        .gte("created_at", sixHoursAgo)
+        .select("id, created_at, profiles(username, display_name, avatar_url)")
+        .gte("created_at", pulseWindow)
         .order("created_at", { ascending: false })
         .limit(2),
       supabase
         .from("charts")
-        .select("id, created_at, profiles(username, display_name, avatar_url, is_verified)")
-        .gte("created_at", sixHoursAgo)
+        .select("id, created_at, profiles(username, display_name, avatar_url)")
+        .gte("created_at", pulseWindow)
         .order("created_at", { ascending: false })
         .limit(2),
       supabase
         .from("lyric_pins")
-        .select("id, created_at, song_apple_id, profiles(username, display_name, avatar_url, is_verified)")
-        .gte("created_at", sixHoursAgo)
+        .select("id, created_at, song_apple_id, profiles(username, display_name, avatar_url)")
+        .gte("created_at", pulseWindow)
         .order("created_at", { ascending: false })
         .limit(3),
       supabase
         .from("stars")
-        .select("id, created_at, kind, target_id, profiles(username, display_name, avatar_url, is_verified)")
-        .gte("created_at", sixHoursAgo)
+        .select("id, created_at, kind, target_id, profiles(username, display_name, avatar_url)")
+        .gte("created_at", pulseWindow)
         .order("created_at", { ascending: false })
         .limit(3),
       supabase
         .from("reposts")
-        .select("id, created_at, kind, target_id, profiles(username, display_name, avatar_url, is_verified)")
-        .gte("created_at", sixHoursAgo)
+        .select("id, created_at, kind, target_id, profiles(username, display_name, avatar_url)")
+        .gte("created_at", pulseWindow)
         .order("created_at", { ascending: false })
         .limit(2),
     ]);
@@ -178,7 +180,7 @@ export default async function HomePage() {
     // Pull recent stories from the past 7 days
     const { data: recentStories } = await supabase
       .from("stories")
-      .select("id, kind, target_apple_id, target_title, target_artist, target_artwork_url, headline, body, created_at, profiles(id, username, display_name, avatar_url, is_verified, verified_label)")
+      .select("id, kind, target_apple_id, target_title, target_artist, target_artwork_url, headline, body, created_at, profiles(id, username, display_name, avatar_url)")
       .gte("created_at", weekAgo)
       .order("created_at", { ascending: false })
       .limit(40);
@@ -203,7 +205,7 @@ export default async function HomePage() {
       // No stories in the past week — fall back to the most recent story ever
       const { data: anyStory } = await supabase
         .from("stories")
-        .select("id, kind, target_apple_id, target_title, target_artist, target_artwork_url, headline, body, created_at, profiles(id, username, display_name, avatar_url, is_verified, verified_label)")
+        .select("id, kind, target_apple_id, target_title, target_artist, target_artwork_url, headline, body, created_at, profiles(id, username, display_name, avatar_url)")
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -232,31 +234,31 @@ export default async function HomePage() {
     const [s, l, c, ly, rp] = await Promise.all([
       supabase
         .from("stories")
-        .select("id, created_at, kind, target_apple_id, target_title, target_artist, target_artwork_url, headline, body, profiles(username, display_name, avatar_url, is_verified, verified_label)")
+        .select("id, created_at, kind, target_apple_id, target_title, target_artist, target_artwork_url, headline, body, profiles(username, display_name, avatar_url)")
         .in("user_id", followingIds)
         .order("created_at", { ascending: false })
         .limit(8),
       supabase
         .from("lists")
-        .select("id, created_at, title, subtitle, profiles(username, display_name, avatar_url, is_verified, verified_label), items:list_items(target_artwork_url, position)")
+        .select("id, created_at, title, subtitle, profiles(username, display_name, avatar_url), items:list_items(target_artwork_url, position)")
         .in("user_id", followingIds)
         .order("created_at", { ascending: false })
         .limit(6),
       supabase
         .from("charts")
-        .select("id, created_at, period_label, profiles(username, display_name, avatar_url, is_verified, verified_label), items:chart_items(position, target_title, target_artwork_url)")
+        .select("id, created_at, period_label, profiles(username, display_name, avatar_url), items:chart_items(position, target_title, target_artwork_url)")
         .in("user_id", followingIds)
         .order("created_at", { ascending: false })
         .limit(4),
       supabase
         .from("lyric_pins")
-        .select("id, created_at, lyric, song_apple_id, song_title, song_artist, song_artwork_url, profiles(username, display_name, avatar_url, is_verified, verified_label)")
+        .select("id, created_at, lyric, song_apple_id, song_title, song_artist, song_artwork_url, profiles(username, display_name, avatar_url)")
         .in("user_id", followingIds)
         .order("created_at", { ascending: false })
         .limit(6),
       supabase
         .from("reposts")
-        .select("id, created_at, kind, target_id, comment, profiles(username, display_name, avatar_url, is_verified, verified_label)")
+        .select("id, created_at, kind, target_id, comment, profiles(username, display_name, avatar_url)")
         .in("user_id", followingIds)
         .order("created_at", { ascending: false })
         .limit(10),
@@ -279,16 +281,16 @@ export default async function HomePage() {
 
     const [hs, hl, hc, hly] = await Promise.all([
       storyIds.length > 0
-        ? supabase.from("stories").select("id, kind, target_apple_id, target_title, target_artist, target_artwork_url, headline, body, profiles(username, display_name, avatar_url, is_verified, verified_label)").in("id", storyIds)
+        ? supabase.from("stories").select("id, kind, target_apple_id, target_title, target_artist, target_artwork_url, headline, body, profiles(username, display_name, avatar_url)").in("id", storyIds)
         : Promise.resolve({ data: [] as any[] }),
       listIds.length > 0
-        ? supabase.from("lists").select("id, title, subtitle, profiles(username, display_name, avatar_url, is_verified, verified_label), items:list_items(target_artwork_url, position)").in("id", listIds)
+        ? supabase.from("lists").select("id, title, subtitle, profiles(username, display_name, avatar_url), items:list_items(target_artwork_url, position)").in("id", listIds)
         : Promise.resolve({ data: [] as any[] }),
       chartIds.length > 0
-        ? supabase.from("charts").select("id, period_label, created_at, profiles(username, display_name, avatar_url, is_verified, verified_label), items:chart_items(position, target_title)").in("id", chartIds)
+        ? supabase.from("charts").select("id, period_label, created_at, profiles(username, display_name, avatar_url), items:chart_items(position, target_title)").in("id", chartIds)
         : Promise.resolve({ data: [] as any[] }),
       lyricIds.length > 0
-        ? supabase.from("lyric_pins").select("id, lyric, song_apple_id, song_title, song_artist, song_artwork_url, profiles(username, display_name, avatar_url, is_verified, verified_label)").in("id", lyricIds)
+        ? supabase.from("lyric_pins").select("id, lyric, song_apple_id, song_title, song_artist, song_artwork_url, profiles(username, display_name, avatar_url)").in("id", lyricIds)
         : Promise.resolve({ data: [] as any[] }),
     ]);
 
@@ -311,20 +313,11 @@ export default async function HomePage() {
   // 7. Curators worth following
   const { data: activeCurators } = await supabase
     .from("profiles")
-    .select("id, username, display_name, avatar_url, album_count, is_verified, verified_label")
+    .select("id, username, display_name, avatar_url, album_count")
     .gt("album_count", 0)
     .neq("id", user.id)
     .order("album_count", { ascending: false })
     .limit(8);
-
-  // Notable voices — verified accounts (legends, critics, artists)
-  const { data: notableVoices } = await supabase
-    .from("profiles")
-    .select("id, username, display_name, avatar_url, album_count, bio, is_verified, verified_label")
-    .eq("is_verified", true)
-    .neq("id", user.id)
-    .order("updated_at", { ascending: false })
-    .limit(6);
 
   // 8. Apple Music charts fallback (for cold start)
   let appleMusicCharts: any[] = [];
@@ -411,11 +404,8 @@ export default async function HomePage() {
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-zinc-200 inline-flex items-center gap-1.5">
+                  <p className="text-sm font-medium text-zinc-200">
                     {storyOfTheWeek.profiles?.display_name || storyOfTheWeek.profiles?.username}
-                    {storyOfTheWeek.profiles?.is_verified && (
-                      <svg viewBox="0 0 24 24" className="w-3 h-3 text-accent inline shrink-0" fill="currentColor"><path d="M12 2L14.39 5.42L18.5 4.83L17.91 8.94L21.33 11.33L17.91 13.72L18.5 17.83L14.39 17.24L12 20.66L9.61 17.24L5.5 17.83L6.09 13.72L2.67 11.33L6.09 8.94L5.5 4.83L9.61 5.42L12 2Z"/></svg>
-                    )}
                   </p>
                   <p className="text-[11px] text-zinc-600">
                     on <span className="italic text-zinc-400">{storyOfTheWeek.target_title}</span>
@@ -494,15 +484,15 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      {/* === THE PULSE — six fresh acts from the whole platform === */}
-      {pulse.length > 0 && (
+      {/* === THE PULSE — recent intentional acts from the whole platform === */}
+      {pulse.length > 0 ? (
         <section className="mb-12">
           <div className="flex items-baseline gap-2 mb-4">
             <span className="relative flex h-1.5 w-1.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-60" />
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-accent" />
             </span>
-            <p className="text-[10px] uppercase tracking-[0.22em] text-accent font-semibold">The pulse · right now</p>
+            <p className="text-[10px] uppercase tracking-[0.22em] text-accent font-semibold">The pulse · this week</p>
           </div>
           <div className="flex gap-3 overflow-x-auto -mx-5 sm:-mx-8 px-5 sm:px-8 no-scrollbar pb-2">
             {pulse.slice(0, 12).map((act) => {
@@ -522,16 +512,28 @@ export default async function HomePage() {
                       <img src={act.actor.avatar_url} alt="" className="w-full h-full object-cover" />
                     ) : act.actor.username[0].toUpperCase()}
                   </div>
-                  <p className="text-[10px] font-medium truncate inline-flex items-center gap-0.5 justify-center">
+                  <p className="text-[10px] font-medium truncate">
                     {act.actor.display_name || act.actor.username}
-                    {act.actor.is_verified && (
-                      <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 text-accent inline shrink-0" fill="currentColor"><path d="M12 2L14.39 5.42L18.5 4.83L17.91 8.94L21.33 11.33L17.91 13.72L18.5 17.83L14.39 17.24L12 20.66L9.61 17.24L5.5 17.83L6.09 13.72L2.67 11.33L6.09 8.94L5.5 4.83L9.61 5.42L12 2Z"/></svg>
-                    )}
                   </p>
                   <p className="text-[9px] text-zinc-700 truncate italic mt-0.5">{verb}</p>
                 </Link>
               );
             })}
+          </div>
+        </section>
+      ) : (
+        <section className="mb-12">
+          <div className="flex items-baseline gap-2 mb-4">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-zinc-700" />
+            </span>
+            <p className="text-[10px] uppercase tracking-[0.22em] text-zinc-700 font-semibold">The pulse · quiet</p>
+          </div>
+          <div className="border border-dashed border-border rounded-2xl py-8 px-6 text-center">
+            <p className="font-display italic text-xl text-zinc-500 mb-2">The room is quiet.</p>
+            <p className="text-[11px] text-zinc-700 max-w-xs mx-auto">
+              When people write stories, pin lyrics, or publish charts, you&apos;ll see them here in real time.
+            </p>
           </div>
         </section>
       )}
@@ -575,11 +577,8 @@ export default async function HomePage() {
                     ) : (author?.username?.[0]?.toUpperCase() || "?")}
                   </Link>
                   <div className="min-w-0 flex-1">
-                    <Link href={`/${author?.username}`} className="text-sm font-medium hover:text-accent transition-colors inline-flex items-center gap-1">
+                    <Link href={`/${author?.username}`} className="text-sm font-medium hover:text-accent transition-colors">
                       {author?.display_name || author?.username}
-                      {author?.is_verified && (
-                        <svg viewBox="0 0 24 24" className="w-3 h-3 text-accent inline" fill="currentColor"><path d="M12 2L14.39 5.42L18.5 4.83L17.91 8.94L21.33 11.33L17.91 13.72L18.5 17.83L14.39 17.24L12 20.66L9.61 17.24L5.5 17.83L6.09 13.72L2.67 11.33L6.09 8.94L5.5 4.83L9.61 5.42L12 2Z"/></svg>
-                      )}
                     </Link>
                     <span className="text-[10px] text-zinc-700"> · {entry.type === "story" ? "wrote a story" : entry.type === "list" ? "made a list" : entry.type === "chart" ? "published a chart" : "pinned a lyric"}</span>
                   </div>
@@ -743,40 +742,12 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* === NOTABLE VOICES — verified accounts === */}
-      {notableVoices && notableVoices.length > 0 && (
-        <section className="mb-14">
-          <div className="flex items-baseline justify-between mb-5">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-accent">Notable voices</p>
-            <Link href="/discover" className="text-[11px] text-zinc-500 hover:text-accent transition-colors">See all →</Link>
-          </div>
-          <div className="flex gap-3 overflow-x-auto -mx-5 sm:-mx-8 px-5 sm:px-8 no-scrollbar pb-2">
-            {notableVoices.map((v: any) => (
-              <Link key={v.id} href={`/${v.username}`} className="shrink-0 w-44 bg-card border border-border rounded-2xl p-4 hover:border-accent/40 transition-colors text-center group">
-                <div className="w-16 h-16 rounded-full bg-background border border-border flex items-center justify-center text-lg text-zinc-600 mx-auto mb-3 overflow-hidden">
-                  {v.avatar_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={v.avatar_url} alt="" className="w-full h-full object-cover" />
-                  ) : v.username[0].toUpperCase()}
-                </div>
-                <p className="font-medium text-sm truncate inline-flex items-center gap-1 justify-center">
-                  {v.display_name || v.username}
-                  <svg viewBox="0 0 24 24" className="w-3 h-3 text-accent inline" fill="currentColor"><path d="M12 2L14.39 5.42L18.5 4.83L17.91 8.94L21.33 11.33L17.91 13.72L18.5 17.83L14.39 17.24L12 20.66L9.61 17.24L5.5 17.83L6.09 13.72L2.67 11.33L6.09 8.94L5.5 4.83L9.61 5.42L12 2Z"/></svg>
-                </p>
-                <p className="text-[11px] text-accent truncate">{v.verified_label || "Verified"}</p>
-                <p className="text-[10px] text-zinc-600 truncate mt-1">@{v.username}</p>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-
       {/* === CURATORS === */}
       {activeCurators && activeCurators.length > 0 && (
         <section className="mb-14">
           <div className="flex items-baseline justify-between mb-5">
             <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">Curators worth following</p>
-            <Link href="/discover" className="text-[11px] text-accent hover:underline">See all →</Link>
+            <Link href="/people" className="text-[11px] text-accent hover:underline">See all →</Link>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {activeCurators.map((c: any) => (
@@ -788,11 +759,8 @@ export default async function HomePage() {
                     <img src={c.avatar_url} alt="" className="w-full h-full object-cover" />
                   ) : c.username[0].toUpperCase()}
                 </div>
-                <p className="font-medium text-sm truncate inline-flex items-center gap-1 justify-center">
+                <p className="font-medium text-sm truncate">
                   {c.display_name || c.username}
-                  {c.is_verified && (
-                    <svg viewBox="0 0 24 24" className="w-3 h-3 text-accent inline shrink-0" fill="currentColor"><path d="M12 2L14.39 5.42L18.5 4.83L17.91 8.94L21.33 11.33L17.91 13.72L18.5 17.83L14.39 17.24L12 20.66L9.61 17.24L5.5 17.83L6.09 13.72L2.67 11.33L6.09 8.94L5.5 4.83L9.61 5.42L12 2Z"/></svg>
-                  )}
                 </p>
                 <p className="text-[11px] text-accent truncate italic">@{c.username}</p>
               </Link>

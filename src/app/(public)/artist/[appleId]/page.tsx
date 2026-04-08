@@ -39,7 +39,7 @@ export default async function ArtistPage({ params }: Props) {
   const supabase = await createClient();
   const { data: stories } = await supabase
     .from("stories")
-    .select("id, headline, body, created_at, user_id, profiles(username, display_name, avatar_url, is_verified, verified_label)")
+    .select("id, headline, body, created_at, user_id, profiles(username, display_name, avatar_url)")
     .eq("kind", "artist")
     .eq("target_apple_id", appleId)
     .order("created_at", { ascending: false })

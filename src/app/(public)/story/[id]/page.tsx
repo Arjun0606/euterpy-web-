@@ -8,7 +8,6 @@ import StoryShareCard from "./StoryShareCard";
 import MarkButton from "@/components/social/MarkButton";
 import EchoButton from "@/components/social/EchoButton";
 import StoryCommentsThread from "@/components/social/StoryCommentsThread";
-import VerifiedMark from "@/components/ui/VerifiedMark";
 import StoryBody from "@/components/story/StoryBody";
 
 export const dynamic = "force-dynamic";
@@ -65,7 +64,7 @@ export default async function StoryPage({ params }: Props) {
 
   const { data: story } = await supabase
     .from("stories")
-    .select("*, profiles(id, username, display_name, avatar_url, bio, is_verified, verified_label)")
+    .select("*, profiles(id, username, display_name, avatar_url, bio)")
     .eq("id", id)
     .single();
 
@@ -96,7 +95,7 @@ export default async function StoryPage({ params }: Props) {
   // Comments
   const { data: comments } = await supabase
     .from("story_comments")
-    .select("id, body, created_at, user_id, profiles(username, display_name, avatar_url, is_verified, verified_label)")
+    .select("id, body, created_at, user_id, profiles(username, display_name, avatar_url)")
     .eq("story_id", id)
     .order("created_at", { ascending: true });
   const isAlbum = story.kind === "album";
@@ -187,9 +186,8 @@ export default async function StoryPage({ params }: Props) {
               )}
             </Link>
             <div className="flex-1 min-w-0">
-              <Link href={`/${author.username}`} className="text-sm font-medium hover:text-accent transition-colors inline-flex items-center gap-1">
+              <Link href={`/${author.username}`} className="text-sm font-medium hover:text-accent transition-colors">
                 {author.display_name || author.username}
-                {author.is_verified && <VerifiedMark label={author.verified_label} size="sm" />}
               </Link>
               <p className="text-[11px] text-zinc-600">@{author.username} · {date}</p>
             </div>

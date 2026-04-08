@@ -21,21 +21,12 @@ export default async function PeoplePage() {
 
   // === DATA FETCHES ===
 
-  // Notable voices — verified accounts
-  const { data: notableVoices } = await supabase
-    .from("profiles")
-    .select("id, username, display_name, avatar_url, bio, is_verified, verified_label")
-    .eq("is_verified", true)
-    .neq("id", user.id)
-    .order("updated_at", { ascending: false })
-    .limit(12);
-
   // Rising voices — users whose stories got the most marks in the past 7 days
   let risingVoices: any[] = [];
   {
     const { data: recentStories } = await supabase
       .from("stories")
-      .select("id, user_id, profiles(id, username, display_name, avatar_url, bio, is_verified, verified_label)")
+      .select("id, user_id, profiles(id, username, display_name, avatar_url, bio)")
       .gte("created_at", weekAgo)
       .neq("user_id", user.id);
 
@@ -81,7 +72,7 @@ export default async function PeoplePage() {
     if (myAlbumIds.length > 0) {
       const { data: others } = await supabase
         .from("ratings")
-        .select("user_id, profiles(id, username, display_name, avatar_url, bio, is_verified, verified_label)")
+        .select("user_id, profiles(id, username, display_name, avatar_url, bio)")
         .in("album_id", myAlbumIds)
         .neq("user_id", user.id)
         .limit(200);
@@ -106,7 +97,7 @@ export default async function PeoplePage() {
   if (followingIds.size > 0) {
     const { data: theirFollows } = await supabase
       .from("follows")
-      .select("following_id, profiles!follows_following_id_fkey(id, username, display_name, avatar_url, bio, is_verified, verified_label)")
+      .select("following_id, profiles!follows_following_id_fkey(id, username, display_name, avatar_url, bio)")
       .in("follower_id", Array.from(followingIds))
       .limit(200);
 
@@ -128,7 +119,7 @@ export default async function PeoplePage() {
   // Active curators — fallback when none of the above have content
   const { data: activeCurators } = await supabase
     .from("profiles")
-    .select("id, username, display_name, avatar_url, album_count, is_verified, verified_label")
+    .select("id, username, display_name, avatar_url, album_count")
     .gt("album_count", 0)
     .neq("id", user.id)
     .order("updated_at", { ascending: false })
@@ -150,20 +141,6 @@ export default async function PeoplePage() {
 
       {/* Search */}
       <PeopleSearch />
-
-      {/* === NOTABLE VOICES === */}
-      {notableVoices && notableVoices.length > 0 && (
-        <section className="mb-14">
-          <div className="mb-5">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-accent mb-1">— Notable voices</p>
-            <h2 className="font-display text-3xl tracking-tight">Critics, artists, legends.</h2>
-            <p className="text-sm text-zinc-500 mt-1">Verified by Euterpy. People who are paid to listen.</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {notableVoices.map((v: any) => <PersonCard key={v.id} person={v} subtitle={v.verified_label || "Verified"} />)}
-          </div>
-        </section>
-      )}
 
       {/* === RISING VOICES === */}
       {risingVoices.length > 0 && (
@@ -259,11 +236,8 @@ function PersonCard({ person, subtitle }: { person: any; subtitle: string }) {
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-sm truncate group-hover:text-accent transition-colors inline-flex items-center gap-1">
+        <p className="font-medium text-sm truncate group-hover:text-accent transition-colors">
           {person.display_name || person.username}
-          {person.is_verified && (
-            <svg viewBox="0 0 24 24" className="w-3 h-3 text-accent inline shrink-0" fill="currentColor"><path d="M12 2L14.39 5.42L18.5 4.83L17.91 8.94L21.33 11.33L17.91 13.72L18.5 17.83L14.39 17.24L12 20.66L9.61 17.24L5.5 17.83L6.09 13.72L2.67 11.33L6.09 8.94L5.5 4.83L9.61 5.42L12 2Z" /></svg>
-          )}
         </p>
         <p className="text-[11px] text-accent truncate">@{person.username}</p>
         {person.bio && <p className="text-[11px] text-zinc-500 line-clamp-1 mt-1 italic editorial">{person.bio}</p>}

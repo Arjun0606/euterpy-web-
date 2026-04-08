@@ -89,7 +89,7 @@ export default async function SongPage({ params }: Props) {
   // Stories about this song
   const { data: stories } = await supabase
     .from("stories")
-    .select("id, headline, body, created_at, user_id, profiles(username, display_name, avatar_url, is_verified, verified_label)")
+    .select("id, headline, body, created_at, user_id, profiles(username, display_name, avatar_url)")
     .eq("kind", "song")
     .eq("target_apple_id", appleId)
     .order("created_at", { ascending: false })

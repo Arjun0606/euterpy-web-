@@ -133,7 +133,7 @@ async function getAlbumData(appleId: string) {
   // Stories about this album
   const { data: stories } = await supabase
     .from("stories")
-    .select("id, headline, body, created_at, user_id, profiles(username, display_name, avatar_url, is_verified, verified_label)")
+    .select("id, headline, body, created_at, user_id, profiles(username, display_name, avatar_url)")
     .eq("kind", "album")
     .eq("target_apple_id", appleId)
     .order("created_at", { ascending: false })
