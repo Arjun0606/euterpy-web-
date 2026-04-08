@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { getArtworkUrl, getAppleMusicCharts, getAppleMusicEditorialPlaylists } from "@/lib/apple-music/client";
+import { getArtworkUrl, getAppleMusicCharts } from "@/lib/apple-music/client";
 import Link from "next/link";
 import Stars from "@/components/ui/Stars";
 import PeopleSearch from "@/components/profile/PeopleSearch";
@@ -31,9 +31,6 @@ export default async function DiscoverPage() {
     artist_name: a.attributes.artistName,
     artwork_url: a.attributes.artwork?.url || null,
   }));
-
-  // Editorial playlists from Apple Music's editorial team — our curation source
-  const editorialPlaylists = await getAppleMusicEditorialPlaylists(12);
 
   // Country-of-the-day — rotates daily, gives Discover a global pulse
   const COUNTRIES = [
@@ -140,40 +137,6 @@ export default async function DiscoverPage() {
 
       {/* People search */}
       <PeopleSearch />
-
-      {/* Today's editorial — Apple Music's curatorial team */}
-      {editorialPlaylists.length > 0 && (
-        <section className="mb-14">
-          <div className="mb-6">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-accent mb-1">— The editorial</p>
-            <h2 className="font-display text-3xl sm:text-4xl tracking-tight">Today&apos;s playlists.</h2>
-            <p className="text-sm text-zinc-500 mt-1">Curated daily by the editorial team. Updates whenever they do.</p>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {editorialPlaylists.slice(0, 6).map((p) => {
-              const cover = p.attributes.artwork?.url
-                ? p.attributes.artwork.url.replace("{w}", "500").replace("{h}", "500")
-                : null;
-              const desc = (p.attributes.description?.short || p.attributes.description?.standard || "")
-                .replace(/<[^>]*>/g, "");
-              return (
-                <Link key={p.id} href={`/playlist/${p.id}`} className="group">
-                  <div className="aspect-square rounded-xl overflow-hidden bg-card border border-border mb-3 group-hover:border-accent/40 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl group-hover:shadow-accent/10">
-                    {cover ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={cover} alt={p.attributes.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-zinc-700">♪</div>
-                    )}
-                  </div>
-                  <p className="font-display text-base tracking-tight truncate group-hover:text-accent transition-colors">{p.attributes.name}</p>
-                  {desc && <p className="text-[11px] text-zinc-600 line-clamp-2 mt-0.5">{desc}</p>}
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-      )}
 
       {/* Apple Music Charts — real data from Apple */}
       {appleAlbums.length > 0 && (

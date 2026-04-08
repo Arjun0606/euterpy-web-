@@ -39,15 +39,15 @@ export default function HomeSearch() {
       const res = await fetch(`/api/search?q=${encodeURIComponent(q.trim())}`);
       const data = await res.json();
       // Interleave: 3 albums, then 3 songs, then more albums
-      const albums: AlbumResult[] = (data.albums || []).slice(0, 4).map((a: any) => ({ ...a, kind: "album" }));
-      const songs: SongResult[] = (data.songs || []).slice(0, 4).map((s: any) => ({ ...s, kind: "song" }));
+      const albums: AlbumResult[] = (data.albums || []).slice(0, 5).map((a: any) => ({ ...a, kind: "album" }));
+      const songs: SongResult[] = (data.songs || []).slice(0, 5).map((s: any) => ({ ...s, kind: "song" }));
       const merged: Result[] = [];
       const max = Math.max(albums.length, songs.length);
       for (let i = 0; i < max; i++) {
         if (albums[i]) merged.push(albums[i]);
         if (songs[i]) merged.push(songs[i]);
       }
-      setResults(merged.slice(0, 6));
+      setResults(merged.slice(0, 8));
     } catch {
       setResults([]);
     }
@@ -104,14 +104,6 @@ export default function HomeSearch() {
               </span>
             </Link>
           ))}
-          {query.length >= 2 && (
-            <Link
-              href={`/search?q=${encodeURIComponent(query)}`}
-              className="block px-4 py-2.5 text-xs text-accent hover:bg-card-hover border-t border-border"
-            >
-              See all results for &ldquo;{query}&rdquo;
-            </Link>
-          )}
         </div>
       )}
     </div>
