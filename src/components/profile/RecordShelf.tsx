@@ -34,38 +34,61 @@ const SHELF_STYLES: Record<ShelfStyle, { ledge: React.CSSProperties; shadow: Rea
     ledge: {
       background: "linear-gradient(to bottom, #2a2a2a 0%, #1a1a1a 50%, #0a0a0a 100%)",
       boxShadow: "0 2px 8px rgba(0,0,0,0.5), 0 1px 2px rgba(255,255,255,0.04) inset",
-      height: "4px",
+      height: "5px",
+      borderRadius: "1px",
     },
     shadow: { background: "linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 100%)", height: "16px" },
   },
   wood: {
     ledge: {
-      background: "linear-gradient(to bottom, #a0633d 0%, #7a4a2c 30%, #5c3517 70%, #3e1f0b 100%)",
-      boxShadow: "0 4px 16px rgba(0,0,0,0.7), 0 2px 4px rgba(255,180,120,0.15) inset, 0 -1px 1px rgba(0,0,0,0.5) inset",
-      height: "10px",
-      borderRadius: "1px",
+      // Wood grain effect using multiple gradient stops
+      backgroundImage: `
+        linear-gradient(to bottom,
+          #c4895a 0%,
+          #a0633d 15%,
+          #8b5a32 35%,
+          #6b3f1a 60%,
+          #4a2810 100%
+        ),
+        repeating-linear-gradient(90deg,
+          rgba(0,0,0,0.06) 0px,
+          rgba(0,0,0,0) 2px,
+          rgba(255,255,255,0.03) 4px,
+          rgba(0,0,0,0) 8px
+        )
+      `,
+      backgroundBlendMode: "overlay",
+      boxShadow: "0 6px 20px rgba(0,0,0,0.8), 0 3px 6px rgba(255,200,140,0.2) inset, 0 -2px 2px rgba(0,0,0,0.5) inset",
+      height: "14px",
+      borderRadius: "2px",
     },
-    shadow: { background: "linear-gradient(to bottom, rgba(50,25,5,0.7) 0%, transparent 100%)", height: "20px" },
+    shadow: { background: "linear-gradient(to bottom, rgba(60,30,5,0.8) 0%, transparent 100%)", height: "24px" },
   },
   ornate: {
     ledge: {
-      background: "linear-gradient(to bottom, #d4a574 0%, #b8865a 25%, #8b5a2b 60%, #5a3a1a 100%)",
-      boxShadow: "0 5px 20px rgba(0,0,0,0.7), 0 2px 4px rgba(255,215,120,0.25) inset, 0 -1px 0 rgba(0,0,0,0.4) inset, 0 0 0 1px rgba(212,165,116,0.3)",
-      height: "12px",
-      borderRadius: "2px",
+      backgroundImage: `linear-gradient(to bottom,
+        #e8c39e 0%,
+        #d4a574 20%,
+        #b8865a 45%,
+        #8b5a2b 75%,
+        #5a3a1a 100%
+      )`,
+      boxShadow: "0 6px 24px rgba(0,0,0,0.8), 0 3px 6px rgba(255,220,150,0.35) inset, 0 -2px 2px rgba(0,0,0,0.5) inset, 0 0 0 1px rgba(232,195,158,0.4), 0 0 16px rgba(212,165,116,0.2)",
+      height: "16px",
+      borderRadius: "3px",
     },
-    shadow: { background: "linear-gradient(to bottom, rgba(40,20,5,0.7) 0%, transparent 100%)", height: "22px" },
+    shadow: { background: "linear-gradient(to bottom, rgba(50,25,8,0.8) 0%, transparent 100%)", height: "26px" },
   },
   glass: {
     ledge: {
-      background: "linear-gradient(to bottom, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.02) 100%)",
-      boxShadow: "0 4px 16px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.18) inset, 0 -1px 0 rgba(255,255,255,0.05) inset",
-      backdropFilter: "blur(12px)",
-      height: "8px",
-      borderRadius: "1px",
-      border: "1px solid rgba(255,255,255,0.08)",
+      background: "linear-gradient(to bottom, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.12) 30%, rgba(255,255,255,0.04) 100%)",
+      boxShadow: "0 4px 20px rgba(0,0,0,0.5), 0 2px 0 rgba(255,255,255,0.25) inset, 0 -1px 0 rgba(255,255,255,0.06) inset",
+      backdropFilter: "blur(16px)",
+      height: "12px",
+      borderRadius: "2px",
+      border: "1px solid rgba(255,255,255,0.12)",
     },
-    shadow: { background: "linear-gradient(to bottom, rgba(255,255,255,0.04) 0%, transparent 100%)", height: "18px" },
+    shadow: { background: "linear-gradient(to bottom, rgba(255,255,255,0.06) 0%, transparent 100%)", height: "20px" },
   },
 };
 
