@@ -127,7 +127,7 @@ export default function QuickSearch() {
       </div>
 
       {/* Results */}
-      {loading && <p className="text-xs text-muted py-2">Searching Apple Music...</p>}
+      {loading && <p className="text-xs text-muted py-2">Searching...</p>}
 
       {results.length > 0 && !selected && (
         <div className="max-h-[200px] overflow-y-auto space-y-0.5 mb-3">

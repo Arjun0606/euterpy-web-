@@ -165,7 +165,7 @@ export default async function SongPage({ params }: Props) {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 mb-4 px-4 py-1.5 bg-card border border-border rounded-full text-xs text-muted hover:text-foreground hover:border-foreground/20 transition-colors"
             >
-              <span>🎵</span> Listen on Apple Music
+              <span>🎵</span> Listen
             </a>
 
             {/* Rating Summary */}

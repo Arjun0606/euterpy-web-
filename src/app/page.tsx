@@ -150,7 +150,7 @@ export default async function Home() {
         <section className="border-t border-border overflow-hidden">
           <div className="max-w-7xl mx-auto px-6 sm:px-10 py-24">
             <div className="text-center mb-16">
-              <p className="text-[11px] uppercase tracking-[0.18em] text-accent mb-4">Live from Apple Music</p>
+              <p className="text-[11px] uppercase tracking-[0.18em] text-accent mb-4">What everyone&apos;s playing</p>
               <h2 className="font-display text-4xl sm:text-5xl tracking-tight">
                 Trending right now
               </h2>

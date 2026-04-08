@@ -103,8 +103,8 @@ export default async function DiscoverPage() {
       {appleAlbums.length > 0 && (
         <section className="mb-12">
           <div className="flex items-baseline justify-between mb-5">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">Trending on Apple Music</p>
-            <p className="text-[11px] text-zinc-600">via MusicKit</p>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">Trending Now</p>
+            
           </div>
           <div className="flex gap-3 overflow-x-auto -mx-5 sm:-mx-8 px-5 sm:px-8 no-scrollbar pb-2">
             {appleAlbums.map((album: any) => (
