@@ -5,6 +5,7 @@ import { getArtist, getArtistAlbums, getArtworkUrl } from "@/lib/apple-music/cli
 import { createClient } from "@/lib/supabase/server";
 import TellStoryButton from "@/components/story/TellStoryButton";
 import StoriesSection from "@/components/story/StoriesSection";
+import StreamingLinks from "@/components/music/StreamingLinks";
 
 interface Props {
   params: Promise<{ appleId: string }>;
@@ -93,17 +94,8 @@ export default async function ArtistPage({ params }: Props) {
                   {artist.attributes.genreNames.filter((g) => g !== "Music").join(" · ")}
                 </p>
               )}
-              <div className="flex flex-wrap items-center gap-2">
-                {artist.attributes.url && (
-                  <a
-                    href={artist.attributes.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-card border border-border rounded-full text-xs text-zinc-500 hover:text-zinc-200 hover:border-zinc-700 transition-colors"
-                  >
-                    <span>🎵</span> Listen
-                  </a>
-                )}
+              <StreamingLinks kind="artist" appleId={appleId} appleUrl={artist.attributes.url} />
+              <div className="mt-4 flex flex-wrap items-center gap-2">
                 <TellStoryButton
                   kind="artist"
                   appleId={appleId}

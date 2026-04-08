@@ -47,6 +47,13 @@ export default function NotificationsList({ initial }: { initial: Notification[]
         let message = "";
         let href = "/";
 
+        function targetHrefFor(kind: string, targetId: string): string {
+          if (kind === "story") return `/story/${targetId}`;
+          if (kind === "list") return `/list/${targetId}`;
+          if (kind === "chart") return `/${n.actor?.username}/charts`;
+          return "/";
+        }
+
         switch (n.type) {
           case "follow":
             message = "started following you";
@@ -55,6 +62,18 @@ export default function NotificationsList({ initial }: { initial: Notification[]
           case "follow_request":
             message = "requested to follow you";
             href = "/settings";
+            break;
+          case "mark":
+            message = `marked your ${n.data?.kind || "story"}`;
+            href = n.data?.kind && n.data?.target_id ? targetHrefFor(n.data.kind, n.data.target_id) : "/";
+            break;
+          case "echo":
+            message = `echoed your ${n.data?.kind || "story"}`;
+            href = n.data?.kind && n.data?.target_id ? targetHrefFor(n.data.kind, n.data.target_id) : "/";
+            break;
+          case "letter":
+            message = "left a letter on your story";
+            href = n.data?.story_id ? `/story/${n.data.story_id}` : "/";
             break;
           case "review_vote":
             message = `${n.data?.vote_type === "up" ? "upvoted" : "downvoted"} your review`;

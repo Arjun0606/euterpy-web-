@@ -5,8 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getArtworkUrl } from "@/lib/apple-music/client";
 import StoryEditButton from "./StoryEditButton";
 import StoryShareCard from "./StoryShareCard";
-import StarButton from "@/components/social/StarButton";
-import RepostButton from "@/components/social/RepostButton";
+import MarkButton from "@/components/social/MarkButton";
+import EchoButton from "@/components/social/EchoButton";
 import StoryCommentsThread from "@/components/social/StoryCommentsThread";
 import VerifiedMark from "@/components/ui/VerifiedMark";
 import StoryBody from "@/components/story/StoryBody";
@@ -43,6 +43,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title,
       description,
+      images: [{ url: `/api/og/story/${id}`, width: 1080, height: 1350 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [`/api/og/story/${id}`],
+    },
+    alternates: {
+      types: {
+        "application/json+oembed": `/api/oembed?url=${encodeURIComponent(`https://euterpy.app/story/${id}`)}`,
+      },
     },
   };
 }
@@ -181,8 +193,8 @@ export default async function StoryPage({ params }: Props) {
               </Link>
               <p className="text-[11px] text-zinc-600">@{author.username} · {date}</p>
             </div>
-            <StarButton kind="story" targetId={story.id} initialCount={starCount || 0} initialStarred={myStar} />
-            <RepostButton kind="story" targetId={story.id} initialCount={repostCount || 0} />
+            <MarkButton kind="story" targetId={story.id} ownerId={author.id} initialCount={starCount || 0} initialMarked={myStar} />
+            <EchoButton kind="story" targetId={story.id} ownerId={author.id} initialCount={repostCount || 0} />
             {isOwnStory && (
               <StoryEditButton
                 story={{

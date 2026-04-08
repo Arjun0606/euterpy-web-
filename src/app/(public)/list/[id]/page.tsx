@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getArtworkUrl } from "@/lib/apple-music/client";
 import ListShareCard from "./ListShareCard";
 import ListEditButton from "./ListEditButton";
+import MarkButton from "@/components/social/MarkButton";
+import EchoButton from "@/components/social/EchoButton";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +46,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
       images: [`/api/og/list/${id}`],
     },
+    alternates: {
+      types: {
+        "application/json+oembed": `/api/oembed?url=${encodeURIComponent(`https://euterpy.app/list/${id}`)}`,
+      },
+    },
   };
 }
 
@@ -64,6 +71,23 @@ export default async function ListPage({ params }: Props) {
 
   const { data: { user } } = await supabase.auth.getUser();
   const isOwn = user?.id === author.id;
+
+  // Mark + echo counts
+  const [{ count: markCount }, { count: echoCount }] = await Promise.all([
+    supabase.from("stars").select("id", { count: "exact", head: true }).eq("kind", "list").eq("target_id", id),
+    supabase.from("reposts").select("id", { count: "exact", head: true }).eq("kind", "list").eq("target_id", id),
+  ]);
+  let myMark = false;
+  if (user) {
+    const { data: markRow } = await supabase
+      .from("stars")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("kind", "list")
+      .eq("target_id", id)
+      .maybeSingle();
+    myMark = !!markRow;
+  }
 
   // First 4 covers for backdrop
   const backdropCover = items[0]?.target_artwork_url ? art(items[0].target_artwork_url, 800) : null;
@@ -114,6 +138,8 @@ export default async function ListPage({ params }: Props) {
               </Link>
               <p className="text-[11px] text-zinc-600">@{author.username} · {date} · {items.length} {items.length === 1 ? "item" : "items"}</p>
             </div>
+            <MarkButton kind="list" targetId={id} ownerId={author.id} initialCount={markCount || 0} initialMarked={myMark} size="sm" />
+            <EchoButton kind="list" targetId={id} ownerId={author.id} initialCount={echoCount || 0} size="sm" />
             {isOwn && (
               <ListEditButton
                 list={{

@@ -8,6 +8,7 @@ import TrackList from "@/components/album/TrackList";
 import EditorialNotes from "@/components/album/EditorialNotes";
 import TellStoryButton from "@/components/story/TellStoryButton";
 import StoriesSection from "@/components/story/StoriesSection";
+import StreamingLinks from "@/components/music/StreamingLinks";
 
 interface Props {
   params: Promise<{ mbid: string }>;
@@ -256,17 +257,10 @@ export default async function AlbumPage({ params }: Props) {
               <p className="text-sm text-muted/40">Not yet collected</p>
             )}
 
-            {/* Listen */}
-            <a
-              href={album.apple_url || `https://music.apple.com/album/${appleId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 mt-4 px-4 py-1.5 bg-card border border-border rounded-full text-xs text-muted hover:text-foreground hover:border-foreground/20 transition-colors"
-            >
-              <span>🎵</span> Listen
-            </a>
+            {/* Streaming links — Spotify, Apple Music, YouTube, Tidal, etc */}
+            <StreamingLinks kind="album" appleId={appleId} appleUrl={album.apple_url} />
 
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-4 flex flex-wrap gap-2">
               <TellStoryButton
                 kind="album"
                 appleId={appleId}

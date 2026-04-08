@@ -245,10 +245,10 @@ export default function ProfilePage({ data }: Props) {
             )}
 
             {/* Chart — my ten right now */}
-            <ChartSection charts={charts} username={profile.username} isOwner={isOwnProfile} />
+            <ChartSection charts={charts} username={profile.username} isOwner={isOwnProfile} ownerId={profile.id} />
 
             {/* Lyric pins */}
-            <LyricPinsSection pins={lyricPins} isOwner={isOwnProfile} />
+            <LyricPinsSection pins={lyricPins} isOwner={isOwnProfile} ownerId={profile.id} />
 
             {/* Lists */}
             <ListsSection lists={lists} isOwner={isOwnProfile} />

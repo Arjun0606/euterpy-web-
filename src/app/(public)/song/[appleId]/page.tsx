@@ -6,6 +6,7 @@ import { getArtworkUrl, getSong as fetchSongFromApple } from "@/lib/apple-music/
 import SongActions from "./SongActions";
 import TellStoryButton from "@/components/story/TellStoryButton";
 import StoriesSection from "@/components/story/StoriesSection";
+import StreamingLinks from "@/components/music/StreamingLinks";
 
 interface Props {
   params: Promise<{ appleId: string }>;
@@ -175,15 +176,8 @@ export default async function SongPage({ params }: Props) {
             {song.composer_name && (
               <p className="text-xs text-muted/30 mb-2">Written by {song.composer_name}</p>
             )}
-            <div className="flex flex-wrap items-center gap-2 mb-3 justify-center sm:justify-start">
-              <a
-                href={song.apple_url || `https://music.apple.com/song/${appleId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-card border border-border rounded-full text-xs text-muted hover:text-foreground hover:border-foreground/20 transition-colors"
-              >
-                <span>🎵</span> Listen
-              </a>
+            <StreamingLinks kind="song" appleId={appleId} appleUrl={song.apple_url} />
+            <div className="mt-4 flex flex-wrap items-center gap-2 justify-center sm:justify-start">
               <TellStoryButton
                 kind="song"
                 appleId={appleId}

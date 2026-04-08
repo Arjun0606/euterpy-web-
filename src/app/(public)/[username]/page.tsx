@@ -39,6 +39,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
       images: [`/api/og/profile/${profile.username}`],
     },
+    alternates: {
+      types: {
+        "application/json+oembed": `/api/oembed?url=${encodeURIComponent(`https://euterpy.app/${profile.username}`)}`,
+      },
+    },
   };
 }
 

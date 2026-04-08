@@ -35,6 +35,33 @@ export default async function DiscoverPage() {
   // Editorial playlists from Apple Music's editorial team — our curation source
   const editorialPlaylists = await getAppleMusicEditorialPlaylists(12);
 
+  // Country-of-the-day — rotates daily, gives Discover a global pulse
+  const COUNTRIES = [
+    { code: "jp", name: "Japan", flag: "🇯🇵" },
+    { code: "br", name: "Brazil", flag: "🇧🇷" },
+    { code: "kr", name: "Korea", flag: "🇰🇷" },
+    { code: "fr", name: "France", flag: "🇫🇷" },
+    { code: "ng", name: "Nigeria", flag: "🇳🇬" },
+    { code: "de", name: "Germany", flag: "🇩🇪" },
+    { code: "mx", name: "Mexico", flag: "🇲🇽" },
+    { code: "in", name: "India", flag: "🇮🇳" },
+    { code: "se", name: "Sweden", flag: "🇸🇪" },
+    { code: "gb", name: "United Kingdom", flag: "🇬🇧" },
+    { code: "es", name: "Spain", flag: "🇪🇸" },
+    { code: "au", name: "Australia", flag: "🇦🇺" },
+    { code: "it", name: "Italy", flag: "🇮🇹" },
+    { code: "ca", name: "Canada", flag: "🇨🇦" },
+  ];
+  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+  const country = COUNTRIES[dayOfYear % COUNTRIES.length];
+  const countryCharts = await getAppleMusicCharts(8, country.code);
+  const countryAlbums = countryCharts.map((a) => ({
+    apple_id: a.id,
+    title: a.attributes.name,
+    artist_name: a.attributes.artistName,
+    artwork_url: a.attributes.artwork?.url || null,
+  }));
+
   // Trending this week
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const { data: trending } = await supabase
@@ -202,6 +229,35 @@ export default async function DiscoverPage() {
                   </div>
                 </div>
                 {v.bio && <p className="text-xs text-zinc-500 line-clamp-2 italic editorial">{v.bio}</p>}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Country of the day — rotates daily */}
+      {countryAlbums.length > 0 && (
+        <section className="mb-14">
+          <div className="mb-5">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-accent mb-1">— Today, abroad</p>
+            <h2 className="font-display text-3xl sm:text-4xl tracking-tight">
+              <span className="mr-2">{country.flag}</span>Top in {country.name}.
+            </h2>
+            <p className="text-sm text-zinc-500 mt-1">A different country every day. Tomorrow, somewhere else.</p>
+          </div>
+          <div className="flex gap-3 overflow-x-auto -mx-5 sm:-mx-8 px-5 sm:px-8 no-scrollbar pb-2">
+            {countryAlbums.map((album: any) => (
+              <Link key={album.apple_id} href={`/album/${album.apple_id}`} className="shrink-0 w-36 group">
+                <div className="aspect-square rounded-xl overflow-hidden bg-card border border-border mb-2 group-hover:border-accent/40 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl group-hover:shadow-accent/10">
+                  {album.artwork_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={art(album.artwork_url)!} alt={album.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-zinc-700">♪</div>
+                  )}
+                </div>
+                <p className="text-xs font-medium truncate">{album.title}</p>
+                <p className="text-[11px] text-zinc-500 truncate">{album.artist_name}</p>
               </Link>
             ))}
           </div>

@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import LyricPinComposer from "./LyricPinComposer";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import MarkButton from "@/components/social/MarkButton";
+import EchoButton from "@/components/social/EchoButton";
 
 interface LyricPin {
   id: string;
@@ -20,11 +22,30 @@ interface LyricPin {
 interface Props {
   pins: LyricPin[];
   isOwner: boolean;
+  ownerId?: string;
 }
 
-export default function LyricPinsSection({ pins, isOwner }: Props) {
+export default function LyricPinsSection({ pins, isOwner, ownerId }: Props) {
   const [composerOpen, setComposerOpen] = useState(false);
+  const [counts, setCounts] = useState<Record<string, { mark: number; echo: number }>>({});
   const router = useRouter();
+
+  // Fetch counts for all pins on mount
+  useEffect(() => {
+    if (pins.length === 0) return;
+    const supabase = createClient();
+    const ids = pins.map((p) => p.id);
+    Promise.all([
+      supabase.from("stars").select("target_id").eq("kind", "lyric").in("target_id", ids),
+      supabase.from("reposts").select("target_id").eq("kind", "lyric").in("target_id", ids),
+    ]).then(([m, e]) => {
+      const next: Record<string, { mark: number; echo: number }> = {};
+      for (const id of ids) next[id] = { mark: 0, echo: 0 };
+      for (const row of (m.data || []) as any[]) next[row.target_id].mark++;
+      for (const row of (e.data || []) as any[]) next[row.target_id].echo++;
+      setCounts(next);
+    });
+  }, [pins]);
 
   async function handleRemove(id: string) {
     if (!confirm("Remove this lyric?")) return;
@@ -112,6 +133,27 @@ export default function LyricPinsSection({ pins, isOwner }: Props) {
                   <p className="text-[10px] text-zinc-600 truncate">{pin.song_artist}</p>
                 </div>
               </Link>
+
+              {/* Mark + Echo row */}
+              <div className="flex items-center gap-2 mt-4 pt-4 border-t border-white/[0.04]">
+                <MarkButton
+                  key={`m-${pin.id}-${counts[pin.id]?.mark || 0}`}
+                  kind="lyric"
+                  targetId={pin.id}
+                  ownerId={ownerId}
+                  initialCount={counts[pin.id]?.mark || 0}
+                  size="sm"
+                />
+                <EchoButton
+                  key={`e-${pin.id}-${counts[pin.id]?.echo || 0}`}
+                  kind="lyric"
+                  targetId={pin.id}
+                  ownerId={ownerId}
+                  initialCount={counts[pin.id]?.echo || 0}
+                  size="sm"
+                />
+              </div>
+
               <div className="absolute top-3 right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
                 <button
                   onClick={() => handleDownload(pin.id)}

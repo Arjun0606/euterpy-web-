@@ -7,23 +7,28 @@ import { toast } from "sonner";
 interface Props {
   kind: "story" | "list" | "chart" | "lyric";
   targetId: string;
+  ownerId?: string;
   initialCount?: number;
   size?: "sm" | "md";
 }
 
 /**
- * Repost — the amplification primitive. Same surface as StarButton
- * but with an optional comment when reposting (Substack restack pattern).
- * Reposted content shows up in the reposter's followers' feeds.
+ * ECHO — Euterpy's amplification primitive. Replaces the generic
+ * retweet/restack icon with an editorial typographic chip.
+ * Backend table is 'reposts' for stability; UI calls it Echo.
+ *
+ * Echoing carries a piece of someone's identity into your followers'
+ * feeds, with their attribution intact.
  */
-export default function RepostButton({
+export default function EchoButton({
   kind,
   targetId,
+  ownerId,
   initialCount = 0,
   size = "md",
 }: Props) {
   const [count, setCount] = useState(initialCount);
-  const [reposted, setReposted] = useState(false);
+  const [echoed, setEchoed] = useState(false);
   const [authed, setAuthed] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
   const [composerOpen, setComposerOpen] = useState(false);
@@ -45,7 +50,7 @@ export default function RepostButton({
         .eq("target_id", targetId)
         .maybeSingle()
         .then(({ data }) => {
-          if (data) setReposted(true);
+          if (data) setEchoed(true);
         });
     });
   }, [kind, targetId]);
@@ -56,22 +61,20 @@ export default function RepostButton({
       window.location.href = "/signup";
       return;
     }
-    if (reposted) {
-      // Unrepost immediately, no confirm
-      await unrepost();
+    if (echoed) {
+      await unecho();
       return;
     }
-    // Open composer for the comment
     setComposerOpen(true);
   }
 
-  async function unrepost() {
+  async function unecho() {
     setLoading(true);
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    setReposted(false);
+    setEchoed(false);
     setCount((c) => Math.max(0, c - 1));
     const { error } = await supabase
       .from("reposts")
@@ -80,16 +83,16 @@ export default function RepostButton({
       .eq("kind", kind)
       .eq("target_id", targetId);
     if (error) {
-      setReposted(true);
+      setEchoed(true);
       setCount((c) => c + 1);
-      toast.error("Couldn't unrepost");
+      toast.error("Couldn't unecho");
     } else {
-      toast("Unposted");
+      toast("Unechoed");
     }
     setLoading(false);
   }
 
-  async function repost() {
+  async function echo() {
     setLoading(true);
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -104,54 +107,56 @@ export default function RepostButton({
       comment: comment.trim() || null,
     });
     if (error) {
-      if (error.code !== "23505") toast.error("Couldn't repost");
+      if (error.code !== "23505") toast.error("Couldn't echo");
     } else {
-      setReposted(true);
+      setEchoed(true);
       setCount((c) => c + 1);
       setComposerOpen(false);
       setComment("");
-      toast("Reposted to your followers");
+      toast("Echoed to your followers");
+      if (ownerId && ownerId !== user.id) {
+        await supabase.from("notifications").insert({
+          user_id: ownerId,
+          actor_id: user.id,
+          type: "echo",
+          data: { kind, target_id: targetId, comment: comment.trim() || null },
+        });
+      }
     }
     setLoading(false);
   }
 
-  const iconSize = size === "md" ? "w-4 h-4" : "w-3.5 h-3.5";
   const padding = size === "md" ? "px-3 py-1.5" : "px-2.5 py-1";
-  const fontSize = size === "md" ? "text-xs" : "text-[11px]";
+  const fontSize = size === "md" ? "text-[10px]" : "text-[9px]";
 
   return (
     <>
       <button
         onClick={handleClick}
         disabled={loading}
-        className={`inline-flex items-center gap-1.5 ${padding} rounded-full border transition-all ${fontSize} ${
-          reposted
-            ? "bg-accent/10 border-accent/40 text-accent"
-            : "bg-card border-border text-zinc-500 hover:text-accent hover:border-accent/40"
+        className={`inline-flex items-baseline gap-1.5 ${padding} rounded-full border transition-all uppercase tracking-[0.18em] font-semibold ${fontSize} ${
+          echoed
+            ? "bg-accent border-accent text-white"
+            : "bg-transparent border-border text-zinc-500 hover:text-accent hover:border-accent/40"
         }`}
-        aria-label={reposted ? "Unrepost" : "Repost"}
-        title={reposted ? "Unrepost" : "Repost to your followers"}
+        aria-label={echoed ? "Unecho" : "Echo"}
+        title={echoed ? "Echoed" : "Echo to your followers"}
       >
-        <svg viewBox="0 0 24 24" className={iconSize} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="17 1 21 5 17 9" />
-          <path d="M3 11V9a4 4 0 0 1 4-4h14" />
-          <polyline points="7 23 3 19 7 15" />
-          <path d="M21 13v2a4 4 0 0 1-4 4H3" />
-        </svg>
-        <span className="tabular-nums">{count}</span>
+        <span>{echoed ? "Echoed" : "Echo"}</span>
+        <span className={`tabular-nums ${echoed ? "text-white/70" : "text-zinc-700"}`}>· {count}</span>
       </button>
 
       {composerOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={() => !loading && setComposerOpen(false)}>
           <div className="absolute inset-0 bg-black/85 backdrop-blur-md" />
           <div className="relative w-full sm:max-w-md bg-card border border-border rounded-t-3xl sm:rounded-3xl p-6" onClick={(e) => e.stopPropagation()}>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-accent mb-1">— Repost</p>
-            <p className="font-display text-2xl tracking-tight mb-5">Add your voice (optional)</p>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-accent mb-1">— Echo</p>
+            <p className="font-display text-2xl tracking-tight mb-5">Add your voice <span className="text-zinc-700 italic text-base">(optional)</span></p>
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               maxLength={500}
-              placeholder="Why is this worth reading?"
+              placeholder="Why is this worth carrying?"
               rows={3}
               autoFocus
               className="editorial w-full bg-input border border-border rounded-2xl p-4 text-sm text-zinc-200 placeholder:text-zinc-700 focus:outline-none focus:border-zinc-700 resize-none transition-colors"
@@ -166,11 +171,11 @@ export default function RepostButton({
                 Cancel
               </button>
               <button
-                onClick={repost}
+                onClick={echo}
                 disabled={loading}
                 className="flex-1 py-3 bg-accent text-white rounded-full text-xs font-medium hover:bg-accent-hover transition-colors disabled:opacity-30"
               >
-                {loading ? "Reposting..." : "Repost"}
+                {loading ? "Echoing..." : "Echo"}
               </button>
             </div>
           </div>

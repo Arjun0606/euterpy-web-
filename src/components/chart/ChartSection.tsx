@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import ChartComposer from "./ChartComposer";
 import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
+import MarkButton from "@/components/social/MarkButton";
+import EchoButton from "@/components/social/EchoButton";
 
 interface ChartItem {
   position: number;
@@ -26,6 +29,7 @@ interface Props {
   charts: Chart[];
   username: string;
   isOwner: boolean;
+  ownerId?: string;
 }
 
 function art(url: string | null, size = 200): string | null {
@@ -33,12 +37,27 @@ function art(url: string | null, size = 200): string | null {
   return url.replace("{w}", size.toString()).replace("{h}", size.toString());
 }
 
-export default function ChartSection({ charts, username, isOwner }: Props) {
+export default function ChartSection({ charts, username, isOwner, ownerId }: Props) {
   const [composerOpen, setComposerOpen] = useState(false);
   const [editChart, setEditChart] = useState<Chart | null>(null);
+  const [markCount, setMarkCount] = useState(0);
+  const [echoCount, setEchoCount] = useState(0);
 
   const current = charts[0];
   const hasHistory = charts.length > 1;
+
+  // Fetch mark + echo counts for the current chart
+  useEffect(() => {
+    if (!current) return;
+    const supabase = createClient();
+    Promise.all([
+      supabase.from("stars").select("id", { count: "exact", head: true }).eq("kind", "chart").eq("target_id", current.id),
+      supabase.from("reposts").select("id", { count: "exact", head: true }).eq("kind", "chart").eq("target_id", current.id),
+    ]).then(([m, e]) => {
+      setMarkCount(m.count || 0);
+      setEchoCount(e.count || 0);
+    });
+  }, [current]);
 
   if (!current && !isOwner) return null;
 
@@ -103,19 +122,25 @@ export default function ChartSection({ charts, username, isOwner }: Props) {
       {current && (
         <div className="bg-card border border-border rounded-2xl overflow-hidden">
           {/* Header */}
-          <div className="px-6 py-5 border-b border-white/[0.04] flex items-baseline justify-between gap-4">
-            <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-[0.18em] text-accent mb-1">— My ten right now</p>
-              <p className="font-display text-2xl tracking-tight italic truncate">
-                {current.period_label || new Date(current.created_at).toLocaleString("en-US", { month: "long", year: "numeric" })}
-              </p>
+          <div className="px-6 py-5 border-b border-white/[0.04]">
+            <div className="flex items-baseline justify-between gap-4 mb-3">
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase tracking-[0.18em] text-accent mb-1">— My ten right now</p>
+                <p className="font-display text-2xl tracking-tight italic truncate">
+                  {current.period_label || new Date(current.created_at).toLocaleString("en-US", { month: "long", year: "numeric" })}
+                </p>
+              </div>
+              <button
+                onClick={handleDownload}
+                className="text-[11px] text-zinc-500 hover:text-accent transition-colors px-3 py-1.5 border border-border rounded-full whitespace-nowrap"
+              >
+                Save image
+              </button>
             </div>
-            <button
-              onClick={handleDownload}
-              className="text-[11px] text-zinc-500 hover:text-accent transition-colors px-3 py-1.5 border border-border rounded-full whitespace-nowrap"
-            >
-              Save image
-            </button>
+            <div className="flex items-center gap-2">
+              <MarkButton key={`m-${current.id}-${markCount}`} kind="chart" targetId={current.id} ownerId={ownerId} initialCount={markCount} size="sm" />
+              <EchoButton key={`e-${current.id}-${echoCount}`} kind="chart" targetId={current.id} ownerId={ownerId} initialCount={echoCount} size="sm" />
+            </div>
           </div>
 
           {/* Items */}

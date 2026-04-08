@@ -54,6 +54,15 @@ export default function StoryCommentsThread({ storyId, initial, currentUserId, s
       if (data) {
         setComments([...comments, data as any]);
         setBody("");
+        // Notify the story owner (silent on failure)
+        if (storyOwnerId !== currentUserId) {
+          await supabase.from("notifications").insert({
+            user_id: storyOwnerId,
+            actor_id: currentUserId,
+            type: "letter",
+            data: { story_id: storyId, comment_id: data.id },
+          });
+        }
       }
     } catch {
       toast.error("Couldn't post comment");

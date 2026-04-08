@@ -7,24 +7,27 @@ import { toast } from "sonner";
 interface Props {
   kind: "story" | "list" | "chart" | "lyric";
   targetId: string;
+  ownerId?: string;
   initialCount?: number;
-  initialStarred?: boolean;
+  initialMarked?: boolean;
   size?: "sm" | "md";
 }
 
 /**
- * Universal star (validation primitive). Works on stories, lists,
- * charts, and lyric pins. One DB row per (user, kind, target_id).
+ * MARK — Euterpy's validation primitive. Replaces the generic
+ * heart/star icon with an editorial typographic chip.
+ * Backend table is 'stars' for stability; UI calls it Mark.
  */
-export default function StarButton({
+export default function MarkButton({
   kind,
   targetId,
+  ownerId,
   initialCount = 0,
-  initialStarred = false,
+  initialMarked = false,
   size = "md",
 }: Props) {
   const [count, setCount] = useState(initialCount);
-  const [starred, setStarred] = useState(initialStarred);
+  const [marked, setMarked] = useState(initialMarked);
   const [authed, setAuthed] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -36,7 +39,6 @@ export default function StarButton({
         return;
       }
       setAuthed(true);
-      // Check if this user has already starred
       supabase
         .from("stars")
         .select("id")
@@ -45,7 +47,7 @@ export default function StarButton({
         .eq("target_id", targetId)
         .maybeSingle()
         .then(({ data }) => {
-          if (data) setStarred(true);
+          if (data) setMarked(true);
         });
     });
   }, [kind, targetId]);
@@ -64,9 +66,8 @@ export default function StarButton({
       return;
     }
 
-    if (starred) {
-      // Unstar
-      setStarred(false);
+    if (marked) {
+      setMarked(false);
       setCount((c) => Math.max(0, c - 1));
       const { error } = await supabase
         .from("stars")
@@ -75,47 +76,50 @@ export default function StarButton({
         .eq("kind", kind)
         .eq("target_id", targetId);
       if (error) {
-        // rollback
-        setStarred(true);
+        setMarked(true);
         setCount((c) => c + 1);
-        toast.error("Couldn't unstar");
+        toast.error("Couldn't unmark");
       }
     } else {
-      // Star
-      setStarred(true);
+      setMarked(true);
       setCount((c) => c + 1);
       const { error } = await supabase
         .from("stars")
         .insert({ user_id: user.id, kind, target_id: targetId });
       if (error) {
-        setStarred(false);
+        setMarked(false);
         setCount((c) => Math.max(0, c - 1));
-        if (error.code !== "23505") toast.error("Couldn't star");
+        if (error.code !== "23505") toast.error("Couldn't mark");
+      } else if (ownerId && ownerId !== user.id) {
+        // Fire a notification to the owner — silent on failure
+        await supabase.from("notifications").insert({
+          user_id: ownerId,
+          actor_id: user.id,
+          type: "mark",
+          data: { kind, target_id: targetId },
+        });
       }
     }
     setLoading(false);
   }
 
-  const iconSize = size === "md" ? "w-4 h-4" : "w-3.5 h-3.5";
   const padding = size === "md" ? "px-3 py-1.5" : "px-2.5 py-1";
-  const fontSize = size === "md" ? "text-xs" : "text-[11px]";
+  const fontSize = size === "md" ? "text-[10px]" : "text-[9px]";
 
   return (
     <button
       onClick={toggle}
       disabled={loading}
-      className={`inline-flex items-center gap-1.5 ${padding} rounded-full border transition-all ${fontSize} ${
-        starred
-          ? "bg-accent/10 border-accent/40 text-accent"
-          : "bg-card border-border text-zinc-500 hover:text-accent hover:border-accent/40"
+      className={`inline-flex items-baseline gap-1.5 ${padding} rounded-full border transition-all uppercase tracking-[0.18em] font-semibold ${fontSize} ${
+        marked
+          ? "bg-accent border-accent text-white"
+          : "bg-transparent border-border text-zinc-500 hover:text-accent hover:border-accent/40"
       }`}
-      aria-label={starred ? "Unstar" : "Star"}
-      title={starred ? "Unstar" : "Star"}
+      aria-label={marked ? "Unmark" : "Mark"}
+      title={marked ? "Marked" : "Mark this"}
     >
-      <svg viewBox="0 0 24 24" className={iconSize} fill={starred ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-      </svg>
-      <span className="tabular-nums">{count}</span>
+      <span>{marked ? "Marked" : "Mark"}</span>
+      <span className={`tabular-nums ${marked ? "text-white/70" : "text-zinc-700"}`}>· {count}</span>
     </button>
   );
 }
