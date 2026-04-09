@@ -5,7 +5,9 @@ import Stars from "@/components/ui/Stars";
 import LikeButton from "@/components/ui/LikeButton";
 import HomeSearch from "./HomeSearch";
 import OnThisDay from "@/components/feed/OnThisDay";
+import FirstFridayBanner from "@/components/feed/FirstFridayBanner";
 import { getOnThisDayMemory } from "@/lib/memories";
+import { isFirstFriday, todayStartISO, tomorrowStartISO } from "@/lib/firstFriday";
 
 export const metadata = { title: "Home" };
 export const dynamic = "force-dynamic";
@@ -46,6 +48,20 @@ export default async function HomePage() {
   // On-this-day memory — surfaces one item from the user's own past
   // (a year ago, 6 months ago, etc). Returns null on fresh profiles.
   const memory = await getOnThisDayMemory(supabase, user.id);
+
+  // First Friday — count how many followed users have updated their three
+  // today. Only meaningful when today actually IS First Friday; otherwise
+  // we skip the query entirely.
+  let firstFridayUpdatesFromFriends = 0;
+  if (isFirstFriday() && followingIds.length > 0) {
+    const { count } = await supabase
+      .from("get_to_know_me")
+      .select("user_id", { count: "exact", head: true })
+      .in("user_id", followingIds)
+      .gte("updated_at", todayStartISO())
+      .lt("updated_at", tomorrowStartISO());
+    firstFridayUpdatesFromFriends = count || 0;
+  }
 
   // === DATA FETCHING ===
 
@@ -369,6 +385,11 @@ export default async function HomePage() {
 
       {/* Search */}
       <HomeSearch />
+
+      {/* === FIRST FRIDAY — Euterpy's monthly cultural date ===
+          Festive on the day itself, quietly anticipatory the rest of
+          the month. Always present so the rhythm becomes habitual. */}
+      <FirstFridayBanner friendsUpdatedToday={firstFridayUpdatesFromFriends} />
 
       {/* === ON THIS DAY — personal memory hero === */}
       {/* Quietly surfaces one item from the user's own past. Skipped on
