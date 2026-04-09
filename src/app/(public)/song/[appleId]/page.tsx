@@ -8,6 +8,8 @@ import TellStoryButton from "@/components/story/TellStoryButton";
 import StoriesSection from "@/components/story/StoriesSection";
 import StreamingLinks from "@/components/music/StreamingLinks";
 
+export const dynamic = "force-dynamic";
+
 interface Props {
   params: Promise<{ appleId: string }>;
 }

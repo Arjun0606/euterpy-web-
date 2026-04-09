@@ -101,9 +101,9 @@ export default async function ListPage({ params }: Props) {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
-      <section className="relative">
+      <section className="relative overflow-hidden">
         {backdropCover && (
-          <div className="absolute inset-0 h-[60vh]">
+          <div className="absolute inset-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={backdropCover} alt="" className="w-full h-full object-cover opacity-25 blur-3xl scale-125" />
             <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/85 to-background" />
