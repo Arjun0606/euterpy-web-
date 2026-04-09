@@ -8,14 +8,19 @@ interface Props {
 }
 
 /**
- * The Three share card. The single highest-leverage shareable artifact
- * in the product. Renders the user's three GTKM albums as a magazine
- * spread, with download + link share. Modeled on Letterboxd's Four
- * Favourites — this is meant to escape the app and live on Twitter,
- * Instagram, iMessage. The whole growth strategy hinges on this card
- * being beautiful enough that people *want* to share it.
+ * The Three share card. Collapsed by default — just a small inline
+ * button that says "Share your three". Click it to expand the preview
+ * + download/share controls. This keeps the GTKM carousel as the hero
+ * of the profile and treats sharing as an explicit action, not a
+ * giant always-on preview.
+ *
+ * The card itself is the highest-leverage viral artifact in the
+ * product. Modeled on Letterboxd's Four Favourites — it's meant to
+ * escape the app and live on Twitter, Instagram, iMessage. The OG
+ * route at /api/og/three/[username] does the actual rendering.
  */
 export default function ThreeShareCard({ username }: Props) {
+  const [open, setOpen] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const cardUrl = `/api/og/three/${username}?ts=${Date.now()}`;
 
@@ -54,25 +59,47 @@ export default function ThreeShareCard({ username }: Props) {
     }
   }
 
+  if (!open) {
+    return (
+      <div className="-mt-8 mb-14 flex justify-center">
+        <button
+          onClick={() => setOpen(true)}
+          className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 hover:text-accent px-4 py-2 border border-border hover:border-accent/40 rounded-full transition-colors font-semibold"
+        >
+          ↓ Share your three
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="mb-12">
-      <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-5">— Share your three</p>
-      <div className="bg-card border border-border rounded-2xl p-5">
-        <div className="rounded-xl overflow-hidden mb-5 border border-border bg-black aspect-[1080/1350]">
+    <div className="mb-14">
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">— Share your three</p>
+        <button
+          onClick={() => setOpen(false)}
+          className="text-[11px] text-zinc-600 hover:text-zinc-300 transition-colors"
+          aria-label="Close share preview"
+        >
+          Close
+        </button>
+      </div>
+      <div className="bg-card border border-border rounded-2xl p-4 max-w-md mx-auto">
+        <div className="rounded-xl overflow-hidden mb-4 border border-border bg-black aspect-[1080/1350]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={cardUrl} alt="The Three card" className="w-full h-full object-contain" />
         </div>
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col sm:flex-row gap-2">
           <button
             onClick={handleDownload}
             disabled={downloading}
-            className="flex-1 px-6 py-3 bg-accent text-white text-sm font-medium rounded-full hover:bg-accent-hover transition-colors disabled:opacity-50"
+            className="flex-1 px-5 py-2.5 bg-accent text-white text-xs font-medium rounded-full hover:bg-accent-hover transition-colors disabled:opacity-50"
           >
             {downloading ? "Saving..." : "Download as image"}
           </button>
           <button
             onClick={handleShare}
-            className="flex-1 px-6 py-3 border border-border text-zinc-300 text-sm font-medium rounded-full hover:border-zinc-700 hover:text-white transition-colors"
+            className="flex-1 px-5 py-2.5 border border-border text-zinc-300 text-xs font-medium rounded-full hover:border-zinc-700 hover:text-white transition-colors"
           >
             Share link
           </button>
