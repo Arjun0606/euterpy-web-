@@ -176,7 +176,13 @@ export default async function SongPage({ params }: Props) {
             {song.composer_name && (
               <p className="text-xs text-muted/30 mb-2">Written by {song.composer_name}</p>
             )}
-            <StreamingLinks kind="song" appleId={appleId} appleUrl={song.apple_url} />
+            <StreamingLinks
+              kind="song"
+              appleId={appleId}
+              appleUrl={song.apple_url}
+              title={song.title}
+              artist={song.artist_name}
+            />
             <div className="mt-4 flex flex-wrap items-center gap-2 justify-center sm:justify-start">
               <TellStoryButton
                 kind="song"

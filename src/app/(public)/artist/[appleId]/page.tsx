@@ -94,7 +94,12 @@ export default async function ArtistPage({ params }: Props) {
                   {artist.attributes.genreNames.filter((g) => g !== "Music").join(" · ")}
                 </p>
               )}
-              <StreamingLinks kind="artist" appleId={appleId} appleUrl={artist.attributes.url} />
+              <StreamingLinks
+                kind="artist"
+                appleId={appleId}
+                appleUrl={artist.attributes.url}
+                title={artist.attributes.name}
+              />
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 <TellStoryButton
                   kind="artist"

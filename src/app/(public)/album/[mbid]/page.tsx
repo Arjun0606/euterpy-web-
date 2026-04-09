@@ -263,7 +263,13 @@ export default async function AlbumPage({ params }: Props) {
             )}
 
             {/* Streaming links — Spotify, Apple Music, YouTube, Tidal, etc */}
-            <StreamingLinks kind="album" appleId={appleId} appleUrl={album.apple_url} />
+            <StreamingLinks
+              kind="album"
+              appleId={appleId}
+              appleUrl={album.apple_url}
+              title={album.title}
+              artist={album.artist_name}
+            />
 
             <div className="mt-4 flex flex-wrap gap-2">
               <TellStoryButton
