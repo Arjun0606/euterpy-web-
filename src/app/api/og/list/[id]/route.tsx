@@ -9,6 +9,25 @@ function art(template: string | null, size: number): string | null {
   return template.replace("{w}", size.toString()).replace("{h}", size.toString());
 }
 
+/**
+ * next/og's edge runtime ships only Latin sans-serif glyphs. Any
+ * emoji, decorative symbol (★), or non-Latin character renders as
+ * a tofu box. Strip them defensively from anything we display in
+ * the share card so user-provided titles don't break the artifact.
+ *
+ * Allows: ASCII printable, Latin Supplement, common Latin Extended,
+ * curly quotes, em/en dashes, ellipsis. Drops emoji and pictographs.
+ */
+function safe(text: string | null | undefined): string {
+  if (!text) return "";
+  return text
+    // Strip anything outside Basic Latin + Latin-1 Supplement + Latin Extended-A
+    // and the small set of typographic characters we use ourselves.
+    .replace(/[^\x20-\x7E\u00A0-\u017F\u2018\u2019\u201C\u201D\u2013\u2014\u2026]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -36,8 +55,8 @@ export async function GET(
   const author = (list.profiles as any) || {};
   const itemRows = (items || []).map((it: any, i: number) => ({
     position: i + 1,
-    title: it.target_title,
-    artist: it.target_artist,
+    title: safe(it.target_title),
+    artist: safe(it.target_artist),
     cover: art(it.target_artwork_url, 200),
   }));
 
@@ -74,7 +93,10 @@ export async function GET(
             maxWidth: "100%",
           }}
         >
-          {list.title.length > 60 ? list.title.slice(0, 60) + "…" : list.title}
+          {(() => {
+            const t = safe(list.title);
+            return t.length > 60 ? t.slice(0, 60) + "…" : t;
+          })()}
         </div>
 
         {/* Subtitle */}
@@ -93,7 +115,7 @@ export async function GET(
               maxWidth: "85%",
             }}
           >
-            {list.subtitle}
+            {safe(list.subtitle)}
           </div>
         )}
 
