@@ -187,63 +187,68 @@ export default function WelcomePage() {
           </div>
         )}
 
-        <main className="relative max-w-2xl mx-auto px-5 sm:px-8 py-16 sm:py-24">
-          <p className="text-[10px] uppercase tracking-[0.25em] text-accent font-semibold mb-6">— Your music identity</p>
-          <h1 className="font-display text-5xl sm:text-7xl tracking-tighter leading-[0.92] mb-4">
-            This is who you are,
-          </h1>
-          <h1 className="font-display italic text-5xl sm:text-7xl tracking-tighter leading-[0.92] text-accent mb-10">
-            in three records.
-          </h1>
+        <main className="relative max-w-7xl mx-auto px-5 sm:px-8 py-16 sm:py-24">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-12 lg:gap-20 items-start">
+            {/* LEFT — editorial hero */}
+            <div className="lg:sticky lg:top-24">
+              <p className="text-[11px] uppercase tracking-[0.25em] text-accent font-semibold mb-6">— Your music identity</p>
+              <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl tracking-tighter leading-[0.92] mb-3">
+                This is who you are,
+              </h1>
+              <h1 className="font-display italic text-5xl sm:text-6xl lg:text-7xl tracking-tighter leading-[0.92] text-accent mb-10">
+                in three records.
+              </h1>
 
-          <p className="editorial text-base text-zinc-400 leading-relaxed mb-12 max-w-md">
-            Every Euterpy profile starts with these three. They sit at the top of your page — the first thing anyone sees when they arrive. You can rewrite them anytime.
-          </p>
+              <p className="editorial text-base sm:text-lg text-zinc-400 leading-[1.7] mb-10 max-w-md">
+                Every Euterpy profile starts with these three. They sit at the top of your page — the first thing anyone sees when they arrive. You can rewrite them anytime.
+              </p>
 
-          {/* The three picks */}
-          <div className="space-y-4 mb-12">
-            {picks.map((pick, i) => (
-              <div key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-border">
-                <span className="font-display text-3xl tracking-tighter text-zinc-700 w-8 text-right tabular-nums shrink-0">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                {pick?.artworkUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={art(pick.artworkUrl, 200)!} alt="" className="w-14 h-14 rounded-md object-cover shrink-0 border border-white/[0.06]" />
-                ) : (
-                  <div className="w-14 h-14 rounded-md bg-background border border-border flex items-center justify-center text-zinc-700 shrink-0">♪</div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">{pick?.title || "—"}</p>
-                  <p className="text-xs text-zinc-500 truncate italic">{pick?.artistName || ""}</p>
-                </div>
+              <p className="editorial italic text-sm text-zinc-600 max-w-md leading-relaxed">
+                From here, write a story about one of them. Pin a lyric you carry. Make a list. Build your charts. The page is yours.
+              </p>
+            </div>
+
+            {/* RIGHT — the three picks + actions */}
+            <div>
+              <div className="space-y-3 mb-10">
+                {picks.map((pick, i) => (
+                  <div key={i} className="flex items-center gap-4 p-5 rounded-2xl bg-card border border-border">
+                    <span className="font-display text-3xl tracking-tighter text-zinc-700 w-8 text-right tabular-nums shrink-0">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    {pick?.artworkUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={art(pick.artworkUrl, 200)!} alt="" className="w-16 h-16 rounded-md object-cover shrink-0 border border-white/[0.06]" />
+                    ) : (
+                      <div className="w-16 h-16 rounded-md bg-background border border-border flex items-center justify-center text-zinc-700 shrink-0">♪</div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-display text-lg tracking-tight truncate">{pick?.title || "—"}</p>
+                      <p className="text-xs text-zinc-500 truncate italic">{pick?.artistName || ""}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            {username && (
-              <button
-                onClick={() => router.push(`/${username}`)}
-                disabled={!allPicked}
-                className="flex-1 py-3.5 bg-accent text-white text-sm font-medium rounded-full hover:bg-accent-hover transition-colors disabled:opacity-30"
-              >
-                See your profile →
-              </button>
-            )}
-            <button
-              onClick={() => router.push("/feed")}
-              className="flex-1 py-3.5 border border-border text-zinc-400 text-sm rounded-full hover:text-white hover:border-zinc-700 transition-colors"
-            >
-              Go to the feed
-            </button>
-          </div>
-
-          <div className="mt-10 pt-8 border-t border-white/[0.04] text-center">
-            <p className="editorial italic text-xs text-zinc-700 max-w-sm mx-auto leading-relaxed">
-              From here, write a story about one of them. Pin a lyric you carry. Make a list. Build your charts. The page is yours.
-            </p>
+              {/* Actions */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                {username && (
+                  <button
+                    onClick={() => router.push(`/${username}`)}
+                    disabled={!allPicked}
+                    className="flex-1 py-3.5 bg-accent text-white text-sm font-medium rounded-full hover:bg-accent-hover transition-colors disabled:opacity-30"
+                  >
+                    See your profile →
+                  </button>
+                )}
+                <button
+                  onClick={() => router.push("/feed")}
+                  className="flex-1 py-3.5 border border-border text-zinc-400 text-sm rounded-full hover:text-white hover:border-zinc-700 transition-colors"
+                >
+                  Go to the feed
+                </button>
+              </div>
+            </div>
           </div>
         </main>
       </div>
@@ -256,10 +261,9 @@ export default function WelcomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <main className="max-w-2xl mx-auto px-5 sm:px-8 py-12 sm:py-20">
-
-        {/* Progress */}
-        <div className="flex gap-1.5 mb-12">
+      <main className="max-w-7xl mx-auto px-5 sm:px-8 py-12 sm:py-20">
+        {/* Progress — full width across the top of the page */}
+        <div className="flex gap-1.5 mb-16 max-w-3xl">
           {[0, 1, 2].map((i) => (
             <div
               key={i}
@@ -270,111 +274,135 @@ export default function WelcomePage() {
           ))}
         </div>
 
-        {/* Eyebrow + headline */}
-        <p className="text-[10px] uppercase tracking-[0.25em] text-accent font-semibold mb-4">— {prompt.eyebrow}</p>
-        <h1 className="font-display text-4xl sm:text-6xl tracking-tighter leading-[0.95] mb-5">
-          {prompt.title}
-        </h1>
-        <p className="editorial italic text-base sm:text-lg text-zinc-400 leading-relaxed mb-12 max-w-lg">
-          {prompt.sub}
-        </p>
+        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-12 lg:gap-20 items-start">
+          {/* LEFT — editorial prompt */}
+          <div className="lg:sticky lg:top-24">
+            <p className="text-[11px] uppercase tracking-[0.25em] text-accent font-semibold mb-5">— {prompt.eyebrow}</p>
+            <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl tracking-tighter leading-[0.95] mb-6">
+              {prompt.title}
+            </h1>
+            <p className="editorial italic text-base sm:text-lg text-zinc-400 leading-[1.65] max-w-md">
+              {prompt.sub}
+            </p>
 
-        {/* Already-picked confirmation when revisiting */}
-        {currentPick && (
-          <div className="mb-6 p-4 rounded-2xl bg-card border border-accent/30">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-accent mb-2">Your answer</p>
-            <div className="flex items-center gap-3">
-              {currentPick.artworkUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={art(currentPick.artworkUrl, 200)!} alt="" className="w-12 h-12 rounded-md object-cover shrink-0" />
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{currentPick.title}</p>
-                <p className="text-xs text-zinc-500 truncate italic">{currentPick.artistName}</p>
-              </div>
+            {/* Footer nav — under the prompt copy on desktop */}
+            <div className="hidden lg:flex items-center gap-6 mt-12 pt-6 border-t border-white/[0.04]">
               <button
-                onClick={() => {
-                  const next = [...picks];
-                  next[step] = null;
-                  setPicks(next);
-                }}
-                className="text-[11px] text-zinc-600 hover:text-accent transition-colors"
+                onClick={back}
+                disabled={step === 0}
+                className="text-[11px] text-zinc-600 hover:text-accent transition-colors disabled:opacity-0 disabled:pointer-events-none"
               >
-                Change
+                ← Previous
+              </button>
+              <button
+                onClick={() => router.push("/feed")}
+                className="text-[11px] text-zinc-700 hover:text-zinc-400 transition-colors"
+              >
+                Skip for now
               </button>
             </div>
-            {step < 2 && (
-              <button
-                onClick={() => setStep(step + 1)}
-                className="w-full mt-4 py-2.5 bg-accent text-white text-xs font-medium rounded-full hover:bg-accent-hover transition-colors"
-              >
-                Next question →
-              </button>
-            )}
-            {step === 2 && (
-              <button
-                onClick={() => setStep(3)}
-                className="w-full mt-4 py-2.5 bg-accent text-white text-xs font-medium rounded-full hover:bg-accent-hover transition-colors"
-              >
-                Finish →
-              </button>
-            )}
           </div>
-        )}
 
-        {/* Search input */}
-        {!currentPick && (
-          <>
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => handleInput(e.target.value)}
-              autoFocus
-              placeholder="Search for the album..."
-              className="w-full px-5 py-4 bg-input border border-border rounded-2xl text-base placeholder:text-zinc-700 focus:outline-none focus:border-zinc-700 transition-colors"
-              disabled={saving}
-            />
-
-            {searching && (
-              <p className="text-center text-zinc-700 text-xs py-6">Searching...</p>
-            )}
-
-            {!searching && query.length < 2 && (
-              <p className="text-center text-zinc-800 text-[11px] py-6 italic">Type a title or artist to begin.</p>
-            )}
-
-            {!searching && query.length >= 2 && results.length === 0 && (
-              <p className="text-center text-zinc-700 text-xs py-6">No albums found.</p>
-            )}
-
-            {results.length > 0 && (
-              <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {results.map((a) => (
+          {/* RIGHT — search + results, or the locked-in answer */}
+          <div>
+            {/* Already-picked confirmation when revisiting */}
+            {currentPick && (
+              <div className="mb-6 p-5 rounded-2xl bg-card border border-accent/30">
+                <p className="text-[10px] uppercase tracking-[0.18em] text-accent mb-3">Your answer</p>
+                <div className="flex items-center gap-3">
+                  {currentPick.artworkUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={art(currentPick.artworkUrl, 200)!} alt="" className="w-14 h-14 rounded-md object-cover shrink-0" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-display text-lg tracking-tight truncate">{currentPick.title}</p>
+                    <p className="text-xs text-zinc-500 truncate italic">{currentPick.artistName}</p>
+                  </div>
                   <button
-                    key={a.appleId}
-                    onClick={() => handlePick(a)}
-                    disabled={saving}
-                    className="group text-left disabled:opacity-50"
+                    onClick={() => {
+                      const next = [...picks];
+                      next[step] = null;
+                      setPicks(next);
+                    }}
+                    className="text-[11px] text-zinc-600 hover:text-accent transition-colors shrink-0"
                   >
-                    <div className="aspect-square rounded-xl overflow-hidden bg-card border border-border mb-2 group-hover:border-accent/40 group-hover:-translate-y-0.5 group-hover:shadow-2xl group-hover:shadow-accent/20 transition-all">
-                      {a.artworkUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={art(a.artworkUrl)!} alt={a.title} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-zinc-700">♪</div>
-                      )}
-                    </div>
-                    <p className="text-xs font-medium truncate">{a.title}</p>
-                    <p className="text-[11px] text-zinc-600 truncate italic">{a.artistName}</p>
+                    Change
                   </button>
-                ))}
+                </div>
+                {step < 2 && (
+                  <button
+                    onClick={() => setStep(step + 1)}
+                    className="w-full mt-5 py-3 bg-accent text-white text-xs font-medium rounded-full hover:bg-accent-hover transition-colors"
+                  >
+                    Next question →
+                  </button>
+                )}
+                {step === 2 && (
+                  <button
+                    onClick={() => setStep(3)}
+                    className="w-full mt-5 py-3 bg-accent text-white text-xs font-medium rounded-full hover:bg-accent-hover transition-colors"
+                  >
+                    Finish →
+                  </button>
+                )}
               </div>
             )}
-          </>
-        )}
 
-        {/* Footer nav */}
-        <div className="mt-12 pt-6 border-t border-white/[0.04] flex items-center justify-between">
+            {/* Search input + results */}
+            {!currentPick && (
+              <>
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => handleInput(e.target.value)}
+                  autoFocus
+                  placeholder="Search for the album..."
+                  className="w-full px-5 py-4 bg-card border border-border rounded-2xl text-base placeholder:text-zinc-700 focus:outline-none focus:border-accent/40 transition-colors"
+                  disabled={saving}
+                />
+
+                {searching && (
+                  <p className="text-center text-zinc-700 text-xs py-8">Searching...</p>
+                )}
+
+                {!searching && query.length < 2 && (
+                  <p className="text-center text-zinc-800 text-[11px] py-8 italic">Type a title or artist to begin.</p>
+                )}
+
+                {!searching && query.length >= 2 && results.length === 0 && (
+                  <p className="text-center text-zinc-700 text-xs py-8">No albums found.</p>
+                )}
+
+                {results.length > 0 && (
+                  <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    {results.map((a) => (
+                      <button
+                        key={a.appleId}
+                        onClick={() => handlePick(a)}
+                        disabled={saving}
+                        className="group text-left disabled:opacity-50"
+                      >
+                        <div className="aspect-square rounded-xl overflow-hidden bg-card border border-border mb-2 group-hover:border-accent/40 group-hover:-translate-y-0.5 group-hover:shadow-2xl group-hover:shadow-accent/20 transition-all">
+                          {a.artworkUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={art(a.artworkUrl)!} alt={a.title} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-zinc-700">♪</div>
+                          )}
+                        </div>
+                        <p className="text-xs font-medium truncate">{a.title}</p>
+                        <p className="text-[11px] text-zinc-600 truncate italic">{a.artistName}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Mobile-only footer nav (desktop version is under the prompt) */}
+        <div className="lg:hidden mt-12 pt-6 border-t border-white/[0.04] flex items-center justify-between">
           <button
             onClick={back}
             disabled={step === 0}

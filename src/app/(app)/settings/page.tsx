@@ -16,8 +16,6 @@ interface Profile {
   bio: string | null;
   avatar_url: string | null;
   is_private: boolean;
-  shelf_style?: "minimal" | "wood" | "ornate" | "glass";
-  social_links: Record<string, string> | null;
 }
 
 interface BlockedUser {
@@ -26,7 +24,7 @@ interface BlockedUser {
   profiles: { username: string; display_name: string | null } | null;
 }
 
-type Tab = "profile" | "appearance" | "privacy" | "requests";
+type Tab = "profile" | "privacy" | "requests";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -37,8 +35,6 @@ export default function SettingsPage() {
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isPrivate, setIsPrivate] = useState(false);
-  const [shelfStyle, setShelfStyle] = useState<"minimal" | "wood" | "ornate" | "glass">("minimal");
-  const [socialLinks, setSocialLinks] = useState({ instagram: "", twitter: "", spotify: "" });
   const [saving, setSaving] = useState(false);
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
   const [pendingRequests, setPendingRequests] = useState<any[]>([]);
@@ -61,12 +57,6 @@ export default function SettingsPage() {
         setBio(data.bio || "");
         setAvatarUrl(data.avatar_url);
         setIsPrivate(data.is_private || false);
-        setShelfStyle(data.shelf_style || "minimal");
-        setSocialLinks({
-          instagram: data.social_links?.instagram || "",
-          twitter: data.social_links?.twitter || "",
-          spotify: data.social_links?.spotify || "",
-        });
       }
 
       const { data: blocked } = await supabase
@@ -88,36 +78,20 @@ export default function SettingsPage() {
     if (!profile) return;
     setSaving(true);
     const supabase = createClient();
-    const links: Record<string, string> = {};
-    if (socialLinks.instagram.trim()) links.instagram = socialLinks.instagram.trim();
-    if (socialLinks.twitter.trim()) links.twitter = socialLinks.twitter.trim();
-    if (socialLinks.spotify.trim()) links.spotify = socialLinks.spotify.trim();
-
     const { error } = await supabase
       .from("profiles")
       .update({
         display_name: displayName.trim() || null,
         bio: bio.trim() || null,
-        social_links: Object.keys(links).length > 0 ? links : null,
       })
       .eq("id", profile.id);
 
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast("Profile saved");
-  }
-
-  async function saveAppearance() {
-    if (!profile) return;
-    setSaving(true);
-    const supabase = createClient();
-    const { error } = await supabase
-      .from("profiles")
-      .update({ shelf_style: shelfStyle })
-      .eq("id", profile.id);
-    setSaving(false);
-    if (error) { toast.error(error.message); return; }
-    toast("Saved");
   }
 
   async function savePrivacy() {
@@ -129,7 +103,10 @@ export default function SettingsPage() {
       .update({ is_private: isPrivate })
       .eq("id", profile.id);
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast("Privacy updated");
   }
 
@@ -151,8 +128,6 @@ export default function SettingsPage() {
         const body = await res.json().catch(() => ({}));
         throw new Error(body?.error || "Account deletion failed.");
       }
-      // Server signs us out, but make sure the local client cache
-      // is cleared too before navigating.
       const supabase = createClient();
       await supabase.auth.signOut();
       toast("Account deleted.");
@@ -194,311 +169,302 @@ export default function SettingsPage() {
     );
   }
 
-  const tabs: { id: Tab; label: string; badge?: number }[] = [
-    { id: "profile", label: "Profile" },
-    { id: "appearance", label: "Appearance" },
-    { id: "privacy", label: "Privacy" },
-    { id: "requests", label: "Requests", badge: pendingRequests.length },
+  const tabs: { id: Tab; label: string; description: string; badge?: number }[] = [
+    { id: "profile", label: "Profile", description: "Avatar, display name, bio." },
+    { id: "privacy", label: "Privacy", description: "Visibility, blocked users." },
+    { id: "requests", label: "Requests", description: "Pending follow requests.", badge: pendingRequests.length },
   ];
 
   return (
-    <div className="max-w-4xl mx-auto px-5 sm:px-8 py-10 sm:py-14">
-      <div className="mb-10">
-        <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-2">Manage</p>
-        <h1 className="font-display text-4xl sm:text-5xl tracking-tight leading-none">Settings</h1>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex gap-1 border-b border-border mb-10 overflow-x-auto no-scrollbar">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={`relative px-5 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
-              tab === t.id ? "text-white" : "text-zinc-600 hover:text-zinc-300"
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              {t.label}
-              {t.badge ? (
-                <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-white text-[10px] font-bold">
-                  {t.badge}
-                </span>
-              ) : null}
-            </span>
-            {tab === t.id && <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-accent" />}
-          </button>
-        ))}
-      </div>
-
-      {/* PROFILE TAB */}
-      {tab === "profile" && (
-        <div className="space-y-8">
-          {/* Avatar */}
-          <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-3">Profile Picture</label>
-            <AvatarUploader
-              userId={profile.id}
-              currentUrl={avatarUrl}
-              username={profile.username}
-              onUploaded={(url) => setAvatarUrl(url || null)}
-            />
-          </div>
-
-          {/* Username (read-only) */}
-          <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-2">Username</label>
-            <p className="text-zinc-200 font-mono">@{profile.username}</p>
-            <p className="text-xs text-zinc-700 mt-1">Username can&apos;t be changed</p>
-          </div>
-
-          {/* Display Name */}
-          <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-2">Display Name</label>
-            <input
-              type="text"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Your name"
-              maxLength={50}
-              className="w-full px-4 py-3 bg-input border border-border rounded-xl text-foreground placeholder:text-muted/50 focus:outline-none focus:border-zinc-700 transition-colors"
-            />
-          </div>
-
-          {/* Bio */}
-          <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-2">Bio</label>
-            <textarea
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              placeholder="One line about your relationship with music..."
-              maxLength={160}
-              rows={2}
-              className="w-full px-4 py-3 bg-input border border-border rounded-xl text-foreground placeholder:text-muted/50 focus:outline-none focus:border-zinc-700 transition-colors resize-none"
-            />
-            <p className="text-right text-[11px] text-zinc-700 mt-1">{bio.length}/160</p>
-          </div>
-
-          {/* Social Links */}
-          <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-3">Social Links</label>
-            <div className="space-y-2">
-              {[
-                { key: "instagram", icon: "📸", placeholder: "Instagram username" },
-                { key: "twitter", icon: "𝕏", placeholder: "X / Twitter username" },
-                { key: "spotify", icon: "🎧", placeholder: "Spotify username" },
-              ].map((s) => (
-                <div key={s.key} className="flex items-center gap-2">
-                  <span className="text-sm w-6 text-center">{s.icon}</span>
-                  <input
-                    type="text"
-                    value={(socialLinks as any)[s.key]}
-                    onChange={(e) => setSocialLinks({ ...socialLinks, [s.key]: e.target.value })}
-                    placeholder={s.placeholder}
-                    className="flex-1 px-3 py-2 bg-input border border-border rounded-lg text-sm placeholder:text-muted/50 focus:outline-none focus:border-zinc-700"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Quick links */}
-          <div className="pt-4 border-t border-border">
-            <Link href="/gtkm" className="flex items-center justify-between p-4 bg-card border border-border rounded-xl hover:border-zinc-700 transition-colors group">
-              <div>
-                <p className="text-sm font-medium">Manage your three albums</p>
-                <p className="text-xs text-zinc-600 mt-0.5">Edit your Get to Know Me carousel</p>
-              </div>
-              <span className="text-zinc-600 group-hover:text-accent transition-colors">→</span>
-            </Link>
-          </div>
-
-          <button
-            onClick={saveProfile}
-            disabled={saving}
-            className="w-full py-3.5 bg-accent text-white font-medium rounded-xl hover:bg-accent-hover transition-colors disabled:opacity-50"
-          >
-            {saving ? "Saving..." : "Save Changes"}
-          </button>
+    <div className="min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 py-12 sm:py-16">
+        {/* Page header */}
+        <div className="mb-12 sm:mb-16">
+          <p className="text-[11px] uppercase tracking-[0.22em] text-accent font-semibold mb-3">— Manage</p>
+          <h1 className="font-display text-5xl sm:text-7xl tracking-tighter leading-[0.92]">
+            Settings.
+          </h1>
         </div>
-      )}
 
-      {/* APPEARANCE TAB */}
-      {tab === "appearance" && (
-        <div className="space-y-8">
-          <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-2">Shelf Style</label>
-            <p className="text-xs text-zinc-600 mb-4">How your record shelf looks on your profile.</p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {([
-                { id: "minimal" as const, label: "Minimal" },
-                { id: "wood" as const, label: "Wood" },
-                { id: "ornate" as const, label: "Marble" },
-                { id: "glass" as const, label: "Glass" },
-              ]).map((s) => (
+        {/* Two-column layout: sidebar tab nav + content. Fills the
+            full editorial canvas instead of a narrow centered column. */}
+        <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8 lg:gap-16">
+          {/* Sidebar — sticky tab nav */}
+          <aside className="lg:sticky lg:top-24 lg:self-start">
+            <nav className="flex lg:flex-col gap-1 lg:gap-0 overflow-x-auto no-scrollbar lg:border-r lg:border-border lg:pr-6">
+              {tabs.map((t) => (
                 <button
-                  key={s.id}
-                  onClick={() => setShelfStyle(s.id)}
-                  className={`p-4 rounded-xl border transition-all text-left ${
-                    shelfStyle === s.id ? "border-accent bg-accent/5" : "border-border bg-card hover:border-zinc-700"
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  className={`text-left px-4 py-3 lg:py-4 rounded-lg lg:rounded-none lg:border-l-2 lg:-ml-px transition-colors whitespace-nowrap lg:whitespace-normal ${
+                    tab === t.id
+                      ? "lg:border-accent text-foreground bg-card lg:bg-transparent"
+                      : "lg:border-transparent text-zinc-600 hover:text-zinc-300"
                   }`}
                 >
-                  <div className="h-8 mb-3 flex items-end">
-                    <div
-                      className="w-full rounded"
-                      style={
-                        s.id === "minimal" ? { background: "linear-gradient(to bottom, #2a2a2a, #111)", height: "5px" }
-                        : s.id === "wood" ? { background: "linear-gradient(to bottom, #d49060, #4a2810)", height: "8px" }
-                        : s.id === "ornate" ? { background: "linear-gradient(to bottom, #2a2a2e, #0f0f11)", height: "6px", boxShadow: "0 0 0 1px rgba(255,255,255,0.1)" }
-                        : { background: "linear-gradient(to bottom, rgba(255,255,255,0.3), rgba(255,255,255,0.05))", height: "6px", border: "1px solid rgba(255,255,255,0.15)" }
-                      }
-                    />
-                  </div>
-                  <p className={`text-xs font-medium ${shelfStyle === s.id ? "text-accent" : "text-zinc-400"}`}>{s.label}</p>
+                  <span className="flex items-center gap-2">
+                    <span className="text-sm font-medium">{t.label}</span>
+                    {t.badge ? (
+                      <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-white text-[10px] font-bold">
+                        {t.badge}
+                      </span>
+                    ) : null}
+                  </span>
+                  <p className="hidden lg:block text-[11px] text-zinc-600 mt-1 leading-relaxed italic editorial">
+                    {t.description}
+                  </p>
                 </button>
               ))}
-            </div>
-          </div>
+            </nav>
+          </aside>
 
-          <button
-            onClick={saveAppearance}
-            disabled={saving}
-            className="w-full py-3.5 bg-accent text-white font-medium rounded-xl hover:bg-accent-hover transition-colors disabled:opacity-50"
-          >
-            {saving ? "Saving..." : "Save Appearance"}
-          </button>
-        </div>
-      )}
+          {/* Right column — tab content + always-visible Account section */}
+          <main className="min-w-0">
+            {/* PROFILE TAB */}
+            {tab === "profile" && (
+              <section className="space-y-10 max-w-2xl">
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-accent font-semibold mb-3">— Your portrait</p>
+                  <h2 className="font-display text-3xl sm:text-4xl tracking-tight leading-[0.95] mb-3">
+                    How you appear.
+                  </h2>
+                  <p className="editorial italic text-sm text-zinc-500 leading-relaxed">
+                    The face, name, and one-line introduction other people see at the top of your page.
+                  </p>
+                </div>
 
-      {/* PRIVACY TAB */}
-      {tab === "privacy" && (
-        <div className="space-y-8">
-          <div className="flex items-center justify-between p-4 bg-card border border-border rounded-xl">
-            <div>
-              <p className="text-sm font-medium">Private Profile</p>
-              <p className="text-xs text-zinc-600 mt-0.5">Only followers can see your collection</p>
-            </div>
-            <button
-              onClick={() => setIsPrivate(!isPrivate)}
-              className={`w-11 h-6 rounded-full transition-colors relative ${isPrivate ? "bg-accent" : "bg-zinc-800"}`}
-            >
-              <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${isPrivate ? "translate-x-5" : "translate-x-0.5"}`} />
-            </button>
-          </div>
+                {/* Avatar */}
+                <div>
+                  <label className="block text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-3">Profile Picture</label>
+                  <AvatarUploader
+                    userId={profile.id}
+                    currentUrl={avatarUrl}
+                    username={profile.username}
+                    onUploaded={(url) => setAvatarUrl(url || null)}
+                  />
+                </div>
 
-          <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-3">Blocked Users</label>
-            {blockedUsers.length === 0 ? (
-              <p className="text-sm text-zinc-700 italic">No blocked users.</p>
-            ) : (
-              <div className="space-y-2">
-                {blockedUsers.map((b) => (
-                  <div key={b.id} className="flex items-center justify-between p-3 bg-card border border-border rounded-xl">
-                    <div>
-                      <p className="text-sm font-medium">{b.profiles?.display_name || b.profiles?.username}</p>
-                      <p className="text-xs text-zinc-600">@{b.profiles?.username}</p>
-                    </div>
-                    <button
-                      onClick={() => handleUnblock(b.blocked_id)}
-                      className="px-3 py-1 border border-border text-xs text-zinc-400 rounded-full hover:text-foreground transition-colors"
-                    >
-                      Unblock
-                    </button>
+                {/* Username (read-only) */}
+                <div>
+                  <label className="block text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-2">Username</label>
+                  <p className="text-zinc-200 font-mono text-base">@{profile.username}</p>
+                  <p className="text-xs text-zinc-700 mt-1 italic">Username can&apos;t be changed.</p>
+                </div>
+
+                {/* Display Name */}
+                <div>
+                  <label className="block text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-2">Display Name</label>
+                  <input
+                    type="text"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="Your name"
+                    maxLength={50}
+                    className="w-full px-4 py-3 bg-card border border-border rounded-xl text-foreground placeholder:text-muted/50 focus:outline-none focus:border-accent/40 transition-colors"
+                  />
+                </div>
+
+                {/* Bio */}
+                <div>
+                  <label className="block text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-2">Bio</label>
+                  <textarea
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    placeholder="One line about your relationship with music..."
+                    maxLength={160}
+                    rows={2}
+                    className="w-full px-4 py-3 bg-card border border-border rounded-xl text-foreground placeholder:text-muted/50 focus:outline-none focus:border-accent/40 transition-colors resize-none"
+                  />
+                  <p className="text-right text-[11px] text-zinc-700 mt-1">{bio.length}/160</p>
+                </div>
+
+                {/* Quick link — manage the three */}
+                <Link
+                  href="/gtkm"
+                  className="flex items-center justify-between p-5 bg-card border border-border rounded-2xl hover:border-accent/30 transition-colors group"
+                >
+                  <div>
+                    <p className="font-display text-lg tracking-tight">Manage your three albums</p>
+                    <p className="text-xs text-zinc-500 mt-0.5 italic editorial">
+                      Edit the Get to Know Me carousel that opens your profile.
+                    </p>
                   </div>
-                ))}
-              </div>
+                  <span className="text-zinc-600 group-hover:text-accent transition-colors text-xl">→</span>
+                </Link>
+
+                <button
+                  onClick={saveProfile}
+                  disabled={saving}
+                  className="w-full sm:w-auto px-8 py-3.5 bg-accent text-white font-medium rounded-full hover:bg-accent-hover transition-colors disabled:opacity-50"
+                >
+                  {saving ? "Saving..." : "Save changes"}
+                </button>
+              </section>
             )}
-          </div>
 
-          <button
-            onClick={savePrivacy}
-            disabled={saving}
-            className="w-full py-3.5 bg-accent text-white font-medium rounded-xl hover:bg-accent-hover transition-colors disabled:opacity-50"
-          >
-            {saving ? "Saving..." : "Save Privacy"}
-          </button>
-        </div>
-      )}
+            {/* PRIVACY TAB */}
+            {tab === "privacy" && (
+              <section className="space-y-10 max-w-2xl">
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-accent font-semibold mb-3">— Visibility</p>
+                  <h2 className="font-display text-3xl sm:text-4xl tracking-tight leading-[0.95] mb-3">
+                    Who can see you.
+                  </h2>
+                  <p className="editorial italic text-sm text-zinc-500 leading-relaxed">
+                    Lock your profile so only people you accept can see your work, and manage anyone you&apos;ve blocked.
+                  </p>
+                </div>
 
-      {/* REQUESTS TAB */}
-      {tab === "requests" && (
-        <div className="space-y-4">
-          {pendingRequests.length === 0 ? (
-            <div className="text-center py-16 border border-dashed border-border rounded-2xl">
-              <p className="text-zinc-500 text-sm">No pending requests</p>
-              <p className="text-xs text-zinc-700 mt-1">Follow requests show up here when your profile is private.</p>
-            </div>
-          ) : (
-            pendingRequests.map((req) => (
-              <div key={req.id} className="flex items-center gap-3 p-4 bg-card border border-border rounded-xl">
-                <div className="w-12 h-12 rounded-full bg-background border border-border flex items-center justify-center text-sm text-zinc-600 shrink-0 overflow-hidden">
-                  {req.requester?.avatar_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={req.requester.avatar_url} alt="" className="w-full h-full object-cover" />
-                  ) : req.requester?.username?.[0]?.toUpperCase() || "?"}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">{req.requester?.display_name || req.requester?.username}</p>
-                  <p className="text-xs text-zinc-600">@{req.requester?.username}</p>
-                </div>
-                <div className="flex gap-2">
+                <div className="flex items-center justify-between p-5 bg-card border border-border rounded-2xl">
+                  <div>
+                    <p className="text-sm font-medium">Private profile</p>
+                    <p className="text-xs text-zinc-500 mt-1 italic">
+                      Only followers can see your collection.
+                    </p>
+                  </div>
                   <button
-                    onClick={() => handleAcceptRequest(req.id, req.requester_id)}
-                    className="px-4 py-1.5 bg-accent text-white text-xs rounded-full hover:bg-accent-hover transition-colors"
+                    onClick={() => setIsPrivate(!isPrivate)}
+                    className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${
+                      isPrivate ? "bg-accent" : "bg-zinc-800"
+                    }`}
+                    aria-label={isPrivate ? "Make profile public" : "Make profile private"}
                   >
-                    Accept
-                  </button>
-                  <button
-                    onClick={() => handleRejectRequest(req.id)}
-                    className="px-4 py-1.5 border border-border text-xs text-zinc-500 rounded-full hover:text-red-400 transition-colors"
-                  >
-                    Reject
+                    <div
+                      className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${
+                        isPrivate ? "translate-x-5" : "translate-x-0.5"
+                      }`}
+                    />
                   </button>
                 </div>
+
+                <div>
+                  <label className="block text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-3">Blocked users</label>
+                  {blockedUsers.length === 0 ? (
+                    <p className="text-sm text-zinc-700 italic">No blocked users.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {blockedUsers.map((b) => (
+                        <div key={b.id} className="flex items-center justify-between p-4 bg-card border border-border rounded-xl">
+                          <div>
+                            <p className="text-sm font-medium">{b.profiles?.display_name || b.profiles?.username}</p>
+                            <p className="text-xs text-zinc-600">@{b.profiles?.username}</p>
+                          </div>
+                          <button
+                            onClick={() => handleUnblock(b.blocked_id)}
+                            className="px-3 py-1 border border-border text-xs text-zinc-400 rounded-full hover:text-foreground transition-colors"
+                          >
+                            Unblock
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={savePrivacy}
+                  disabled={saving}
+                  className="w-full sm:w-auto px-8 py-3.5 bg-accent text-white font-medium rounded-full hover:bg-accent-hover transition-colors disabled:opacity-50"
+                >
+                  {saving ? "Saving..." : "Save privacy"}
+                </button>
+              </section>
+            )}
+
+            {/* REQUESTS TAB */}
+            {tab === "requests" && (
+              <section className="space-y-6 max-w-2xl">
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-accent font-semibold mb-3">— Letters at the door</p>
+                  <h2 className="font-display text-3xl sm:text-4xl tracking-tight leading-[0.95] mb-3">
+                    Pending requests.
+                  </h2>
+                  <p className="editorial italic text-sm text-zinc-500 leading-relaxed">
+                    People who&apos;ve asked to follow your private profile. Only shown when your profile is private.
+                  </p>
+                </div>
+
+                {pendingRequests.length === 0 ? (
+                  <div className="text-center py-16 border border-dashed border-border rounded-2xl">
+                    <p className="text-zinc-500 text-sm">No pending requests.</p>
+                    <p className="text-xs text-zinc-700 mt-1 italic">
+                      Follow requests show up here when your profile is private.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {pendingRequests.map((req) => (
+                      <div key={req.id} className="flex items-center gap-3 p-4 bg-card border border-border rounded-2xl">
+                        <div className="w-12 h-12 rounded-full bg-background border border-border flex items-center justify-center text-sm text-zinc-600 shrink-0 overflow-hidden">
+                          {req.requester?.avatar_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={req.requester.avatar_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            req.requester?.username?.[0]?.toUpperCase() || "?"
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium">{req.requester?.display_name || req.requester?.username}</p>
+                          <p className="text-xs text-zinc-600">@{req.requester?.username}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleAcceptRequest(req.id, req.requester_id)}
+                            className="px-4 py-1.5 bg-accent text-white text-xs rounded-full hover:bg-accent-hover transition-colors"
+                          >
+                            Accept
+                          </button>
+                          <button
+                            onClick={() => handleRejectRequest(req.id)}
+                            className="px-4 py-1.5 border border-border text-xs text-zinc-500 rounded-full hover:text-red-400 transition-colors"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {/* ==========================================================
+                ACCOUNT — always visible at the bottom of every tab.
+                Sign Out is the routine action; Delete Account is the
+                destructive one, gated behind a typed-confirmation dialog.
+                ========================================================== */}
+            <section className="mt-20 pt-12 border-t border-border max-w-2xl">
+              <p className="text-[11px] uppercase tracking-[0.22em] text-accent font-semibold mb-3">— Account</p>
+              <h2 className="font-display text-3xl sm:text-4xl tracking-tight leading-[0.95] mb-3">
+                The door.
+              </h2>
+              <p className="editorial italic text-sm text-zinc-500 leading-relaxed mb-8">
+                Logging out signs you out of this device. Deleting your
+                account is permanent — your profile, stories, lyric pins,
+                lists, and collection are all removed and can&apos;t be recovered.
+              </p>
+
+              <div className="space-y-3">
+                <button
+                  onClick={handleSignOut}
+                  className="w-full py-3.5 border border-border text-zinc-300 rounded-xl hover:border-zinc-600 hover:text-foreground transition-colors text-sm font-medium"
+                >
+                  Log out
+                </button>
+
+                <button
+                  onClick={() => setDeleteOpen(true)}
+                  className="w-full py-3.5 border border-red-900/50 text-red-400/80 rounded-xl hover:border-red-500/60 hover:text-red-400 hover:bg-red-950/10 transition-colors text-sm font-medium"
+                >
+                  Delete account
+                </button>
               </div>
-            ))
-          )}
+            </section>
+          </main>
         </div>
-      )}
+      </div>
 
-      {/* ==========================================================
-          ACCOUNT — always visible at the bottom of every tab.
-          Sign Out is the routine action; Delete Account is the
-          destructive one, gated behind a typed-confirmation dialog.
-          Lives outside the tab content so users never have to hunt
-          for the door on the way out.
-          ========================================================== */}
-      <section className="mt-16 pt-10 border-t border-border">
-        <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-5">
-          — Account
-        </p>
-
-        <div className="space-y-3">
-          <button
-            onClick={handleSignOut}
-            className="w-full py-3.5 border border-border text-zinc-300 rounded-xl hover:border-zinc-600 hover:text-foreground transition-colors text-sm font-medium"
-          >
-            Log out
-          </button>
-
-          <button
-            onClick={() => setDeleteOpen(true)}
-            className="w-full py-3.5 border border-red-900/50 text-red-400/80 rounded-xl hover:border-red-500/60 hover:text-red-400 hover:bg-red-950/10 transition-colors text-sm font-medium"
-          >
-            Delete account
-          </button>
-        </div>
-
-        <p className="text-[11px] text-zinc-700 mt-4 italic editorial leading-relaxed">
-          Logging out signs you out of this device. Deleting your account
-          is permanent — your profile, stories, lyric pins, lists, and
-          collection are all removed and can&apos;t be recovered.
-        </p>
-      </section>
-
-      {/* DELETE CONFIRMATION DIALOG — typed confirmation phrase
-          required so this action can never be triggered by an
-          accidental click. */}
+      {/* DELETE CONFIRMATION DIALOG */}
       {deleteOpen && (
         <div
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-4"
@@ -526,11 +492,7 @@ export default function SettingsPage() {
             </p>
 
             <label className="block text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-2">
-              Type{" "}
-              <span className="text-foreground font-semibold">
-                {DELETE_CONFIRM_PHRASE}
-              </span>{" "}
-              to confirm
+              Type <span className="text-foreground font-semibold">{DELETE_CONFIRM_PHRASE}</span> to confirm
             </label>
             <input
               type="text"

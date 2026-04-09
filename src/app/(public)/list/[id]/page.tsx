@@ -7,7 +7,6 @@ import ListShareCard from "./ListShareCard";
 import ListEditButton from "./ListEditButton";
 import MarkButton from "@/components/social/MarkButton";
 import EchoButton from "@/components/social/EchoButton";
-import ListShelf from "@/components/list/ListShelf";
 
 export const dynamic = "force-dynamic";
 
@@ -61,7 +60,7 @@ export default async function ListPage({ params }: Props) {
 
   const { data: list } = await supabase
     .from("lists")
-    .select("*, profiles(id, username, display_name, avatar_url, bio, shelf_style), items:list_items(*)")
+    .select("*, profiles(id, username, display_name, avatar_url, bio), items:list_items(*)")
     .eq("id", id)
     .single();
 
@@ -162,11 +161,56 @@ export default async function ListPage({ params }: Props) {
         </div>
       </section>
 
-      {/* Items — wrapped in the author's chosen shelf chrome
-          (wood / marble / glass / minimal) so a list reads like
-          another shelf in their record store. */}
-      <section className="max-w-5xl mx-auto px-5 sm:px-8 pb-16">
-        <ListShelf items={items} shelfStyle={author.shelf_style} />
+      {/* Items — clean editorial rows. The shelf metaphor was killed
+          because it didn't pay off; lists now read as a numbered
+          tracklist in the same dark editorial language as the rest
+          of the product. */}
+      <section className="max-w-5xl mx-auto px-5 sm:px-8 pb-20">
+        {items.length === 0 ? (
+          <div className="text-center py-20 border border-dashed border-border rounded-2xl">
+            <p className="font-display text-2xl mb-2">An empty list.</p>
+            <p className="text-sm text-zinc-500 italic">No items yet.</p>
+          </div>
+        ) : (
+          <ol className="divide-y divide-white/[0.05]">
+            {items.map((item: any, idx: number) => {
+              const cover = art(item.target_artwork_url, 400);
+              const href = item.kind === "song" ? `/song/${item.target_apple_id}` : `/album/${item.target_apple_id}`;
+              return (
+                <li key={item.id}>
+                  <Link href={href} className="block group">
+                    <div className="flex items-center gap-5 sm:gap-7 py-6 sm:py-7">
+                      <span className="font-display text-4xl sm:text-5xl tracking-tighter text-zinc-700 group-hover:text-accent transition-colors w-12 sm:w-14 tabular-nums shrink-0">
+                        {String(idx + 1).padStart(2, "0")}
+                      </span>
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden bg-card border border-border shrink-0 shadow-2xl shadow-black/40 group-hover:border-accent/30 transition-colors">
+                        {cover ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={cover} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-zinc-700 text-2xl">♪</div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-display text-xl sm:text-2xl tracking-tight leading-tight group-hover:text-accent transition-colors mb-1">
+                          {item.target_title}
+                        </p>
+                        {item.target_artist && (
+                          <p className="text-sm text-zinc-500 italic mb-2">{item.target_artist}</p>
+                        )}
+                        {item.caption && (
+                          <p className="editorial text-sm text-zinc-400 leading-relaxed italic">
+                            &ldquo;{item.caption}&rdquo;
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                </li>
+              );
+            })}
+          </ol>
+        )}
 
         {/* Share */}
         <div className="mt-16">

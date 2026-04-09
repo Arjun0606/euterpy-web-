@@ -145,20 +145,6 @@ export default function ProfilePage({ data }: Props) {
             )}
 
 
-            {/* Social links */}
-            {profile.social_links && Object.keys(profile.social_links).length > 0 && (
-              <div className="flex gap-4 mt-2">
-                {Object.entries(profile.social_links).map(([platform, handle]: [string, any]) => {
-                  if (!handle) return null;
-                  const urls: Record<string, string> = { instagram: `https://instagram.com/${handle}`, twitter: `https://x.com/${handle}`, spotify: `https://open.spotify.com/user/${handle}` };
-                  return (
-                    <a key={platform} href={urls[platform] || "#"} target="_blank" rel="noopener noreferrer"
-                      className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors">{handle}</a>
-                  );
-                })}
-              </div>
-            )}
-
             {/* Stats — engagement counts hidden from public view by design.
                 Cosmos.fm playbook: show the work, not the score. Owners see
                 their own numbers (so they're not flying blind), visitors see
@@ -332,7 +318,6 @@ export default function ProfilePage({ data }: Props) {
                 items={shelfItems}
                 title="Collection"
                 showSort={isOwnProfile || shelfItems.length > 5}
-                shelfStyle={profile.shelf_style || "minimal"}
               />
             )}
             {shelfItems.length === 0 && isOwnProfile && (

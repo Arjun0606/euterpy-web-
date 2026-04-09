@@ -4,7 +4,6 @@ import { useState } from "react";
 import { getArtworkUrl } from "@/lib/apple-music/client";
 import Stars from "@/components/ui/Stars";
 import Link from "next/link";
-import { SHELF_STYLES, type ShelfStyle } from "@/lib/shelfStyles";
 
 interface RatingItem {
   id: string;
@@ -28,10 +27,9 @@ interface Props {
   items: RatingItem[];
   title?: string;
   showSort?: boolean;
-  shelfStyle?: ShelfStyle;
 }
 
-function artwork(url: string | null, size = 300): string | null {
+function artwork(url: string | null, size = 400): string | null {
   if (!url) return null;
   return getArtworkUrl(url, size, size);
 }
@@ -50,8 +48,21 @@ function sortItems(items: RatingItem[], by: SortBy): RatingItem[] {
   }
 }
 
-export default function RecordShelf({ items, title = "The Shelf", showSort = true, shelfStyle = "minimal" }: Props) {
-  const style = SHELF_STYLES[shelfStyle] || SHELF_STYLES.minimal;
+/**
+ * The collection grid. Used to be wrapped in physical "shelf" chrome
+ * (wood / marble / glass frames). The metaphor never paid off — the
+ * shelf containers fought the editorial dark layout instead of
+ * complementing it, and the metaphor was confusing once lists also
+ * appeared on the page (a list-of-records doesn't sit on a shelf the
+ * way an album collection does).
+ *
+ * Now this is just a clean responsive grid of cover thumbnails with
+ * filter + sort controls. Each cover lifts on hover and reveals
+ * title / artist / stars below it. The visual language is the same
+ * as Discover and the rest of the editorial dark surfaces in the
+ * product, which is what we wanted in the first place.
+ */
+export default function RecordShelf({ items, title = "Collection", showSort = true }: Props) {
   const [sortBy, setSortBy] = useState<SortBy>("recent");
   const [filter, setFilter] = useState<FilterType>("all");
 
@@ -77,12 +88,6 @@ export default function RecordShelf({ items, title = "The Shelf", showSort = tru
   const albumCount = items.filter((i) => i.type === "album").length;
   const songCount = items.filter((i) => i.type === "song").length;
 
-  // Group into rows of 5
-  const shelves: RatingItem[][] = [];
-  for (let i = 0; i < sorted.length; i += 5) {
-    shelves.push(sorted.slice(i, i + 5));
-  }
-
   return (
     <div className="mb-10">
       {/* Header */}
@@ -96,7 +101,7 @@ export default function RecordShelf({ items, title = "The Shelf", showSort = tru
 
       {/* Filter + Sort */}
       {showSort && (
-        <div className="flex items-center gap-2 mb-5 flex-wrap">
+        <div className="flex items-center gap-2 mb-6 flex-wrap">
           <div className="flex gap-0.5 bg-card rounded-lg p-0.5 border border-border overflow-x-auto no-scrollbar">
             {([
               ["all", "All"],
@@ -122,73 +127,54 @@ export default function RecordShelf({ items, title = "The Shelf", showSort = tru
         </div>
       )}
 
-      {/* Shelf rows */}
-      <div className="space-y-6">
-        {shelves.map((row, rowIndex) => (
-          <div key={rowIndex} className="relative">
-            {/* Frame (back wall + side walls) — wraps the row */}
-            <div style={{ ...style.frame, padding: style.innerPadding }}>
-              <div className="flex gap-2 sm:gap-3 pb-2 relative z-10">
-                {row.map((item) => {
-                  const coverUrl = artwork(item.artwork_url, 300);
-                  const href = item.type === "album" ? `/album/${item.apple_id}` : `/song/${item.apple_id}`;
+      {/* Grid — responsive cover thumbnails */}
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3 sm:gap-4">
+        {sorted.map((item) => {
+          const coverUrl = artwork(item.artwork_url, 400);
+          const href = item.type === "album" ? `/album/${item.apple_id}` : `/song/${item.apple_id}`;
 
-                  return (
-                    <Link
-                      key={item.id}
-                      href={href}
-                      className="group flex-1 min-w-0 max-w-[20%]"
-                    >
-                      <div
-                        className="aspect-square rounded-sm overflow-hidden shadow-2xl border border-white/5 transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-2xl group-hover:shadow-accent/10 relative"
-                        style={{
-                          transformOrigin: "bottom center",
-                          boxShadow: shelfStyle === "minimal"
-                            ? "0 6px 16px rgba(0,0,0,0.6)"
-                            : "0 8px 24px rgba(0,0,0,0.8), 0 0 0 1px rgba(0,0,0,0.6)",
-                        }}
-                      >
-                        {coverUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={coverUrl} alt={item.title} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full bg-card flex items-center justify-center text-border">♪</div>
-                        )}
-                        {/* Type badge */}
-                        {item.type === "song" ? (
-                          <div className="absolute top-1 left-1 px-1.5 py-0.5 bg-black/70 backdrop-blur-sm rounded text-[8px] text-white font-bold tracking-wider">SONG</div>
-                        ) : item.album_type === "ep" ? (
-                          <div className="absolute top-1 left-1 px-1.5 py-0.5 bg-accent/90 backdrop-blur-sm rounded text-[8px] text-white font-bold tracking-wider">EP</div>
-                        ) : item.album_type === "single" ? (
-                          <div className="absolute top-1 left-1 px-1.5 py-0.5 bg-accent/90 backdrop-blur-sm rounded text-[8px] text-white font-bold tracking-wider">SINGLE</div>
-                        ) : item.album_type === "compilation" ? (
-                          <div className="absolute top-1 left-1 px-1.5 py-0.5 bg-zinc-700/90 backdrop-blur-sm rounded text-[8px] text-white font-bold tracking-wider">COMP</div>
-                        ) : null}
-                        {/* Ownership badge */}
-                        {item.ownership && item.ownership !== "digital" && (
-                          <div className="absolute bottom-1 right-1 text-[10px]">
-                            {item.ownership === "vinyl" ? "🎵" : item.ownership === "cd" ? "💿" : "📼"}
-                          </div>
-                        )}
-                      </div>
+          return (
+            <Link key={item.id} href={href} className="group block">
+              <div className="aspect-square rounded-lg overflow-hidden bg-card border border-border relative shadow-xl shadow-black/40 transition-all duration-300 group-hover:-translate-y-1 group-hover:border-accent/30 group-hover:shadow-2xl group-hover:shadow-accent/10">
+                {coverUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={coverUrl} alt={item.title} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-zinc-700 text-2xl">♪</div>
+                )}
 
-                      {/* Hover info */}
-                      <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <p className="text-xs font-medium truncate">{item.title}</p>
-                        <p className="text-xs text-muted truncate">{item.artist_name}</p>
-                        <Stars score={item.score} size="sm" />
-                      </div>
-                    </Link>
-                  );
-                })}
+                {/* Type badge */}
+                {item.type === "song" ? (
+                  <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-black/70 backdrop-blur-sm rounded text-[8px] text-white font-bold tracking-wider">SONG</div>
+                ) : item.album_type === "ep" ? (
+                  <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-accent/90 backdrop-blur-sm rounded text-[8px] text-white font-bold tracking-wider">EP</div>
+                ) : item.album_type === "single" ? (
+                  <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-accent/90 backdrop-blur-sm rounded text-[8px] text-white font-bold tracking-wider">SINGLE</div>
+                ) : item.album_type === "compilation" ? (
+                  <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-zinc-700/90 backdrop-blur-sm rounded text-[8px] text-white font-bold tracking-wider">COMP</div>
+                ) : null}
+
+                {/* Ownership glyph */}
+                {item.ownership && item.ownership !== "digital" && (
+                  <div className="absolute bottom-1.5 right-1.5 text-[12px]">
+                    {item.ownership === "vinyl" ? "🎵" : item.ownership === "cd" ? "💿" : "📼"}
+                  </div>
+                )}
               </div>
-            </div>
 
-            {/* Shelf ledge — front lip below the frame */}
-            <div className="relative z-0" style={style.ledge} />
-            <div style={style.shadow} />
-          </div>
-        ))}
+              {/* Title + artist + stars (always visible, not hover-only — that was a discoverability bug) */}
+              <div className="mt-2.5 px-0.5">
+                <p className="text-xs font-medium truncate group-hover:text-accent transition-colors">{item.title}</p>
+                <p className="text-[11px] text-zinc-500 truncate">{item.artist_name}</p>
+                {item.score > 0 && (
+                  <div className="mt-0.5">
+                    <Stars score={item.score} size="sm" />
+                  </div>
+                )}
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
