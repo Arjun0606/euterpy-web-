@@ -7,6 +7,8 @@ import Link from "next/link";
 import { toast } from "sonner";
 import AvatarUploader from "@/components/profile/AvatarUploader";
 
+const DELETE_CONFIRM_PHRASE = "DELETE";
+
 interface Profile {
   id: string;
   username: string;
@@ -40,6 +42,12 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
   const [pendingRequests, setPendingRequests] = useState<any[]>([]);
+
+  // Delete-account flow state — gated behind a typed confirmation
+  // dialog so it can never be triggered by an accidental click.
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -129,6 +137,30 @@ export default function SettingsPage() {
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/");
+  }
+
+  async function handleDeleteAccount() {
+    if (deleteConfirmText.trim() !== DELETE_CONFIRM_PHRASE) {
+      toast.error(`Type ${DELETE_CONFIRM_PHRASE} to confirm.`);
+      return;
+    }
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/account/delete", { method: "POST" });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error || "Account deletion failed.");
+      }
+      // Server signs us out, but make sure the local client cache
+      // is cleared too before navigating.
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      toast("Account deleted.");
+      router.push("/");
+    } catch (err: any) {
+      toast.error(err.message || "Couldn't delete account.");
+      setDeleting(false);
+    }
   }
 
   async function handleUnblock(blockedId: string) {
@@ -288,12 +320,6 @@ export default function SettingsPage() {
           >
             {saving ? "Saving..." : "Save Changes"}
           </button>
-
-          <div className="pt-4">
-            <button onClick={handleSignOut} className="w-full py-3 border border-border text-zinc-500 rounded-xl hover:border-red-500/50 hover:text-red-400 transition-colors text-sm">
-              Sign Out
-            </button>
-          </div>
         </div>
       )}
 
@@ -432,6 +458,109 @@ export default function SettingsPage() {
               </div>
             ))
           )}
+        </div>
+      )}
+
+      {/* ==========================================================
+          ACCOUNT — always visible at the bottom of every tab.
+          Sign Out is the routine action; Delete Account is the
+          destructive one, gated behind a typed-confirmation dialog.
+          Lives outside the tab content so users never have to hunt
+          for the door on the way out.
+          ========================================================== */}
+      <section className="mt-16 pt-10 border-t border-border">
+        <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-5">
+          — Account
+        </p>
+
+        <div className="space-y-3">
+          <button
+            onClick={handleSignOut}
+            className="w-full py-3.5 border border-border text-zinc-300 rounded-xl hover:border-zinc-600 hover:text-foreground transition-colors text-sm font-medium"
+          >
+            Log out
+          </button>
+
+          <button
+            onClick={() => setDeleteOpen(true)}
+            className="w-full py-3.5 border border-red-900/50 text-red-400/80 rounded-xl hover:border-red-500/60 hover:text-red-400 hover:bg-red-950/10 transition-colors text-sm font-medium"
+          >
+            Delete account
+          </button>
+        </div>
+
+        <p className="text-[11px] text-zinc-700 mt-4 italic editorial leading-relaxed">
+          Logging out signs you out of this device. Deleting your account
+          is permanent — your profile, stories, lyric pins, lists, and
+          collection are all removed and can&apos;t be recovered.
+        </p>
+      </section>
+
+      {/* DELETE CONFIRMATION DIALOG — typed confirmation phrase
+          required so this action can never be triggered by an
+          accidental click. */}
+      {deleteOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+          onClick={() => {
+            if (!deleting) {
+              setDeleteOpen(false);
+              setDeleteConfirmText("");
+            }
+          }}
+        >
+          <div
+            className="w-full max-w-md bg-background border border-border rounded-3xl p-7 sm:p-8 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-[11px] uppercase tracking-[0.22em] text-red-400 font-semibold mb-4">
+              — Permanent action
+            </p>
+            <h2 className="font-display text-3xl sm:text-4xl tracking-tight leading-[0.95] mb-4">
+              Delete your account?
+            </h2>
+            <p className="editorial italic text-sm text-zinc-400 leading-relaxed mb-6">
+              Your profile, stories, lyric pins, lists, charts, collection,
+              follows, marks, and echoes will all be removed permanently.
+              This cannot be undone.
+            </p>
+
+            <label className="block text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-2">
+              Type{" "}
+              <span className="text-foreground font-semibold">
+                {DELETE_CONFIRM_PHRASE}
+              </span>{" "}
+              to confirm
+            </label>
+            <input
+              type="text"
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              disabled={deleting}
+              className="w-full px-4 py-3 bg-card border border-border rounded-xl text-sm text-foreground focus:outline-none focus:border-red-500/60 disabled:opacity-50"
+              autoFocus
+            />
+
+            <div className="flex flex-col sm:flex-row gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setDeleteOpen(false);
+                  setDeleteConfirmText("");
+                }}
+                disabled={deleting}
+                className="flex-1 py-3 border border-border text-zinc-300 rounded-full text-sm font-medium hover:border-zinc-600 hover:text-foreground transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleting || deleteConfirmText.trim() !== DELETE_CONFIRM_PHRASE}
+                className="flex-1 py-3 bg-red-600 text-white rounded-full text-sm font-medium hover:bg-red-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                {deleting ? "Deleting..." : "Delete forever"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
