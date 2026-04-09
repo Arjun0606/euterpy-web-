@@ -4,12 +4,10 @@ import { useState, useMemo } from "react";
 import { getArtworkUrl } from "@/lib/apple-music/client";
 import GetToKnowMe from "./GetToKnowMe";
 import RecordShelf from "./RecordShelf";
-import ShelfCard from "./ShelfCard";
 import QuickSearch from "./QuickSearch";
 import Stars from "@/components/ui/Stars";
 import FollowButton from "@/components/ui/FollowButton";
 import TasteMatch from "./TasteMatch";
-import ShelfEditor from "./ShelfEditor";
 import BlockButton from "./BlockButton";
 import IdentityStats from "@/components/stats/IdentityStats";
 import StoriesSection from "@/components/story/StoriesSection";
@@ -31,7 +29,6 @@ interface Props {
     getToKnowMe: any[];
     ratings: any[];
     songRatings: any[];
-    shelves: any[];
     stories: any[];
     lyricPins: any[];
     lists: any[];
@@ -52,10 +49,9 @@ interface Props {
 }
 
 export default function ProfilePage({ data }: Props) {
-  const { profile, currentUserId, getToKnowMe, ratings, songRatings, shelves, stories, lyricPins, lists, charts, badges, mutuals = [], socialCounts } = data;
+  const { profile, currentUserId, getToKnowMe, ratings, songRatings, stories, lyricPins, lists, charts, badges, mutuals = [], socialCounts } = data;
   const [activeTab, setActiveTab] = useState<Tab>("collection");
   const [copied, setCopied] = useState(false);
-  const [showNewShelf, setShowNewShelf] = useState(false);
 
   const displayedBadges = badges.filter((b: any) => b.is_displayed).slice(0, 5);
   const isOwnProfile = currentUserId === profile.id;
@@ -261,53 +257,26 @@ export default function ProfilePage({ data }: Props) {
             {/* Lists */}
             <ListsSection lists={lists} isOwner={isOwnProfile} />
 
-            {/* The Shelf */}
+            {/* Collection — every album/song you've added in one place */}
             {shelfItems.length > 0 && (
               <RecordShelf
                 items={shelfItems}
-                title="The Shelf"
+                title="Collection"
                 showSort={isOwnProfile || shelfItems.length > 5}
                 shelfStyle={profile.shelf_style || "minimal"}
               />
             )}
             {shelfItems.length === 0 && isOwnProfile && (
               <div className="mb-10 text-center py-14 border border-dashed border-border rounded-2xl">
-                <p className="font-display text-3xl mb-2">The shelf is yours.</p>
+                <p className="font-display text-3xl mb-2">Your collection is yours.</p>
                 <p className="text-zinc-500 text-sm mb-5 max-w-sm mx-auto">
                   Every album you collect lives here. Find one and add it to make this page yours.
                 </p>
-                <a href="/search" className="inline-block px-6 py-2.5 bg-accent text-white rounded-full text-xs font-medium hover:bg-accent-hover transition-colors">
+                <a href="/discover" className="inline-block px-6 py-2.5 bg-accent text-white rounded-full text-xs font-medium hover:bg-accent-hover transition-colors">
                   Find an album →
                 </a>
               </div>
             )}
-
-            {/* Curated Shelves — only show if there are any, or if owner explicitly wants to add one */}
-            {shelves.length > 0 && (
-              <div className="mb-10">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-[10px] uppercase tracking-[0.15em] text-zinc-600 font-medium">Shelves</h2>
-                  {isOwnProfile && (
-                    <button onClick={() => setShowNewShelf(true)} className="text-xs text-accent hover:underline">+ New</button>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {shelves.map((shelf: any) => <ShelfCard key={shelf.id} shelf={shelf} />)}
-                </div>
-              </div>
-            )}
-            {shelves.length === 0 && isOwnProfile && shelfItems.length > 0 && (
-              <div className="mb-10">
-                <button
-                  onClick={() => setShowNewShelf(true)}
-                  className="w-full py-4 border border-dashed border-border rounded-2xl text-xs text-zinc-600 hover:text-accent hover:border-accent/30 transition-colors"
-                >
-                  + Make a shelf
-                </button>
-              </div>
-            )}
-
-            {showNewShelf && <ShelfEditor onClose={() => setShowNewShelf(false)} onSaved={() => window.location.reload()} />}
           </div>
         )}
 

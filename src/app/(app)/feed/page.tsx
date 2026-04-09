@@ -461,18 +461,10 @@ export default async function HomePage() {
                     )}
 
                     {albumOfTheDay.rating_count > 0 && (
-                      <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-600 mb-8">
+                      <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-600">
                         In <span className="text-accent">{albumOfTheDay.rating_count}</span> {albumOfTheDay.rating_count === 1 ? "collection" : "collections"} today
                       </p>
                     )}
-
-                    {/* CTA inline with the body */}
-                    <div className="flex flex-wrap items-center gap-4 mt-2">
-                      <span className="px-6 py-3 bg-accent text-white text-xs font-medium rounded-full group-hover:bg-accent-hover transition-colors">
-                        Tell its story →
-                      </span>
-                      <p className="text-[11px] text-zinc-600 italic">First one to write becomes next week&apos;s cover.</p>
-                    </div>
                   </div>
                 </div>
               </Link>

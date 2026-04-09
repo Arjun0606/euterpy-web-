@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import SongCollectionModal from "@/components/album/SongCollectionModal";
-import AddToShelfModal from "@/components/album/AddToShelfModal";
+import AddToListModal from "@/components/album/AddToListModal";
 
 interface Props {
   songAppleId: string;
@@ -16,7 +16,7 @@ interface Props {
 
 export default function SongActions({ songAppleId, songDbId, songTitle, artistName, albumName, artworkUrl }: Props) {
   const [showModal, setShowModal] = useState(false);
-  const [showShelfModal, setShowShelfModal] = useState(false);
+  const [showListModal, setShowListModal] = useState(false);
   const [userRating, setUserRating] = useState<{ id: string; score: number; reaction: string | null } | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
@@ -75,10 +75,10 @@ export default function SongActions({ songAppleId, songDbId, songTitle, artistNa
 
         {userId && (
           <button
-            onClick={() => setShowShelfModal(true)}
+            onClick={() => setShowListModal(true)}
             className="px-5 py-2.5 border border-border rounded-full text-sm text-zinc-500 hover:text-zinc-200 hover:border-zinc-700 transition-colors"
           >
-            Pin to shelf
+            Add to a list
           </button>
         )}
       </div>
@@ -96,12 +96,14 @@ export default function SongActions({ songAppleId, songDbId, songTitle, artistNa
         />
       )}
 
-      {showShelfModal && (
-        <AddToShelfModal
+      {showListModal && (
+        <AddToListModal
           songDbId={songDbId}
+          appleId={songAppleId}
           itemTitle={songTitle}
           artistName={artistName}
-          onClose={() => setShowShelfModal(false)}
+          artworkUrl={artworkUrl}
+          onClose={() => setShowListModal(false)}
         />
       )}
     </>

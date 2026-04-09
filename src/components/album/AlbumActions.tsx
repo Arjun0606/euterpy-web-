@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import CollectionModal from "@/components/album/CollectionModal";
-import AddToShelfModal from "@/components/album/AddToShelfModal";
+import AddToListModal from "@/components/album/AddToListModal";
 
 interface Props {
   albumAppleId: string;
@@ -21,7 +21,7 @@ export default function AlbumActions({
   artworkUrl,
 }: Props) {
   const [showCollection, setShowCollection] = useState(false);
-  const [showShelf, setShowShelf] = useState(false);
+  const [showList, setShowList] = useState(false);
   const [existing, setExisting] = useState<{
     id: string;
     ownership?: string | null;
@@ -87,10 +87,10 @@ export default function AlbumActions({
 
         {userId && (
           <button
-            onClick={() => setShowShelf(true)}
+            onClick={() => setShowList(true)}
             className="px-5 py-2.5 border border-border rounded-full text-sm text-zinc-500 hover:text-zinc-200 hover:border-zinc-700 transition-colors"
           >
-            Pin to shelf
+            Add to a list
           </button>
         )}
       </div>
@@ -107,12 +107,14 @@ export default function AlbumActions({
         />
       )}
 
-      {showShelf && (
-        <AddToShelfModal
+      {showList && (
+        <AddToListModal
           albumDbId={albumDbId}
+          appleId={albumAppleId}
           itemTitle={albumTitle}
           artistName={artistName}
-          onClose={() => setShowShelf(false)}
+          artworkUrl={artworkUrl}
+          onClose={() => setShowList(false)}
         />
       )}
     </>
