@@ -14,12 +14,33 @@
  */
 
 export interface NotificationLike {
+  /** The notification's ID is used to seed the variant rotation so the
+   * sentence is stable for any given row but varies across rows. */
+  id?: string;
   type: string;
   data: any;
   actor?: {
     username: string;
     display_name?: string | null;
   };
+}
+
+/**
+ * Tiny stable hash → integer index. Used to pick a sentence variant
+ * for a notification in a way that doesn't change between renders.
+ * Falls back to 0 when no id is present.
+ */
+function variantIndex(seed: string | undefined, length: number): number {
+  if (!seed || length <= 1) return 0;
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash * 31 + seed.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash) % length;
+}
+
+function pick<T>(seed: string | undefined, options: T[]): T {
+  return options[variantIndex(seed, options.length)];
 }
 
 export interface RenderedNotification {
@@ -47,11 +68,16 @@ export function renderNotification(n: NotificationLike): RenderedNotification {
   const kind = n.data?.kind || "story";
   const targetId = n.data?.target_id;
   const actorUsername = n.actor?.username;
+  const seed = n.id;
 
   switch (n.type) {
     case "follow":
       return {
-        message: "is following you now.",
+        message: pick(seed, [
+          "is following you now.",
+          "is keeping an eye on your pages.",
+          "joined your readers.",
+        ]),
         href: actorUsername ? `/${actorUsername}` : "/",
       };
 
@@ -63,22 +89,34 @@ export function renderNotification(n: NotificationLike): RenderedNotification {
 
     case "mark":
       // "Marked" is the validation primitive. Translate it to a more human verb
-      // depending on what was marked.
+      // depending on what was marked. Multiple variants per kind so the feed
+      // doesn't read like a script.
       if (kind === "story") {
         return {
-          message: "kept your story.",
+          message: pick(seed, [
+            "kept your story.",
+            "marked your story to come back to.",
+            "added your story to her keepsakes.",
+          ]),
           href: targetId ? targetHrefFor("story", targetId) : "/",
         };
       }
       if (kind === "lyric") {
         return {
-          message: "kept a line you'd kept too.",
+          message: pick(seed, [
+            "kept a line you'd kept too.",
+            "carries a line you wrote down.",
+            "marked one of your lyrics.",
+          ]),
           href: targetHrefFor("lyric", targetId, actorUsername),
         };
       }
       if (kind === "list") {
         return {
-          message: "kept your list.",
+          message: pick(seed, [
+            "kept your list.",
+            "marked your list to come back to.",
+          ]),
           href: targetId ? targetHrefFor("list", targetId) : "/",
         };
       }
@@ -97,19 +135,29 @@ export function renderNotification(n: NotificationLike): RenderedNotification {
       // Echo = repost. Frame it as carrying the work somewhere new.
       if (kind === "story") {
         return {
-          message: "carried your story into her own pages.",
+          message: pick(seed, [
+            "carried your story into her own pages.",
+            "passed your story along.",
+            "echoed your story to her readers.",
+          ]),
           href: targetId ? targetHrefFor("story", targetId) : "/",
         };
       }
       if (kind === "lyric") {
         return {
-          message: "carried your lyric into her own.",
+          message: pick(seed, [
+            "carried your lyric into her own.",
+            "echoed a line you pinned.",
+          ]),
           href: targetHrefFor("lyric", targetId, actorUsername),
         };
       }
       if (kind === "list") {
         return {
-          message: "carried your list into her own.",
+          message: pick(seed, [
+            "carried your list into her own.",
+            "passed your list along.",
+          ]),
           href: targetId ? targetHrefFor("list", targetId) : "/",
         };
       }
@@ -120,7 +168,11 @@ export function renderNotification(n: NotificationLike): RenderedNotification {
 
     case "letter":
       return {
-        message: "wrote you a letter.",
+        message: pick(seed, [
+          "wrote you a letter.",
+          "left a letter on your story.",
+          "answered your story with one of her own.",
+        ]),
         href: n.data?.story_id ? `/story/${n.data.story_id}` : "/",
       };
 

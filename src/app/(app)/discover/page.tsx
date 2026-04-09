@@ -3,6 +3,8 @@ import { getArtworkUrl, getAppleMusicCharts } from "@/lib/apple-music/client";
 import Link from "next/link";
 import Stars from "@/components/ui/Stars";
 import PeopleSearch from "@/components/profile/PeopleSearch";
+import CuratorCard from "@/components/profile/CuratorCard";
+import { findCurators } from "@/lib/curatorQuery";
 
 export const metadata = { title: "Discover" };
 
@@ -69,13 +71,13 @@ export default async function DiscoverPage() {
     .order("rating_count", { ascending: false })
     .limit(8);
 
-  // Recently active users
-  const { data: activeUsers } = await supabase
-    .from("profiles")
-    .select("*")
-    .gt("album_count", 0)
-    .order("updated_at", { ascending: false })
-    .limit(8);
+  // Curators — users who pass the meritocratic curator thresholds.
+  // findCurators() does the multi-query orchestration, returns up to 8
+  // people sorted by marks-received first then story count.
+  const curators = await findCurators(supabase, {
+    limit: 8,
+    excludeIds: user ? [user.id] : [],
+  });
 
   // Latest stories
   const { data: latestStories } = await supabase
@@ -264,23 +266,28 @@ export default async function DiscoverPage() {
         </section>
       )}
 
-      {/* Active Curators */}
-      {activeUsers && activeUsers.length > 0 && (
-        <section className="mb-12">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-5">Active curators</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
-            {activeUsers.map((u: any) => (
-              <Link key={u.id} href={`/${u.username}`}
-                className="bg-card border border-border rounded-xl p-4 hover:border-zinc-700 transition-colors text-center">
-                <div className="w-12 h-12 rounded-full bg-background border border-border flex items-center justify-center text-lg text-muted mx-auto mb-2 overflow-hidden">
-                  {u.avatar_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={u.avatar_url} alt="" className="w-full h-full object-cover" />
-                  ) : u.username[0].toUpperCase()}
-                </div>
-                <p className="font-medium text-sm truncate">{u.display_name || u.username}</p>
-                <p className="text-[11px] text-zinc-500">{u.album_count} albums</p>
-              </Link>
+      {/* Curators — meritocratic, derived from actual portfolio counts */}
+      {curators.length > 0 && (
+        <section className="mb-14">
+          <div className="flex items-baseline justify-between mb-5">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.18em] text-accent font-semibold mb-1">
+                — The room
+              </p>
+              <h2 className="font-display text-3xl sm:text-4xl tracking-tight">
+                People who&apos;ve made <span className="italic text-accent">something here.</span>
+              </h2>
+            </div>
+            <Link
+              href="/curators"
+              className="text-[11px] uppercase tracking-[0.16em] text-zinc-500 hover:text-accent font-semibold transition-colors shrink-0"
+            >
+              See all →
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {curators.map((c) => (
+              <CuratorCard key={c.id} curator={c} variant="compact" />
             ))}
           </div>
         </section>
@@ -334,7 +341,7 @@ export default async function DiscoverPage() {
       )}
 
       {/* Empty state — only if literally nothing exists */}
-      {(!topAlbums || topAlbums.length === 0) && (!activeUsers || activeUsers.length === 0) && (
+      {(!topAlbums || topAlbums.length === 0) && curators.length === 0 && (
         <div className="text-center py-20">
           <p className="font-display text-3xl mb-3">A new beginning.</p>
           <p className="text-zinc-500 text-sm max-w-xs mx-auto">

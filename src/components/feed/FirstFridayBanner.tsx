@@ -38,22 +38,22 @@ export default function FirstFridayBanner({ friendsUpdatedToday = 0 }: Props) {
           {/* Soft glow */}
           <div className="absolute top-0 right-0 w-[400px] h-[300px] bg-accent/[0.08] rounded-full blur-[100px] -z-0 pointer-events-none" />
 
-          <div className="relative z-10 px-7 py-9 sm:px-12 sm:py-12">
-            <p className="text-[10px] uppercase tracking-[0.25em] text-accent font-semibold mb-4">
+          <div className="relative z-10 px-7 py-10 sm:px-12 sm:py-14">
+            <p className="text-[10px] uppercase tracking-[0.25em] text-accent font-semibold mb-5">
               — A Euterpy holiday
             </p>
-            <h2 className="font-display text-4xl sm:text-5xl tracking-tight leading-[0.95] mb-4">
-              Today is <span className="italic text-accent">First Friday.</span>
+            <h2 className="font-display text-4xl sm:text-6xl tracking-tighter leading-[0.92] mb-5">
+              Today, the room is <span className="italic text-accent">visiting its three.</span>
             </h2>
-            <p className="editorial italic text-base sm:text-lg text-zinc-400 leading-relaxed mb-7 max-w-xl">
-              Once a month, everyone is invited to revisit their three. Swap one,
-              keep them all, or just look at them again. The whole room is doing
-              it today.
+            <p className="editorial italic text-base sm:text-lg text-zinc-400 leading-[1.65] mb-8 max-w-xl">
+              First Friday. The one day a month everyone here looks at their
+              own pages again — keeps what still belongs, swaps what doesn&apos;t.
+              You&apos;re welcome to join.
             </p>
             <div className="flex flex-wrap items-center gap-4">
               <Link
                 href="/gtkm"
-                className="inline-flex items-center px-6 py-3 bg-accent text-white text-sm font-semibold rounded-full hover:bg-accent-hover transition-colors"
+                className="inline-flex items-center px-7 py-3.5 bg-accent text-white text-sm font-semibold rounded-full hover:bg-accent-hover transition-colors"
               >
                 Visit your three →
               </Link>
@@ -61,13 +61,12 @@ export default function FirstFridayBanner({ friendsUpdatedToday = 0 }: Props) {
                 href="/first-friday"
                 className="text-[12px] uppercase tracking-[0.18em] text-zinc-500 hover:text-accent font-semibold transition-colors"
               >
-                See everyone&apos;s →
+                See the room →
               </Link>
               {friendsUpdatedToday > 0 && (
-                <p className="text-xs text-zinc-500 italic ml-auto">
+                <p className="text-xs text-zinc-500 italic ml-auto editorial">
                   {friendsUpdatedToday}{" "}
-                  {friendsUpdatedToday === 1 ? "person you follow has" : "people you follow have"}{" "}
-                  already.
+                  {friendsUpdatedToday === 1 ? "friend" : "friends"} already today.
                 </p>
               )}
             </div>
@@ -78,6 +77,8 @@ export default function FirstFridayBanner({ friendsUpdatedToday = 0 }: Props) {
   }
 
   // Quiet anticipation state — used on every other day of the month.
+  // Should feel like a tide chart, not a notification: a small constant
+  // signal that the next holiday is coming.
   const days = daysUntilNextFirstFriday();
   const label = nextFirstFridayLabel();
 
@@ -91,16 +92,29 @@ export default function FirstFridayBanner({ friendsUpdatedToday = 0 }: Props) {
           <p className="text-[10px] uppercase tracking-[0.22em] text-zinc-600 font-semibold mb-1 group-hover:text-accent transition-colors">
             — First Friday
           </p>
-          <p className="text-sm text-zinc-400">
-            <span className="italic editorial">The next monthly visit to your three is </span>
-            <span className="text-foreground font-medium">{label.toLowerCase()}</span>
-            <span className="italic editorial text-zinc-500">
-              {days >= 7 ? "." : days === 0 ? "." : `, ${days} ${days === 1 ? "day" : "days"} away.`}
-            </span>
+          <p className="text-sm text-zinc-400 editorial">
+            {days === 1 ? (
+              <>
+                <span className="italic">The room visits its three </span>
+                <span className="text-foreground font-medium not-italic">tomorrow.</span>
+              </>
+            ) : days < 7 ? (
+              <>
+                <span className="italic">The room visits its three in </span>
+                <span className="text-foreground font-medium not-italic">
+                  {days} {days === 1 ? "day" : "days"}.
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="italic">The room visits its three on </span>
+                <span className="text-foreground font-medium not-italic">{label}.</span>
+              </>
+            )}
           </p>
         </div>
         <span className="text-[11px] text-zinc-600 group-hover:text-accent transition-colors shrink-0 hidden sm:inline">
-          Read about it →
+          About this →
         </span>
       </Link>
     </section>

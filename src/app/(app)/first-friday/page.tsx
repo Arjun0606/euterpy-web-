@@ -135,22 +135,33 @@ export default async function FirstFridayPage() {
         <h1 className="font-display text-5xl sm:text-7xl tracking-tighter leading-[0.92] mb-6">
           {today ? (
             <>
-              Today is <span className="italic text-accent">First Friday.</span>
+              The room is <span className="italic text-accent">visiting its three.</span>
             </>
           ) : (
             <>
-              First Friday is <span className="italic text-accent">{nextFirstFridayLabel().toLowerCase()}.</span>
+              The next visit is{" "}
+              <span className="italic text-accent">{nextFirstFridayLabel().toLowerCase()}.</span>
             </>
           )}
         </h1>
-        <p className="editorial italic text-lg sm:text-xl text-zinc-400 leading-relaxed max-w-2xl">
-          {today
-            ? "Once a month, everyone on Euterpy is invited to revisit their three. Swap one, keep them all, or just look at them again. The whole room, on the same day."
-            : "Once a month, everyone on Euterpy is invited to revisit their three. Swap one, keep them all, or just look at them again. The next visit is in " +
-              daysUntilNextFirstFriday() +
-              " " +
-              (daysUntilNextFirstFriday() === 1 ? "day" : "days") +
-              "."}
+        <p className="editorial italic text-lg sm:text-xl text-zinc-400 leading-[1.65] max-w-2xl">
+          {today ? (
+            <>
+              First Friday. The one day a month everyone on Euterpy looks at
+              their own pages again — keeps what still belongs, swaps what
+              doesn&apos;t. The room is here together, all day.
+            </>
+          ) : (
+            <>
+              First Friday is the one day a month everyone on Euterpy looks at
+              their own pages again. The next one is in{" "}
+              <span className="not-italic text-foreground font-medium">
+                {daysUntilNextFirstFriday()}{" "}
+                {daysUntilNextFirstFriday() === 1 ? "day" : "days"}
+              </span>
+              . You don&apos;t have to do anything. You&apos;re welcome to come.
+            </>
+          )}
         </p>
         {today && (
           <div className="mt-8">
@@ -245,13 +256,24 @@ function FriendCard({ entry, compact = false }: { entry: any; compact?: boolean 
   const slots = entry.slots as { albums?: any; story?: string }[];
   const coverSize = compact ? 90 : 130;
 
+  // Time since last update — used in the friends section.
+  const updatedAt = entry.latestUpdate ? new Date(entry.latestUpdate) : null;
+  const now = new Date();
+  let updateLabel = "";
+  if (updatedAt) {
+    const minutesAgo = Math.floor((now.getTime() - updatedAt.getTime()) / 60000);
+    if (minutesAgo < 1) updateLabel = "just now";
+    else if (minutesAgo < 60) updateLabel = `${minutesAgo}m ago`;
+    else updateLabel = `${Math.floor(minutesAgo / 60)}h ago`;
+  }
+
   return (
     <Link
       href={`/${profile.username}`}
-      className="group block bg-card border border-border rounded-2xl p-5 hover:border-accent/40 transition-colors"
+      className="group block bg-card border border-border rounded-2xl p-5 hover:border-accent/40 hover:bg-card/80 transition-all"
     >
-      <div className="flex items-center gap-3 mb-4">
-        <div className="w-9 h-9 rounded-full bg-background border border-border overflow-hidden flex items-center justify-center text-xs text-zinc-600 shrink-0">
+      <div className="flex items-center gap-3 mb-5">
+        <div className="w-10 h-10 rounded-full bg-background border border-border overflow-hidden flex items-center justify-center text-xs text-zinc-600 shrink-0">
           {profile.avatar_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
@@ -265,6 +287,11 @@ function FriendCard({ entry, compact = false }: { entry: any; compact?: boolean 
           </p>
           <p className="text-[10px] text-zinc-600">@{profile.username}</p>
         </div>
+        {updateLabel && !compact && (
+          <span className="text-[10px] uppercase tracking-[0.16em] text-zinc-600 italic shrink-0">
+            {updateLabel}
+          </span>
+        )}
       </div>
       <div className="flex gap-2">
         {[0, 1, 2].map((i) => {
@@ -273,13 +300,13 @@ function FriendCard({ entry, compact = false }: { entry: any; compact?: boolean 
           return (
             <div
               key={i}
-              className="flex-1 aspect-square rounded-md overflow-hidden bg-background border border-border"
+              className="flex-1 aspect-square rounded-md overflow-hidden bg-background border border-border group-hover:border-zinc-700 transition-colors"
             >
               {cover ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={cover} alt={slot?.albums?.title || ""} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full" />
+                <div className="w-full h-full flex items-center justify-center text-zinc-800 text-2xl">♪</div>
               )}
             </div>
           );
