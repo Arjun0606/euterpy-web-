@@ -5,6 +5,7 @@ import { getArtworkUrl } from "@/lib/apple-music/client";
 import GetToKnowMe from "./GetToKnowMe";
 import ThreeShareCard from "./ThreeShareCard";
 import RecordShelf from "./RecordShelf";
+import { isCurator, curatorLabel } from "@/lib/curator";
 import QuickSearch from "./QuickSearch";
 import Stars from "@/components/ui/Stars";
 import FollowButton from "@/components/ui/FollowButton";
@@ -59,6 +60,18 @@ export default function ProfilePage({ data }: Props) {
 
   const displayedBadges = badges.filter((b: any) => b.is_displayed).slice(0, 5);
   const isOwnProfile = currentUserId === profile.id;
+
+  // Curator status — derived from actual portfolio counts. Shown to
+  // visitors as a small editorial eyebrow under the username; hidden
+  // from the owner themselves so it doesn't feel performative.
+  const curatorInputs = {
+    storyCount: socialCounts?.stories ?? stories.length,
+    lyricCount: socialCounts?.lyricPins ?? lyricPins.length,
+    listCount: socialCounts?.lists ?? lists.length,
+    marksReceived: socialCounts?.marksReceived ?? 0,
+  };
+  const showCuratorTag = !isOwnProfile && isCurator(curatorInputs);
+  const curatorTagText = showCuratorTag ? curatorLabel(curatorInputs) : null;
 
   const shelfItems = useMemo(() => [
     ...ratings.map((r: any) => ({
@@ -118,6 +131,12 @@ export default function ProfilePage({ data }: Props) {
               )}
             </div>
             <p className="text-accent text-sm">@{profile.username}</p>
+
+            {curatorTagText && (
+              <p className="mt-2 inline-flex items-center text-[10px] uppercase tracking-[0.22em] text-zinc-500 font-semibold">
+                — {curatorTagText}
+              </p>
+            )}
 
             {profile.bio && (
               <p className="editorial text-base text-zinc-300 mt-4 leading-relaxed">
@@ -213,20 +232,33 @@ export default function ProfilePage({ data }: Props) {
           </div>
         </div>
 
-        {/* ====== Mutuals — only when viewing someone else === */}
+        {/* ====== Mutuals — only when viewing someone else ====== */}
+        {/* The whole strip is one big link to the dedicated mutuals page,
+            where each shared connection shows up as a magazine-grade
+            portrait via FollowList. */}
         {!isOwnProfile && mutuals.length > 0 && (
-          <div className="mb-10 p-4 bg-card border border-border rounded-2xl">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-zinc-600 mb-3">— {mutuals.length} mutual{mutuals.length === 1 ? "" : "s"}</p>
+          <a
+            href={`/${profile.username}/mutuals`}
+            className="group block mb-10 p-4 bg-card border border-border rounded-2xl hover:border-accent/30 transition-colors"
+          >
+            <p className="text-[10px] uppercase tracking-[0.18em] text-zinc-600 mb-3 group-hover:text-accent transition-colors">
+              — {mutuals.length} mutual{mutuals.length === 1 ? "" : "s"} →
+            </p>
             <div className="flex items-center gap-2 flex-wrap">
               <div className="flex -space-x-2">
                 {mutuals.slice(0, 5).map((m: any) => (
-                  <a key={m.id} href={`/${m.username}`} title={m.display_name || m.username}
-                    className="w-8 h-8 rounded-full bg-background border-2 border-card overflow-hidden hover:scale-110 transition-transform flex items-center justify-center text-[10px] text-zinc-600">
+                  <div
+                    key={m.id}
+                    title={m.display_name || m.username}
+                    className="w-8 h-8 rounded-full bg-background border-2 border-card overflow-hidden flex items-center justify-center text-[10px] text-zinc-600"
+                  >
                     {m.avatar_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={m.avatar_url} alt="" className="w-full h-full object-cover" />
-                    ) : (m.username[0].toUpperCase())}
-                  </a>
+                    ) : (
+                      m.username[0].toUpperCase()
+                    )}
+                  </div>
                 ))}
               </div>
               <p className="text-xs text-zinc-500 ml-2">
@@ -234,13 +266,17 @@ export default function ProfilePage({ data }: Props) {
                 {mutuals.slice(0, 2).map((m: any, i: number) => (
                   <span key={m.id}>
                     {i > 0 && ", "}
-                    <a href={`/${m.username}`} className="text-zinc-300 hover:text-accent transition-colors font-medium">{m.display_name || m.username}</a>
+                    <span className="text-zinc-300 font-medium">{m.display_name || m.username}</span>
                   </span>
                 ))}
-                {mutuals.length > 2 && <span className="text-zinc-600"> and {mutuals.length - 2} other{mutuals.length - 2 === 1 ? "" : "s"} you follow</span>}
+                {mutuals.length > 2 && (
+                  <span className="text-zinc-600">
+                    {" "}and {mutuals.length - 2} other{mutuals.length - 2 === 1 ? "" : "s"} you follow
+                  </span>
+                )}
               </p>
             </div>
-          </div>
+          </a>
         )}
 
         {/* ====== Tabs ====== */}

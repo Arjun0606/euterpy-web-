@@ -4,6 +4,8 @@ import Link from "next/link";
 import Stars from "@/components/ui/Stars";
 import LikeButton from "@/components/ui/LikeButton";
 import HomeSearch from "./HomeSearch";
+import OnThisDay from "@/components/feed/OnThisDay";
+import { getOnThisDayMemory } from "@/lib/memories";
 
 export const metadata = { title: "Home" };
 export const dynamic = "force-dynamic";
@@ -40,6 +42,10 @@ export default async function HomePage() {
     .select("following_id")
     .eq("follower_id", user.id);
   const followingIds = follows?.map((f) => f.following_id) || [];
+
+  // On-this-day memory — surfaces one item from the user's own past
+  // (a year ago, 6 months ago, etc). Returns null on fresh profiles.
+  const memory = await getOnThisDayMemory(supabase, user.id);
 
   // === DATA FETCHING ===
 
@@ -363,6 +369,12 @@ export default async function HomePage() {
 
       {/* Search */}
       <HomeSearch />
+
+      {/* === ON THIS DAY — personal memory hero === */}
+      {/* Quietly surfaces one item from the user's own past. Skipped on
+          fresh accounts (no fake content) and on accounts with no
+          history at the lookback windows we check. */}
+      {memory && <OnThisDay memory={memory} />}
 
       {/* === STORY OF THE WEEK — the magazine cover === */}
       {/* === DAILY HERO ===

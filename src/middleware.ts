@@ -19,8 +19,8 @@ function isPublicPath(pathname: string): boolean {
   const reserved = ["feed", "search", "settings", "login", "signup", "discover", "notifications", "welcome", "shelf", "gtkm", "recap", "people"];
   const segments = pathname.split("/").filter(Boolean);
   if (segments.length === 1 && !reserved.includes(segments[0])) return true;
-  // Profile sub-pages: stats, followers, following, charts
-  const profileSubpaths = ["stats", "followers", "following", "charts"];
+  // Profile sub-pages: stats, followers, following, charts, mutuals
+  const profileSubpaths = ["stats", "followers", "following", "charts", "mutuals"];
   if (segments.length === 2 && profileSubpaths.includes(segments[1]) && !reserved.includes(segments[0])) return true;
   return false;
 }

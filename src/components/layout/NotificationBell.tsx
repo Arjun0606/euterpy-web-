@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
+import { renderNotification, timeAgo } from "@/lib/notifications/copy";
 
 interface Notification {
   id: string;
@@ -80,34 +81,10 @@ export default function NotificationBell() {
     }
   }
 
-  function renderNotification(n: Notification) {
+  function renderRow(n: Notification) {
     const actorName = n.actor?.display_name || n.actor?.username || "Someone";
     const actorInitial = n.actor?.username?.[0]?.toUpperCase() || "?";
-    const timeAgo = getTimeAgo(n.created_at);
-
-    let message = "";
-    let href = "/";
-
-    switch (n.type) {
-      case "follow":
-        message = "started following you";
-        href = `/${n.actor?.username}`;
-        break;
-      case "follow_request":
-        message = "requested to follow you";
-        href = "/settings";
-        break;
-      case "review_vote":
-        message = `${n.data?.vote_type === "up" ? "upvoted" : "downvoted"} your review`;
-        href = n.data?.album_apple_id ? `/album/${n.data.album_apple_id}` : "/";
-        break;
-      case "badge_earned":
-        message = `You earned the "${n.data?.badge_name}" badge!`;
-        href = `/${n.actor?.username}`;
-        break;
-      default:
-        message = "interacted with your profile";
-    }
+    const { message, href } = renderNotification(n);
 
     return (
       <Link
@@ -116,20 +93,20 @@ export default function NotificationBell() {
         onClick={() => setOpen(false)}
         className={`flex items-start gap-3 p-3 rounded-lg transition-colors hover:bg-card-hover ${!n.is_read ? "bg-accent/5" : ""}`}
       >
-        <div className="w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-xs text-muted shrink-0">
+        <div className="w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-xs text-muted shrink-0 overflow-hidden">
           {n.actor?.avatar_url ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={n.actor.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+            <img src={n.actor.avatar_url} alt="" className="w-full h-full object-cover" />
           ) : (
             actorInitial
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm">
-            <span className="font-medium">{actorName}</span>{" "}
-            <span className="text-muted">{message}</span>
+          <p className="text-[13px] leading-snug">
+            <span className="font-medium text-foreground">{actorName}</span>{" "}
+            <span className="text-zinc-400 italic editorial">{message}</span>
           </p>
-          <p className="text-xs text-muted/50 mt-0.5">{timeAgo}</p>
+          <p className="text-[10px] text-zinc-600 mt-0.5">{timeAgo(n.created_at)}</p>
         </div>
       </Link>
     );
@@ -172,12 +149,12 @@ export default function NotificationBell() {
             </div>
           ) : notifications.length === 0 ? (
             <div className="p-8 text-center">
-              <p className="text-sm text-muted">No notifications yet.</p>
-              <p className="text-xs text-muted/50 mt-1">When people interact with you, it&apos;ll show up here.</p>
+              <p className="text-sm text-foreground font-medium">No letters yet.</p>
+              <p className="text-xs text-zinc-500 mt-1 italic">When someone keeps your work, you&apos;ll find it here.</p>
             </div>
           ) : (
             <div className="p-1">
-              {notifications.map(renderNotification)}
+              {notifications.map(renderRow)}
             </div>
           )}
         </div>
@@ -186,14 +163,3 @@ export default function NotificationBell() {
   );
 }
 
-function getTimeAgo(dateStr: string): string {
-  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
-  if (seconds < 60) return "just now";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
