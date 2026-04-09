@@ -104,7 +104,7 @@ async function getFullProfile(username: string) {
     { data: badges },
   ] = await Promise.all([
     supabase.from("get_to_know_me").select("*, albums(*)").eq("user_id", profile.id).order("position"),
-    supabase.from("ratings").select("*, albums(*)").eq("user_id", profile.id).order("created_at", { ascending: false }),
+    supabase.from("ratings").select("id, score, reaction, ownership, created_at, albums(apple_id, title, artist_name, artwork_url, release_date, genre_names, record_label)").eq("user_id", profile.id).order("created_at", { ascending: false }),
     supabase.from("song_ratings").select("*, songs(*)").eq("user_id", profile.id).order("created_at", { ascending: false }),
     supabase.from("stories").select("id, kind, target_apple_id, target_title, target_artist, target_artwork_url, headline, body, is_pinned, created_at").eq("user_id", profile.id).order("is_pinned", { ascending: false }).order("created_at", { ascending: false }),
     supabase.from("lyric_pins").select("*").eq("user_id", profile.id).order("position"),
@@ -121,16 +121,23 @@ async function getFullProfile(username: string) {
     ...((lyricPins || []).map((l: any) => l.id)),
   ];
 
+  const ownedStoryIds = (stories || []).map((s: any) => s.id);
+
   const [
     { count: marksGiven },
     { count: echoesGiven },
+    { count: followerCount },
+    { count: followingCount },
   ] = await Promise.all([
     supabase.from("stars").select("id", { count: "exact", head: true }).eq("user_id", profile.id),
     supabase.from("reposts").select("id", { count: "exact", head: true }).eq("user_id", profile.id),
+    supabase.from("follows").select("id", { count: "exact", head: true }).eq("following_id", profile.id),
+    supabase.from("follows").select("id", { count: "exact", head: true }).eq("follower_id", profile.id),
   ]);
 
   let marksReceived = 0;
   let echoesReceived = 0;
+  let mostMarkedStoryId: string | null = null;
   if (ownedContentIds.length > 0) {
     const [{ count: m }, { count: e }] = await Promise.all([
       supabase.from("stars").select("id", { count: "exact", head: true }).in("target_id", ownedContentIds),
@@ -138,7 +145,25 @@ async function getFullProfile(username: string) {
     ]);
     marksReceived = m || 0;
     echoesReceived = e || 0;
+
+    if (ownedStoryIds.length > 0) {
+      const { data: storyMarks } = await supabase
+        .from("stars")
+        .select("target_id")
+        .eq("kind", "story")
+        .in("target_id", ownedStoryIds);
+      const storyMarkCounts: Record<string, number> = {};
+      for (const row of (storyMarks || []) as { target_id: string }[]) {
+        storyMarkCounts[row.target_id] = (storyMarkCounts[row.target_id] || 0) + 1;
+      }
+      const top = Object.entries(storyMarkCounts).sort((a, b) => b[1] - a[1])[0];
+      if (top) mostMarkedStoryId = top[0];
+    }
   }
+
+  const mostMarkedStory = mostMarkedStoryId
+    ? (stories || []).find((s: any) => s.id === mostMarkedStoryId) || null
+    : null;
 
   const socialCounts = {
     stories: (stories || []).length,
@@ -149,6 +174,8 @@ async function getFullProfile(username: string) {
     marksReceived,
     echoesGiven: echoesGiven || 0,
     echoesReceived,
+    followers: followerCount || 0,
+    following: followingCount || 0,
   };
 
   // Mutuals — when viewing someone else's profile, who do you both follow?
@@ -187,6 +214,7 @@ async function getFullProfile(username: string) {
     badges: badges || [],
     mutuals,
     socialCounts,
+    mostMarkedStory,
   };
 }
 

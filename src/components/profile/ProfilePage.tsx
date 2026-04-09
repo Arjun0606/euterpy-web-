@@ -35,6 +35,7 @@ interface Props {
     charts: any[];
     badges: any[];
     mutuals?: any[];
+    mostMarkedStory?: any | null;
     socialCounts?: {
       stories: number;
       lyricPins: number;
@@ -44,12 +45,14 @@ interface Props {
       marksReceived: number;
       echoesGiven: number;
       echoesReceived: number;
+      followers?: number;
+      following?: number;
     };
   };
 }
 
 export default function ProfilePage({ data }: Props) {
-  const { profile, currentUserId, getToKnowMe, ratings, songRatings, stories, lyricPins, lists, charts, badges, mutuals = [], socialCounts } = data;
+  const { profile, currentUserId, getToKnowMe, ratings, songRatings, stories, lyricPins, lists, charts, badges, mutuals = [], socialCounts, mostMarkedStory } = data;
   const [activeTab, setActiveTab] = useState<Tab>("collection");
   const [copied, setCopied] = useState(false);
 
@@ -288,6 +291,8 @@ export default function ProfilePage({ data }: Props) {
               displayName={profile.display_name || profile.username}
               ratings={ratings}
               songRatings={songRatings}
+              stories={stories}
+              mostMarkedStory={mostMarkedStory}
               counts={socialCounts || {
                 stories: stories.length,
                 lyricPins: lyricPins.length,
