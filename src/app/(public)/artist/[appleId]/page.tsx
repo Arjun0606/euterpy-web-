@@ -76,7 +76,7 @@ export default async function ArtistPage({ params }: Props) {
             <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/85 to-background" />
           </div>
         )}
-        <div className="relative max-w-5xl mx-auto px-5 sm:px-8 pt-16 sm:pt-24 pb-12">
+        <div className="relative max-w-7xl mx-auto px-5 sm:px-8 pt-16 sm:pt-24 pb-12">
           <p className="text-[10px] uppercase tracking-[0.25em] text-accent font-semibold mb-6">— Artist</p>
           <div className="flex flex-col sm:flex-row items-start gap-8 sm:gap-12">
             {portraitArt && (
@@ -113,7 +113,7 @@ export default async function ArtistPage({ params }: Props) {
         </div>
       </section>
 
-      <main className="max-w-5xl mx-auto px-5 sm:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-5 sm:px-8 py-8">
         {/* Friends wrote about this artist */}
         {friendStories.length > 0 && (
           <StoriesSection

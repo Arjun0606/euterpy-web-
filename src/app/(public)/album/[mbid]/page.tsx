@@ -178,7 +178,7 @@ export default async function AlbumPage({ params }: Props) {
       {/* Anonymous visitor nav */}
       {!userId && (
         <nav className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border">
-          <div className="max-w-5xl mx-auto px-5 sm:px-8 py-4 flex items-center justify-between">
+          <div className="max-w-7xl mx-auto px-5 sm:px-8 py-4 flex items-center justify-between">
             <a href="/" className="font-display text-xl tracking-tight">Euterpy</a>
             <div className="flex items-center gap-4">
               <a href="/login" className="text-sm text-zinc-400 hover:text-foreground transition-colors">Log in</a>
@@ -203,7 +203,7 @@ export default async function AlbumPage({ params }: Props) {
         </div>
       )}
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-8 py-12 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-12 relative z-10">
         {/* Album Header */}
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8 mb-12">
           {/* Vinyl Cover */}

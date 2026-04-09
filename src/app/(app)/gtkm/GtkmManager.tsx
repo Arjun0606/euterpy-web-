@@ -192,7 +192,7 @@ export default function GtkmManager({ userId, initialItems }: { userId: string; 
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-5 sm:px-8 py-10 sm:py-14">
+    <div className="max-w-5xl mx-auto px-5 sm:px-8 py-10 sm:py-14">
       {/* Header */}
       <div className="mb-10">
         <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-2">Your three albums</p>

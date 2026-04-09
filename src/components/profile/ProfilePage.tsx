@@ -90,7 +90,7 @@ export default function ProfilePage({ data }: Props) {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-5xl mx-auto px-5 sm:px-8 py-12 sm:py-16">
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 py-12 sm:py-16">
 
         {/* ====== Profile Header ====== */}
         <div className="flex items-start gap-5 sm:gap-7 mb-12">

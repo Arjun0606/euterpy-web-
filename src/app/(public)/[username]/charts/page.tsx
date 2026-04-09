@@ -43,7 +43,7 @@ export default async function ChartsHistoryPage({ params }: Props) {
   const allCharts = charts || [];
 
   return (
-    <main className="max-w-5xl mx-auto px-5 sm:px-8 py-10 sm:py-14">
+    <main className="max-w-7xl mx-auto px-5 sm:px-8 py-10 sm:py-14">
       <div className="mb-10">
         <Link href={`/${username}`} className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 hover:text-accent transition-colors">
           ← @{username}

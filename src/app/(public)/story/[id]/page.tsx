@@ -147,7 +147,7 @@ export default async function StoryPage({ params }: Props) {
             <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/85 to-background" />
           </div>
         )}
-        <div className="relative max-w-2xl mx-auto px-5 sm:px-8 pt-16 sm:pt-24 pb-10">
+        <div className="relative max-w-3xl mx-auto px-5 sm:px-8 pt-16 sm:pt-24 pb-10">
           {/* Subject pill */}
           <Link
             href={targetHref}
@@ -229,7 +229,7 @@ export default async function StoryPage({ params }: Props) {
 
       {/* Other stories about this thing */}
       {relatedStories && relatedStories.length > 0 && (
-        <section className="max-w-2xl mx-auto px-5 sm:px-8 py-16 border-t border-white/[0.04] mt-16">
+        <section className="max-w-3xl mx-auto px-5 sm:px-8 py-16 border-t border-white/[0.04] mt-16">
           <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-6">— Other voices on this {story.kind}</p>
           <div className="space-y-5">
             {relatedStories.map((s: any) => {
@@ -265,7 +265,7 @@ export default async function StoryPage({ params }: Props) {
 
       {/* More from this writer */}
       {moreFromWriter && moreFromWriter.length > 0 && (
-        <section className="max-w-2xl mx-auto px-5 sm:px-8 py-16 border-t border-white/[0.04]">
+        <section className="max-w-3xl mx-auto px-5 sm:px-8 py-16 border-t border-white/[0.04]">
           <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-6">— More from {author.display_name || author.username}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {moreFromWriter.map((s: any) => {

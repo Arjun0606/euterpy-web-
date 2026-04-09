@@ -351,7 +351,7 @@ export default async function HomePage() {
   const firstName = (profile?.display_name || profile?.username || "").split(" ")[0];
 
   return (
-    <main className="max-w-5xl mx-auto px-5 sm:px-8 py-10 sm:py-14">
+    <main className="max-w-7xl mx-auto px-5 sm:px-8 py-10 sm:py-14">
 
       {/* Greeting */}
       <div className="mb-8">

@@ -135,7 +135,7 @@ export default async function StatsPage({ params }: Props) {
   const displayName = data.profile.display_name || data.profile.username;
 
   return (
-    <main className="max-w-5xl mx-auto px-5 sm:px-8 py-12 sm:py-16">
+    <main className="max-w-7xl mx-auto px-5 sm:px-8 py-12 sm:py-16">
       <div className="mb-12 sm:mb-16">
         <Link href={`/${data.profile.username}`} className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 hover:text-accent transition-colors">
           ← @{data.profile.username}

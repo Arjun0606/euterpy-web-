@@ -170,7 +170,7 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="max-w-3xl mx-auto px-5 sm:px-8 py-10 sm:py-14">
+    <div className="max-w-4xl mx-auto px-5 sm:px-8 py-10 sm:py-14">
       <div className="mb-10">
         <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-2">Manage</p>
         <h1 className="font-display text-4xl sm:text-5xl tracking-tight leading-none">Settings</h1>

@@ -109,7 +109,7 @@ export default async function ListPage({ params }: Props) {
             <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/85 to-background" />
           </div>
         )}
-        <div className="relative max-w-2xl mx-auto px-5 sm:px-8 pt-16 sm:pt-24 pb-10">
+        <div className="relative max-w-5xl mx-auto px-5 sm:px-8 pt-16 sm:pt-24 pb-10">
           <p className="text-[10px] uppercase tracking-[0.25em] text-accent font-semibold mb-6">— A list</p>
 
           <h1 className="font-display text-5xl sm:text-7xl tracking-tighter leading-[0.9] mb-5">
@@ -162,7 +162,7 @@ export default async function ListPage({ params }: Props) {
       </section>
 
       {/* Items */}
-      <section className="max-w-2xl mx-auto px-5 sm:px-8 pb-16">
+      <section className="max-w-5xl mx-auto px-5 sm:px-8 pb-16">
         <ol className="space-y-6">
           {items.map((item: any, idx: number) => {
             const cover = art(item.target_artwork_url, 400);
