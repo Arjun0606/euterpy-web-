@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { getArtworkUrl } from "@/lib/apple-music/client";
 import GetToKnowMe from "./GetToKnowMe";
+import ThreeShareCard from "./ThreeShareCard";
 import RecordShelf from "./RecordShelf";
 import QuickSearch from "./QuickSearch";
 import Stars from "@/components/ui/Stars";
@@ -139,14 +140,37 @@ export default function ProfilePage({ data }: Props) {
               </div>
             )}
 
-            {/* Stats */}
+            {/* Stats — engagement counts hidden from public view by design.
+                Cosmos.fm playbook: show the work, not the score. Owners see
+                their own numbers (so they're not flying blind), visitors see
+                navigable links without the leaderboard psychology. */}
             <div className="flex gap-5 mt-4 text-sm">
-              <span className="text-zinc-500"><span className="text-white font-semibold">{profile.album_count}</span> albums</span>
-              <a href={`/${profile.username}/followers`} className="text-zinc-500 hover:text-zinc-300 transition-colors">
-                <span className="text-white font-semibold">{profile.follower_count}</span> followers
+              <span className="text-zinc-500">
+                <span className="text-white font-semibold">{profile.album_count}</span> albums
+              </span>
+              <a
+                href={`/${profile.username}/followers`}
+                className="text-zinc-500 hover:text-zinc-300 transition-colors"
+              >
+                {isOwnProfile ? (
+                  <>
+                    <span className="text-white font-semibold">{profile.follower_count}</span> followers
+                  </>
+                ) : (
+                  "Followers"
+                )}
               </a>
-              <a href={`/${profile.username}/following`} className="text-zinc-500 hover:text-zinc-300 transition-colors">
-                <span className="text-white font-semibold">{profile.following_count}</span> following
+              <a
+                href={`/${profile.username}/following`}
+                className="text-zinc-500 hover:text-zinc-300 transition-colors"
+              >
+                {isOwnProfile ? (
+                  <>
+                    <span className="text-white font-semibold">{profile.following_count}</span> following
+                  </>
+                ) : (
+                  "Following"
+                )}
               </a>
             </div>
 
@@ -249,6 +273,12 @@ export default function ProfilePage({ data }: Props) {
             {/* GTKM — only show if has items OR is owner */}
             {(getToKnowMe.length > 0 || isOwnProfile) && (
               <GetToKnowMe items={getToKnowMe} username={profile.username} isOwner={isOwnProfile} />
+            )}
+
+            {/* The Three share card — owner only, only when all 3 slots filled.
+                This is the highest-leverage viral artifact in the product. */}
+            {isOwnProfile && getToKnowMe.length === 3 && (
+              <ThreeShareCard username={profile.username} />
             )}
 
             {/* Chart — my ten right now */}

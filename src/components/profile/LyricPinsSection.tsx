@@ -77,6 +77,20 @@ export default function LyricPinsSection({ pins, isOwner, ownerId }: Props) {
     }
   }
 
+  async function handleShareLink(songAppleId: string) {
+    const url = `${window.location.origin}/song/${songAppleId}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast("Link copied");
+      }
+    } catch {
+      // user cancelled
+    }
+  }
+
   if (pins.length === 0 && !isOwner) return null;
 
   return (
@@ -134,7 +148,7 @@ export default function LyricPinsSection({ pins, isOwner, ownerId }: Props) {
                 </div>
               </Link>
 
-              {/* Mark + Echo row */}
+              {/* Mark + Echo + Share row — share is always visible (mobile too) */}
               <div className="flex items-center gap-2 mt-4 pt-4 border-t border-white/[0.04]">
                 <MarkButton
                   key={`m-${pin.id}-${counts[pin.id]?.mark || 0}`}
@@ -152,18 +166,24 @@ export default function LyricPinsSection({ pins, isOwner, ownerId }: Props) {
                   initialCount={counts[pin.id]?.echo || 0}
                   size="sm"
                 />
-              </div>
-
-              <div className="absolute top-3 right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
                 <button
                   onClick={() => handleDownload(pin.id)}
-                  className="text-zinc-600 hover:text-accent text-[10px] px-2 py-1 border border-border rounded-full transition-colors"
-                  aria-label="Download as image"
+                  className="text-[10px] uppercase tracking-[0.14em] text-zinc-500 hover:text-accent px-2.5 py-1.5 border border-border hover:border-accent/40 rounded-full transition-colors font-semibold"
                   title="Save as image"
                 >
                   ↓ Save
                 </button>
-                {isOwner && (
+                <button
+                  onClick={() => handleShareLink(pin.song_apple_id)}
+                  className="text-[10px] uppercase tracking-[0.14em] text-zinc-500 hover:text-accent px-2.5 py-1.5 border border-border hover:border-accent/40 rounded-full transition-colors font-semibold"
+                  title="Share link"
+                >
+                  ↗ Share
+                </button>
+              </div>
+
+              {isOwner && (
+                <div className="absolute top-3 right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
                   <button
                     onClick={() => handleRemove(pin.id)}
                     className="text-zinc-600 hover:text-red-400 text-xs px-2 transition-colors"
@@ -171,8 +191,8 @@ export default function LyricPinsSection({ pins, isOwner, ownerId }: Props) {
                   >
                     ✕
                   </button>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           ))}
         </div>

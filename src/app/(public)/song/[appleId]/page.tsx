@@ -57,12 +57,14 @@ export default async function SongPage({ params }: Props) {
     if (!appleSong) notFound();
 
     const parentAlbumId = (appleSong as any).relationships?.albums?.data?.[0]?.id || null;
+    const parentArtistId = (appleSong as any).relationships?.artists?.data?.[0]?.id || null;
 
     const serviceClient = createServiceClient();
     const { data: inserted } = await serviceClient.from("songs").insert({
       apple_id: appleId,
       title: appleSong.attributes.name,
       artist_name: appleSong.attributes.artistName,
+      artist_apple_id: parentArtistId,
       album_name: appleSong.attributes.albumName,
       album_apple_id: parentAlbumId,
       duration_ms: appleSong.attributes.durationInMillis,
@@ -78,6 +80,25 @@ export default async function SongPage({ params }: Props) {
   }
 
   if (!song) notFound();
+
+  // Lazy backfill: songs cached before migration 022 won't have artist_apple_id
+  // (or album_apple_id). Fetch from Apple once and update so the artist/album
+  // links light up on next render.
+  if (!song.artist_apple_id || !song.album_apple_id) {
+    const appleSong = await fetchSongFromApple(appleId);
+    if (appleSong) {
+      const parentArtistId = (appleSong as any).relationships?.artists?.data?.[0]?.id || null;
+      const parentAlbumId = (appleSong as any).relationships?.albums?.data?.[0]?.id || null;
+      const updates: Record<string, string | null> = {};
+      if (!song.artist_apple_id && parentArtistId) updates.artist_apple_id = parentArtistId;
+      if (!song.album_apple_id && parentAlbumId) updates.album_apple_id = parentAlbumId;
+      if (Object.keys(updates).length > 0) {
+        const serviceClient = createServiceClient();
+        await serviceClient.from("songs").update(updates).eq("id", song.id);
+        Object.assign(song, updates);
+      }
+    }
+  }
 
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -156,7 +177,15 @@ export default async function SongPage({ params }: Props) {
           <div className="text-center sm:text-left flex-1">
             <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500/60 mb-1">Song</p>
             <h1 className="font-display text-3xl sm:text-4xl mb-2">{song.title}</h1>
-            <p className="text-xl text-muted mb-1">{song.artist_name}</p>
+            <p className="text-xl text-muted mb-1">
+              {song.artist_apple_id ? (
+                <a href={`/artist/${song.artist_apple_id}`} className="hover:text-accent transition-colors">
+                  {song.artist_name}
+                </a>
+              ) : (
+                song.artist_name
+              )}
+            </p>
             {song.album_name && (
               <p className="text-sm text-muted/60 mb-1">
                 {song.album_apple_id ? (
